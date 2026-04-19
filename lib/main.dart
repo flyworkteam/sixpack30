@@ -1,11 +1,26 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:onesignal_flutter/onesignal_flutter.dart';
 import 'package:six_pack_30/Core/Config/app_config.dart';
 import 'package:six_pack_30/Core/Routes/app_routes.dart';
+
+import 'package:six_pack_30/firebase_options.dart';
+
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
-void main() {
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
+
+  OneSignal.Debug.setLogLevel(OSLogLevel.verbose);
+  OneSignal.initialize("bbb220aa-bfd2-456b-878d-595b1a3c5193");
+  OneSignal.Notifications.requestPermission(true);
+
   runApp(const ProviderScope(child: MyApp()));
 }
 class MyApp extends StatelessWidget {

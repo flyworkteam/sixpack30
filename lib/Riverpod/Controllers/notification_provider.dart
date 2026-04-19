@@ -1,0 +1,47 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:six_pack_30/Core/Network/api_service.dart';
+
+  return NotificationNotifier();
+});
+
+  final ApiService _apiService = ApiService();
+
+  NotificationNotifier() : super(const AsyncValue.loading()) {
+    fetchNotifications();
+  }
+
+  Future<void> fetchNotifications() async {
+    try {
+      state = const AsyncValue.loading();
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) {
+        state = const AsyncValue.data([]);
+        return;
+      }
+
+      final token = await user.getIdToken();
+      if (token == null) {
+        state = const AsyncValue.data([]);
+        return;
+      }
+
+      final notifications = await _apiService.getNotifications(token);
+      state = AsyncValue.data(notifications ?? []);
+    } catch (e, st) {
+      state = AsyncValue.error(e, st);
+    }
+  }
+
+  Future<void> deleteAll() async {
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      final token = await user?.getIdToken();
+      if (token != null) {
+        await _apiService.deleteAllNotifications(token);
+        state = const AsyncValue.data([]);
+      }
+    } catch (e) {
+    }
+  }
+}

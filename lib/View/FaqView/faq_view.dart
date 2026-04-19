@@ -1,45 +1,29 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
-class FaqView extends StatefulWidget {
+import '../../Riverpod/Controllers/locale_provider.dart';
+import '../../Core/Localization/translations.dart';
+class FaqView extends ConsumerStatefulWidget {
   const FaqView({super.key});
   @override
-  State<FaqView> createState() => _FaqViewState();
+  ConsumerState<FaqView> createState() => _FaqViewState();
 }
-class _FaqViewState extends State<FaqView> {
+class _FaqViewState extends ConsumerState<FaqView> {
   int? _expandedIndex = 0;
-  final List<Map<String, String>> faqs = [
-    {
-      'question': 'SixPack30 nedir?',
-      'answer': 'SixPack30, karın bölgesini güçlendiren ve yağ yakımını hızlandıran, 30 günlük yapay zekâ destekli egzersiz programı sunan bir mobil fitness uygulamasıdır.'
-    },
-    {
-      'question': 'Uygulama gerçekten 30 günde karın kası çıkarır mı?',
-      'answer': 'Düzenli egzersiz ve dengeli bir beslenme ile desteklendiğinde, 30 gün sonunda karın bölgenizdeki yağ oranında azalma ve kaslarınızda belirginleşme görmeniz mümkündür.'
-    },
-    {
-      'question': 'Antrenmanlar için ekipman gerekli mi?',
-      'answer': 'Hayır, SixPack30 antrenmanları kendi vücut ağırlığınızla ve herhangi bir ekstra ekipmana ihtiyaç duymadan yapılabilecek şekilde tasarlanmıştır.'
-    },
-    {
-      'question': 'Günde ne kadar vaktimi alır?',
-      'answer': 'Antrenmanlar seviyenize göre günde ortalama 10 ile 20 dakika arasında sürmektedir. Bu sayede gün içinde rahatlıkla vakit bulabilirsiniz.'
-    },
-    {
-      'question': 'Hangi seviyeden başlamalıyım?',
-      'answer': 'Uygulama, ilk kurulumda veya profilinizden güncellediğiniz fiziksel özelliklerinize göre size otomatik olarak en uygun zorluk seviyesini sunar.'
-    },
-    {
-      'question': 'Premium üyeliğin farkı nedir?',
-      'answer': 'Premium üyelik; reklamsız deneyim, sınırsız antrenman planları, özel sesli yönlendirmeler ve gelişmiş ilerleme raporlarına erişim imkanı sağlar.'
-    },
-    {
-      'question': 'Programsız gün atlamak gelişimi etkiler mi?',
-      'answer': 'Seriyi bozmadan devam etmek kas gelişimi ve alışkanlık kazanımı için önemlidir. Ancak dinlenme günleri de programın bir parçasıdır.'
-    },
-  ];
+  List<Map<String, String>> _getFaqs(String langCode) {
+    return List.generate(7, (index) {
+      final i = index + 1;
+      return {
+        'question': Translations.translate('faq_q$i', langCode),
+        'answer': Translations.translate('faq_a$i', langCode),
+      };
+    });
+  }
   @override
   Widget build(BuildContext context) {
+    final langCode = ref.watch(localeProvider).languageCode;
+    final faqs = _getFaqs(langCode);
     return Scaffold(
       backgroundColor: const Color(0xFFFEFEFE),
       appBar: AppBar(
@@ -67,7 +51,7 @@ class _FaqViewState extends State<FaqView> {
           ),
         ),
         title: Text(
-          'Sıkça Sorulan Sorular',
+          Translations.translate('faq', langCode),
           style: GoogleFonts.montserrat(
             fontSize: 20.sp,
             fontWeight: FontWeight.w600,

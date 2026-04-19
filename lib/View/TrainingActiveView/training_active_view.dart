@@ -1,83 +1,123 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../Core/Data/workout_data.dart';
+import '../../Riverpod/Controllers/stats_provider.dart';
+import '../../Riverpod/Controllers/user_provider.dart';
 import '../BreakView/break_view.dart';
 import '../MotivationView/motivation_view.dart';
 
 class TrainingActiveView extends StatefulWidget {
   final String gender;
   final int initialIndex;
-  const TrainingActiveView({super.key, this.gender = 'woman', this.initialIndex = 0});
+  final List<ExerciseInfo> exercises;
+
+  final int dayNumber;
+
+  const TrainingActiveView({
+    super.key,
+    this.gender = 'woman',
+    required this.initialIndex,
+    required this.exercises,
+    required this.dayNumber,
+  });
   @override
   State<TrainingActiveView> createState() => _TrainingActiveViewState();
 }
 
 class _TrainingActiveViewState extends State<TrainingActiveView> {
-  double progress = 0.55;
+  double progress = 0.0;
   bool isPlaying = true;
   late int currentIndex;
-  final List<Map<String, String>> exercises = [
-    {
-      "name": "Crunch",
-      "sets": "3 Set × 20 Tekrar",
-      "rest": "20 - 30 sn",
-    },
-    {
-      "name": "Toe Touch Crunch",
-      "sets": "3 Set × 15 Tekrar",
-      "rest": "20 - 30 sn",
-    },
-    {
-      "name": "Bent Knee Leg Raise",
-      "sets": "3 Set × 15 Tekrar",
-      "rest": "30 sn",
-    },
-    {
-      "name": "Lying Knee Raise",
-      "sets": "3 Set × 15 Tekrar",
-      "rest": "30 sn",
-    },
-    {
-      "name": "Heel Touch",
-      "sets": "3 Set × 20 Tekrar",
-      "rest": "20 - 30 sn",
-    },
-    {
-      "name": "Standing Side Crunch",
-      "sets": "3 Set × 20 Tekrar",
-      "rest": "20 - 30 sn",
-    },
-    {
-      "name": "Forearm Plank",
-      "sets": "3 Set × 30 Tekrar",
-      "rest": "30 sn",
-    },
-    {
-      "name": "Mountain Climber",
-      "sets": "3 Set × 30 Tekrar",
-      "rest": "30 sn",
-    },
-  ];
+  late List<ExerciseInfo> exercises;
+  
+  Timer? _timer;
+  int _totalSeconds = 0;
+  int _remainingSeconds = 0;
 
   @override
   void initState() {
     super.initState();
     currentIndex = widget.initialIndex;
+    exercises = widget.exercises;
+    _initializeTimer();
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  void _initializeTimer() {
+    _timer?.cancel();
+    final exercise = exercises[currentIndex];
+    _totalSeconds = _extractSeconds(exercise.sets);
+    _remainingSeconds = _totalSeconds;
+    progress = 0.0;
+    if (isPlaying) _startTimer();
+  }
+
+  int _extractSeconds(String setsText) {
+    final RegExp regExp = RegExp(r'(\d+)\s*(Saniye|sn)', caseSensitive: false);
+    final match = regExp.firstMatch(setsText);
+    if (match != null) {
+      return int.parse(match.group(1)!);
+    }
+    return 30;
+  }
+
+  void _startTimer() {
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (mounted) {
+        setState(() {
+          if (_remainingSeconds > 0) {
+            _remainingSeconds--;
+            progress = _remainingSeconds / _totalSeconds;
+          } else {
+            _timer?.cancel();
+            _nextExercise();
+          }
+        });
+      }
+    });
+  }
+
+  void _togglePlayPause() {
+    setState(() {
+      isPlaying = !isPlaying;
+      if (isPlaying) {
+        _startTimer();
+      } else {
+        _timer?.cancel();
+      }
+    });
   }
 
   void _nextExercise() async {
     if (currentIndex < exercises.length - 1) {
+      _timer?.cancel();
       bool wasPlaying = isPlaying;
-      setState(() => isPlaying = false);
+      
       int halfWayMark = (exercises.length ~/ 2) - 1;
       if (currentIndex == halfWayMark) {
+        final container = ProviderScope.containerOf(context);
+        final userAsync = container.read(userProfileProvider);
+        final userName = userAsync.when(
+          data: (user) => user?.name ?? 'Şampiyon',
+          loading: () => 'Şampiyon',
+          error: (_, __) => 'Şampiyon',
+        );
+
         await Navigator.of(context).push(
           MaterialPageRoute(
-            builder: (context) => const MotivationView(
-              userName: 'Sinem',
-              completedExercises: 4,
-              activeMinutes: 10,
+            builder: (context) => MotivationView(
+              userName: userName,
+              completedExercises: currentIndex + 1,
+              activeMinutes: (currentIndex + 1) * 2,
             ),
           ),
         );
@@ -88,20 +128,46 @@ class _TrainingActiveViewState extends State<TrainingActiveView> {
           ),
         );
       }
+      
       if (mounted) {
         setState(() {
           currentIndex++;
-          progress = 0;
           isPlaying = wasPlaying;
+          _initializeTimer();
         });
       }
+    } else {
+      _finishWorkout();
+    }
+  }
+
+  void _finishWorkout() async {
+    final container = ProviderScope.containerOf(context);
+    await container.read(statsProvider.notifier).completeDay(widget.dayNumber);
+    
+    final userAsync = container.read(userProfileProvider);
+    final userName = userAsync.when(
+      data: (user) => user?.name ?? 'Şampiyon',
+      loading: () => 'Şampiyon',
+      error: (_, __) => 'Şampiyon',
+    );
+    
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Tebrikler $userName! Antrenmanı başarıyla tamamladın.'),
+          backgroundColor: const Color(0xFF00EF5B),
+        ),
+      );
+      Navigator.of(context).pop();
+      Navigator.of(context).popUntil((route) => route.isFirst || route.settings.name == '/'); 
     }
   }
   void _prevExercise() {
     if (currentIndex > 0) {
       setState(() {
         currentIndex--;
-        progress = 0;
+        _initializeTimer();
       });
     }
   }
@@ -127,13 +193,10 @@ class _TrainingActiveViewState extends State<TrainingActiveView> {
                   ),
                 ),
                 clipBehavior: Clip.hardEdge,
-                child: Image.asset(
-                  'assets/images/${exercises[currentIndex]['name']} ${widget.gender}.png',
+                child: Image.network(
+                  exercises[currentIndex].imagePath,
                   fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) => _tryAlternativeImage(
-                    'assets/images/${exercises[currentIndex]['name']} ${widget.gender}.png',
-                    context,
-                  ),
+                  errorBuilder: (context, error, stackTrace) => _buildPlaceholder(),
                 ),
               ),
             ),
@@ -184,7 +247,7 @@ class _TrainingActiveViewState extends State<TrainingActiveView> {
                       left: 25.w,
                       top: 23.h,
                       child: Text(
-                        exercises[currentIndex]['name']!,
+                        exercises[currentIndex].name,
                         style: GoogleFonts.montserrat(
                           fontWeight: FontWeight.w600,
                           fontSize: 18.sp,
@@ -215,7 +278,7 @@ class _TrainingActiveViewState extends State<TrainingActiveView> {
             Positioned(
               left: 24.w,
               right: 24.w,
-              top: 761.h,
+              bottom: 35.h,
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 crossAxisAlignment: CrossAxisAlignment.center,
@@ -242,58 +305,62 @@ class _TrainingActiveViewState extends State<TrainingActiveView> {
                     ),
                   ),
                   if (currentIndex < exercises.length - 1)
-                    Row(
-                      children: [
-                        Text(
-                          'Sıradaki Hareket',
-                          style: GoogleFonts.montserrat(
-                            fontWeight: FontWeight.w500,
-                            fontSize: 12.sp,
-                            color: const Color(0xFF000000),
-                            height: 15 / 12,
-                          ),
-                        ),
-                        SizedBox(width: 8.w),
-                        Container(
-                          padding: EdgeInsets.symmetric(horizontal: 4.w, vertical: 2.h),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFFFFFFF),
-                            border: Border.all(color: const Color(0xFFEBEBEB)),
-                            borderRadius: BorderRadius.circular(6.r),
-                          ),
-                          child: Row(
-                            children: [
-                              ClipRRect(
-                                borderRadius: BorderRadius.circular(3.r),
-                                child: Image.asset(
-                                  'assets/images/${exercises[currentIndex + 1]['name']} ${widget.gender}.png',
-                                  width: 29.w,
-                                  height: 21.w,
-                                  fit: BoxFit.cover,
-                                  errorBuilder: (context, error, stackTrace) =>
-                                      _tryAlternativeImageFixedSize(
-                                    'assets/images/${exercises[currentIndex + 1]['name']} ${widget.gender}.png',
-                                    context,
-                                  ),
-                                ),
-                              ),
-                              SizedBox(width: 4.w),
-                              Text(
-                                exercises[currentIndex + 1]['name']!.length > 18
-                                    ? '${exercises[currentIndex + 1]['name']!.substring(0, 18)}...'
-                                    : exercises[currentIndex + 1]['name']!,
+                    Flexible(
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Flexible(
+                            child: Text(
+                              'Sıradaki Hareket',
                               style: GoogleFonts.montserrat(
                                 fontWeight: FontWeight.w500,
-                                fontSize: 10.sp,
-                                color: const Color(0xFF100F0F),
-                                height: 12 / 10,
+                                fontSize: 12.sp,
+                                color: const Color(0xFF000000),
+                                height: 15 / 12,
                               ),
+                              overflow: TextOverflow.ellipsis,
                             ),
-                          ],
-                        ),
+                          ),
+                          SizedBox(width: 8.w),
+                          Container(
+                            padding: EdgeInsets.symmetric(horizontal: 4.w, vertical: 2.h),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFFFFFFF),
+                              border: Border.all(color: const Color(0xFFEBEBEB)),
+                              borderRadius: BorderRadius.circular(6.r),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                ClipRRect(
+                                  borderRadius: BorderRadius.circular(3.r),
+                                  child: Image.network(
+                                    exercises[currentIndex + 1].imagePath,
+                                    width: 29.w,
+                                    height: 21.w,
+                                    fit: BoxFit.cover,
+                                    errorBuilder: (_,__,___) => Container(width: 29.w, height: 21.w, color: Colors.grey[300]),
+                                  ),
+                                ),
+                                SizedBox(width: 4.w),
+                                Flexible(
+                                  child: Text(
+                                    exercises[currentIndex + 1].name,
+                                    style: GoogleFonts.montserrat(
+                                      fontWeight: FontWeight.w500,
+                                      fontSize: 10.sp,
+                                      color: const Color(0xFF100F0F),
+                                      height: 12 / 10,
+                                    ),
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
+                    ),
                 ],
               ),
             ),
@@ -305,44 +372,54 @@ class _TrainingActiveViewState extends State<TrainingActiveView> {
   Widget _buildProgressBar() {
     return SizedBox(
       height: 18.h,
-      child: Stack(
-        alignment: Alignment.centerLeft,
-        children: [
-          Container(
-            height: 12.h,
-            width: double.infinity,
-            decoration: BoxDecoration(
-              color: const Color(0xFFD5D5D5),
-              borderRadius: BorderRadius.circular(20.r),
-            ),
-          ),
-          FractionallySizedBox(
-            widthFactor: progress,
-            child: Container(
-              height: 12.h,
-              decoration: BoxDecoration(
-                color: const Color(0xFF06C44F),
-                borderRadius: BorderRadius.circular(20.r),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final double totalWidth = constraints.maxWidth;
+          return Stack(
+            alignment: Alignment.centerLeft,
+            children: [
+              Container(
+                height: 12.h,
+                width: totalWidth,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFD5D5D5),
+                  borderRadius: BorderRadius.circular(20.r),
+                ),
               ),
-            ),
-          ),
-          Positioned(
-            left: (342.w * progress) - 9.w,
-            child: Container(
-              width: 18.w,
-              height: 18.w,
-              decoration: const BoxDecoration(
-                color: Color(0xFF05A642),
-                shape: BoxShape.circle,
+              Container(
+                height: 12.h,
+                width: totalWidth * progress.clamp(0.0, 1.0),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF06C44F),
+                  borderRadius: BorderRadius.circular(20.r),
+                ),
               ),
-            ),
-          ),
-        ],
+              Positioned(
+                left: (totalWidth * progress.clamp(0.0, 1.0)) - 9.w,
+                child: Container(
+                  width: 18.w,
+                  height: 18.w,
+                  decoration: const BoxDecoration(
+                    color: Color(0xFF05A642),
+                    shape: BoxShape.circle,
+                  ),
+                ),
+              ),
+            ],
+          );
+        },
       ),
     );
   }
 
   Widget _buildTimerRow() {
+    final int minutes = _remainingSeconds ~/ 60;
+    final int seconds = _remainingSeconds % 60;
+    
+    final int totalRemainingSeconds = _remainingSeconds + (exercises.length - currentIndex - 1) * 30;
+    final int totalMins = totalRemainingSeconds ~/ 60;
+    final int totalSecs = totalRemainingSeconds % 60;
+
     return SizedBox(
       height: 39.h,
       child: Stack(
@@ -356,7 +433,7 @@ class _TrainingActiveViewState extends State<TrainingActiveView> {
                 width: 74.w,
                 height: 12.h,
                 child: Text(
-                  'kalan süre 6:58',
+                  'kalan süre ${totalMins.toString().padLeft(2, '0')}:${totalSecs.toString().padLeft(2, '0')}',
                   style: GoogleFonts.montserrat(
                     fontWeight: FontWeight.w300,
                     fontSize: 8.5.sp,
@@ -374,7 +451,7 @@ class _TrainingActiveViewState extends State<TrainingActiveView> {
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 Text(
-                  '10',
+                  minutes.toString().padLeft(2, '0'),
                   style: GoogleFonts.montserrat(
                     fontWeight: FontWeight.w600,
                     fontSize: 32.sp,
@@ -395,7 +472,7 @@ class _TrainingActiveViewState extends State<TrainingActiveView> {
                   ),
                 ),
                 Text(
-                  '00',
+                  seconds.toString().padLeft(2, '0'),
                   style: GoogleFonts.montserrat(
                     fontWeight: FontWeight.w600,
                     fontSize: 32.sp,
@@ -425,11 +502,7 @@ class _TrainingActiveViewState extends State<TrainingActiveView> {
         ),
         SizedBox(width: 34.w),
         GestureDetector(
-          onTap: () {
-            setState(() {
-              isPlaying = !isPlaying;
-            });
-          },
+          onTap: _togglePlayPause,
           child: isPlaying
               ? SvgPicture.asset(
                   'assets/images/pause_button_active.svg',
@@ -454,100 +527,32 @@ class _TrainingActiveViewState extends State<TrainingActiveView> {
         SizedBox(width: 34.w),
         GestureDetector(
           onTap: _nextExercise,
-          child: SvgPicture.asset(
-            'assets/images/next_exercise_button.svg',
-            width: 32.w,
-            height: 32.w,
-          ),
+          child: currentIndex == exercises.length - 1
+            ? Container(
+                width: 60.w,
+                height: 32.h,
+                decoration: BoxDecoration(
+                  color: const Color(0xFF06C44F),
+                  borderRadius: BorderRadius.circular(6.r),
+                ),
+                alignment: Alignment.center,
+                child: Text(
+                  'BİTİR',
+                  style: GoogleFonts.montserrat(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 10.sp,
+                    color: Colors.white,
+                  ),
+                ),
+              )
+            : SvgPicture.asset(
+                'assets/images/next_exercise_button.svg',
+                width: 32.w,
+                height: 32.w,
+              ),
         ),
       ],
     );
-  }
-
-  Widget _tryAlternativeImage(String imagePath, BuildContext context) {
-    String noSpacePath = imagePath.replaceFirst(' woman.png', 'woman.png')
-                                  .replaceFirst(' man.png', 'man.png');
-
-    if (noSpacePath != imagePath) {
-      return Image.asset(
-        noSpacePath,
-        fit: BoxFit.cover,
-        errorBuilder: (context, error, stackTrace) => _tryInvisibleCharacters(imagePath, context),
-      );
-    }
-    return _tryInvisibleCharacters(imagePath, context);
-  }
-
-  Widget _tryAlternativeImageFixedSize(String imagePath, BuildContext context) {
-    String noSpacePath = imagePath.replaceFirst(' woman.png', 'woman.png')
-                                  .replaceFirst(' man.png', 'man.png');
-
-    if (noSpacePath != imagePath) {
-      return Image.asset(
-        noSpacePath,
-        width: 29.w,
-        height: 21.w,
-        fit: BoxFit.cover,
-        errorBuilder: (context, error, stackTrace) => _tryInvisibleCharactersFixedSize(imagePath, context),
-      );
-    }
-    return _tryInvisibleCharactersFixedSize(imagePath, context);
-  }
-
-  Widget _tryInvisibleCharacters(String imagePath, BuildContext context) {
-    String withSepPath = imagePath.replaceFirst(' woman.png', '  woman.png')
-                                  .replaceFirst(' man.png', '  man.png');
-
-    if (withSepPath != imagePath) {
-      return Image.asset(
-        withSepPath,
-        fit: BoxFit.cover,
-        errorBuilder: (context, error, stackTrace) => _tryWomenVariant(imagePath, context),
-      );
-    }
-    return _tryWomenVariant(imagePath, context);
-  }
-
-  Widget _tryInvisibleCharactersFixedSize(String imagePath, BuildContext context) {
-    String withSepPath = imagePath.replaceFirst(' woman.png', '  woman.png')
-                                  .replaceFirst(' man.png', '  man.png');
-
-    if (withSepPath != imagePath) {
-      return Image.asset(
-        withSepPath,
-        width: 29.w,
-        height: 21.w,
-        fit: BoxFit.cover,
-        errorBuilder: (context, error, stackTrace) => _tryWomenVariantFixedSize(imagePath, context),
-      );
-    }
-    return _tryWomenVariantFixedSize(imagePath, context);
-  }
-
-  Widget _tryWomenVariant(String imagePath, BuildContext context) {
-    if (imagePath.contains('woman.png')) {
-      String womenPath = imagePath.replaceFirst('woman.png', 'women.png');
-      return Image.asset(
-        womenPath,
-        fit: BoxFit.cover,
-        errorBuilder: (context, error, stackTrace) => _buildPlaceholder(),
-      );
-    }
-    return _buildPlaceholder();
-  }
-
-  Widget _tryWomenVariantFixedSize(String imagePath, BuildContext context) {
-    if (imagePath.contains('woman.png')) {
-      String womenPath = imagePath.replaceFirst('woman.png', 'women.png');
-      return Image.asset(
-        womenPath,
-        width: 29.w,
-        height: 21.w,
-        fit: BoxFit.cover,
-        errorBuilder: (context, error, stackTrace) => _buildPlaceholderFixedSize(),
-      );
-    }
-    return _buildPlaceholderFixedSize();
   }
 
   Widget _buildPlaceholder() {

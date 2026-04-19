@@ -1,13 +1,23 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../FaqView/faq_view.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:six_pack_30/Riverpod/Controllers/user_provider.dart';
+import 'package:six_pack_30/Riverpod/Controllers/auth_controller.dart';
+import 'package:six_pack_30/Riverpod/Controllers/premium_provider.dart';
+import 'package:six_pack_30/Core/Routes/app_routes.dart';
+import 'profile_edit_view.dart';
 import '../LanguageView/language_view.dart';
+import '../FaqView/faq_view.dart';
+import '../PaywallView/paywall_view.dart';
 import '../RateAppView/rate_app_view.dart';
 import '../ShareAppView/share_app_view.dart';
-import 'profile_edit_view.dart';
-class ProfileView extends StatelessWidget {
+import '../../Riverpod/Controllers/locale_provider.dart';
+import '../../Core/Localization/translations.dart';
+
+class ProfileView extends ConsumerWidget {
   final bool isPremium;
   final VoidCallback onBackPressed;
   const ProfileView({
@@ -16,7 +26,21 @@ class ProfileView extends StatelessWidget {
     required this.onBackPressed,
   });
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final userProfile = ref.watch(userProfileProvider);
+    final user = userProfile.value;
+    final langCode = ref.watch(localeProvider).languageCode;
+    
+    final bool isLoading = userProfile.isLoading && user == null;
+    final bool isGuest = user == null && !userProfile.isLoading;
+    
+    final String displayName = isLoading 
+        ? Translations.translate('loading', langCode) 
+        : (isGuest ? 'Sinem Akın' : (user?.name ?? Translations.translate('guest', langCode)));
+        
+    final String defaultProfileImage = 'assets/images/iconstack.io - (User Circle Regular).png';
+    final bool effectiveIsPremium = isGuest ? true : isPremium;
+
     return SingleChildScrollView(
       physics: const ClampingScrollPhysics(),
       padding: EdgeInsets.only(bottom: 80.h, top: 73.h),
@@ -43,7 +67,7 @@ class ProfileView extends StatelessWidget {
                 ),
                 Expanded(
                   child: Center(
-                    child: Text('Profil',
+                    child: Text(Translations.translate('profile', langCode),
                         style: GoogleFonts.montserrat(
                             fontSize: 20.sp,
                             fontWeight: FontWeight.w600,
@@ -62,25 +86,36 @@ class ProfileView extends StatelessWidget {
               children: [
                 CircleAvatar(
                   radius: 24.r,
-                  backgroundColor: const Color(0xFFD9D9D9),
+                  backgroundColor: const Color(0xFFF3F3F3),
                   child: ClipOval(
-                    child: Image.asset(
-                      'assets/images/genderWOMAN.png',
-                      width: 100.w,
-                      height: 100.h,
-                      fit: BoxFit.cover,
-                    ),
+                    child: user?.photoUrl != null
+                        ? Image.network(
+                            user!.photoUrl!,
+                            width: 48.w,
+                            height: 48.h,
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) => Icon(
+                              Icons.person_rounded,
+                              size: 28.sp,
+                              color: const Color(0xFFADADAD),
+                            ),
+                          )
+                        : Icon(
+                            Icons.person_rounded,
+                            size: 28.sp,
+                            color: const Color(0xFFADADAD),
+                          ),
                   ),
                 ),
                 SizedBox(width: 10.w),
-                Text('Sinem Akın',
+                Text(displayName,
                     style: GoogleFonts.nunito(
                         fontSize: 20.sp,
                         fontWeight: FontWeight.w700,
                         color: Colors.black,
                         letterSpacing: -0.11.sp)),
                 const Spacer(),
-                if (isPremium)
+                if (effectiveIsPremium)
                   Container(
                     width: 110.w,
                     height: 32.h,
@@ -100,7 +135,7 @@ class ProfileView extends StatelessWidget {
                         ),
                         SizedBox(width: 4.w),
                         Text(
-                          'Premium',
+                          Translations.translate('premium', langCode),
                           style: GoogleFonts.montserrat(
                             fontSize: 14.sp,
                             fontWeight: FontWeight.w600,
@@ -120,7 +155,7 @@ class ProfileView extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Hesap Ayarları',
+                Text(Translations.translate('account_settings', langCode),
                     style: GoogleFonts.montserrat(
                         fontSize: 20.sp,
                         fontWeight: FontWeight.w700,
@@ -144,7 +179,7 @@ class ProfileView extends StatelessWidget {
                     children: [
                       _buildSettingsItem(
                           iconPath: 'assets/images/Edit_Profile_Icon_Full.svg',
-                          title: 'Profili Düzenle',
+                          title: Translations.translate('edit_profile', langCode),
                           isLast: false,
                           onTap: () {
                             Navigator.push(
@@ -156,15 +191,26 @@ class ProfileView extends StatelessWidget {
                           }),
                       _buildSettingsItem(
                           iconPath: 'assets/images/Notifications_Icon_Full.svg',
-                          title: 'Bildirimler',
-                          isLast: isPremium,
+                          title: Translations.translate('notifications', langCode),
+                          isLast: effectiveIsPremium,
                           isSwitch: true,
-                          switchValue: true),
-                      if (!isPremium)
+                          switchValue: user?.notificationsEnabled ?? true,
+                          onToggle: (val) {
+                            ref.read(userProfileProvider.notifier).updateProfile({'notificationsEnabled': val});
+                          }),
+                      if (!effectiveIsPremium)
                         _buildSettingsItem(
                             iconPath: 'assets/images/iconstack.io - (Certificate Badge   Svg).png',
                             title: 'Premium',
-                            isLast: true),
+                            isLast: true,
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => const PaywallView(),
+                                ),
+                              );
+                            }),
                     ],
                   ),
                 ),
@@ -177,7 +223,7 @@ class ProfileView extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Destek & Diğer',
+                Text(Translations.translate('support_and_other', langCode),
                     style: GoogleFonts.montserrat(
                         fontSize: 20.sp,
                         fontWeight: FontWeight.w700,
@@ -201,13 +247,16 @@ class ProfileView extends StatelessWidget {
                     children: [
                       _buildSettingsItem(
                           iconPath: 'assets/images/Health_Icon_Full.svg',
-                          title: 'App Sağlık ile Bağlan',
+                          title: Translations.translate('connect_health', langCode),
                           isLast: false,
                           isSwitch: true,
-                          switchValue: false),
+                          switchValue: user?.healthConnected ?? false,
+                          onToggle: (val) {
+                            ref.read(userProfileProvider.notifier).updateProfile({'healthConnected': val});
+                          }),
                       _buildSettingsItem(
                           iconPath: 'assets/images/Language_Icon_Full.svg',
-                          title: 'Dil Tercihleri',
+                          title: Translations.translate('language_preferences', langCode),
                           isLast: false,
                           onTap: () {
                             Navigator.push(
@@ -219,7 +268,7 @@ class ProfileView extends StatelessWidget {
                           }),
                       _buildSettingsItem(
                           iconPath: 'assets/images/Faq_Icon_Full.svg',
-                          title: 'Sıkça Sorulan Sorular',
+                          title: Translations.translate('faq', langCode),
                           isLast: false,
                           onTap: () {
                             Navigator.push(
@@ -231,7 +280,7 @@ class ProfileView extends StatelessWidget {
                           }),
                       _buildSettingsItem(
                           iconPath: 'assets/images/Rate_App_Icon_Full.svg',
-                          title: 'Bizi Değerlendir',
+                          title: Translations.translate('rate_us', langCode),
                           isLast: false,
                           onTap: () {
                             Navigator.push(
@@ -243,7 +292,7 @@ class ProfileView extends StatelessWidget {
                           }),
                       _buildSettingsItem(
                           iconPath: 'assets/images/Share_App_Icon_Full.svg',
-                          title: 'Uygulamayı Paylaş',
+                          title: Translations.translate('share_app', langCode),
                           isLast: false,
                           onTap: () {
                             Navigator.push(
@@ -255,9 +304,84 @@ class ProfileView extends StatelessWidget {
                           }),
                       _buildSettingsItem(
                           iconPath: 'assets/images/Logout_Icon_Full.svg',
-                          title: 'Çıkış Yap',
+                          title: Translations.translate('logout', langCode),
                           isLast: true,
-                          isRed: true),
+                          isRed: true,
+                          onTap: () async {
+                            await ref.read(authControllerProvider.notifier).signOut();
+                            ref.invalidate(userProfileProvider);
+                            if (context.mounted) {
+                              Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
+                            }
+                          }),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          SizedBox(height: 30.h),
+          Padding(
+            padding: EdgeInsets.symmetric(horizontal: 24.w),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  Translations.translate('legal', langCode),
+                  style: GoogleFonts.montserrat(
+                      fontSize: 20.sp,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.black,
+                      letterSpacing: -0.11.sp),
+                ),
+                SizedBox(height: 10.h),
+                Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    border: Border.all(color: const Color(0xFFF3F3F3)),
+                    borderRadius: BorderRadius.circular(15.r),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.05),
+                        offset: const Offset(0, 1),
+                        blurRadius: 2,
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    children: [
+                      _buildSettingsItem(
+                          iconPath: 'assets/images/Faq_Icon_Full.svg',
+                          title: Translations.translate('privacy_policy', langCode),
+                          isLast: false,
+                          onTap: () => launchUrl(
+                                Uri.parse('https://fly-work.com/sixpack30/privacy-policy/'),
+                                mode: LaunchMode.externalApplication,
+                              )),
+                      _buildSettingsItem(
+                          iconPath: 'assets/images/Faq_Icon_Full.svg',
+                          title: Translations.translate('terms_of_service', langCode),
+                          isLast: false,
+                          onTap: () => launchUrl(
+                                Uri.parse('https://fly-work.com/sixpack30/terms/'),
+                                mode: LaunchMode.externalApplication,
+                              )),
+                      _buildSettingsItem(
+                          iconPath: 'assets/images/Faq_Icon_Full.svg',
+                          title: Translations.translate('cookie_policy', langCode),
+                          isLast: false,
+                          onTap: () => launchUrl(
+                                Uri.parse('https://fly-work.com/sixpack30/cookies/'),
+                                mode: LaunchMode.externalApplication,
+                              )),
+                      _buildSettingsItem(
+                          iconPath: 'assets/images/Faq_Icon_Full.svg',
+                          title: Translations.translate('csae_policy', langCode),
+                          isLast: true,
+                          onTap: () => launchUrl(
+                                Uri.parse('https://fly-work.com/sixpack30/csae/'),
+                                mode: LaunchMode.externalApplication,
+                              )),
                     ],
                   ),
                 ),
@@ -276,9 +400,10 @@ class ProfileView extends StatelessWidget {
     bool switchValue = false,
     bool isRed = false,
     VoidCallback? onTap,
+    ValueChanged<bool>? onToggle,
   }) {
     return GestureDetector(
-      onTap: onTap,
+      onTap: isSwitch ? () => onToggle?.call(!switchValue) : onTap,
       child: Container(
         height: 60.h,
         padding: EdgeInsets.symmetric(horizontal: 14.w),
@@ -326,7 +451,7 @@ class ProfileView extends StatelessWidget {
           if (isRed)
             const SizedBox.shrink()
           else if (isSwitch)
-            _buildCustomSwitch(switchValue)
+            _buildCustomSwitch(switchValue, onToggle)
           else
             Icon(Icons.chevron_right,
                 size: 24.sp, color: Colors.black.withOpacity(0.27)),
@@ -335,30 +460,33 @@ class ProfileView extends StatelessWidget {
       ),
     );
   }
-  Widget _buildCustomSwitch(bool value) {
-    return Container(
-      width: 37.w,
-      height: 20.h,
-      decoration: BoxDecoration(
-        color: value ? const Color.fromRGBO(52, 47, 47, 0.96) : const Color(0xFFE2E2E2),
-        borderRadius: BorderRadius.circular(10.r),
-      ),
-      child: Stack(
-        alignment: Alignment.center,
-        children: [
-          Positioned(
-            left: value ? null : 1.58.w,
-            right: value ? 1.58.w : null,
-            child: Container(
-              width: 16.w,
-              height: 16.w,
-              decoration: const BoxDecoration(
-                color: Colors.white,
-                shape: BoxShape.circle,
+  Widget _buildCustomSwitch(bool value, ValueChanged<bool>? onToggle) {
+    return GestureDetector(
+      onTap: () => onToggle?.call(!value),
+      child: Container(
+        width: 37.w,
+        height: 20.h,
+        decoration: BoxDecoration(
+          color: value ? const Color.fromRGBO(52, 47, 47, 0.96) : const Color(0xFFE2E2E2),
+          borderRadius: BorderRadius.circular(10.r),
+        ),
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            Positioned(
+              left: value ? null : 1.58.w,
+              right: value ? 1.58.w : null,
+              child: Container(
+                width: 16.w,
+                height: 16.w,
+                decoration: const BoxDecoration(
+                  color: Colors.white,
+                  shape: BoxShape.circle,
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

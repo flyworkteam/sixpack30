@@ -1,127 +1,65 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-class ProgressView extends StatefulWidget {
+import '../../Riverpod/Controllers/stats_provider.dart';
+import '../../Riverpod/Controllers/workout_provider.dart';
+import '../../Core/Models/stats_model.dart';
+import '../../Core/Models/workout_model.dart';
+import '../../Core/Services/health_service.dart';
+import '../../Riverpod/Controllers/user_provider.dart';
+import '../../Riverpod/Controllers/locale_provider.dart';
+import '../../Core/Localization/translations.dart';
+
+class ProgressView extends ConsumerStatefulWidget {
   final VoidCallback? onBackPressed;
   const ProgressView({super.key, this.onBackPressed});
   @override
-  State<ProgressView> createState() => _ProgressViewState();
+  ConsumerState<ProgressView> createState() => _ProgressViewState();
 }
-class _ProgressViewState extends State<ProgressView> {
+
+class _ProgressViewState extends ConsumerState<ProgressView> {
   int _selectedTab = 2;
-  double _waterIntake = 0.6;
-  String _selectedStepGoal = '';
-  final List<String> _stepGoals = [
-    'Günlük 6 bin',
-    'Günlük 10 bin',
-    'Haftada 40 bin',
-    'Haftada 90 bin',
-  ];
-  OverlayEntry? _stepGoalOverlay;
-  final GlobalKey _hedefSecKey = GlobalKey();
+  int _selectedStepGoalValue = 10000;
+
   @override
-  void dispose() {
-    _stepGoalOverlay?.remove();
-    super.dispose();
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final user = ref.read(userProfileProvider).value;
+      if (user?.healthConnected == true) {
+        HealthService().syncHealthData().then((_) {
+          ref.invalidate(statsProvider);
+        });
+      }
+    });
   }
-  void _openStepGoalDropdown() {
-    final box = _hedefSecKey.currentContext?.findRenderObject() as RenderBox?;
-    if (box == null) return;
-    final pos = box.localToGlobal(Offset.zero);
-    _stepGoalOverlay = OverlayEntry(
-      builder: (_) => Stack(
-        children: [
-          Positioned.fill(
-            child: GestureDetector(
-              onTap: _closeStepGoalDropdown,
-              behavior: HitTestBehavior.opaque,
-              child: const SizedBox.expand(),
-            ),
-          ),
-          Positioned(
-            left: pos.dx,
-            top: pos.dy - 87,
-            child: Material(
-              color: Colors.transparent,
-              child: _buildGoalDropdown(),
-            ),
-          ),
-        ],
-      ),
-    );
-    Overlay.of(context).insert(_stepGoalOverlay!);
+
+  List<Map<String, dynamic>> _getDynamicWeekDays(List<String> completedAtDates, String langCode) {
+    final now = DateTime.now();
+    final firstDayOfWeek = now.subtract(Duration(days: now.weekday - 1));
+    final List<String> dayInitials = Translations.translate('day_initials', langCode).split(',');
+
+    return List.generate(7, (index) {
+      final day = firstDayOfWeek.add(Duration(days: index));
+      final String dateStr = day.toIso8601String().split('T')[0];
+      final String letter = dayInitials[index];
+      return {
+        'letter': letter,
+        'num': day.day.toString(),
+        'done': completedAtDates.contains(dateStr),
+      };
+    });
   }
-  void _closeStepGoalDropdown() {
-    _stepGoalOverlay?.remove();
-    _stepGoalOverlay = null;
-  }
-  Widget _buildGoalDropdown() {
-    return Container(
-      width: 85,
-      height: 82,
-      decoration: BoxDecoration(
-        color: const Color(0xFFECECEC),
-        border: Border.all(color: const Color(0x1CEBEBEB)),
-        borderRadius: BorderRadius.circular(6),
-      ),
-      child: Stack(
-        children: [
-          Positioned(
-            left: 0,
-            top: 20,
-            child: Container(
-              width: 85,
-              height: 19,
-              color: const Color(0x6DD0CDCD),
-            ),
-          ),
-          ...{
-            'Günlük 6 bin': 6.0,
-            'Günlük 10 bin': 24.0,
-            'Haftada 40 bin': 43.0,
-            'Haftada 90 bin': 63.0,
-          }.entries.map(
-            (e) => Positioned(
-              left: 0,
-              top: e.value,
-              child: GestureDetector(
-                onTap: () {
-                  setState(() => _selectedStepGoal = e.key);
-                  _closeStepGoalDropdown();
-                },
-                child: Container(
-                  width: 85,
-                  height: 17,
-                  alignment: Alignment.center,
-                  child: Text(
-                    e.key,
-                    style: GoogleFonts.montserrat(
-                      fontSize: 10,
-                      fontWeight: FontWeight.w500,
-                      color: const Color(0xFF0D0D0D),
-                      letterSpacing: -0.011 * 10,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-  final List<Map<String, dynamic>> _weekDays = [
-    {'letter': 'P', 'num': '23', 'done': true},
-    {'letter': 'S', 'num': '24', 'done': true},
-    {'letter': 'Ç', 'num': '25', 'done': true},
-    {'letter': 'P', 'num': '26', 'done': false},
-    {'letter': 'C', 'num': '27', 'done': false},
-    {'letter': 'C', 'num': '28', 'done': false},
-    {'letter': 'P', 'num': '29', 'done': false},
-  ];
+
   @override
   Widget build(BuildContext context) {
+    final statsAsync = ref.watch(statsProvider);
+    final workoutsAsync = ref.watch(workoutProvider);
+    final langCode = ref.watch(localeProvider).languageCode;
+    final workoutList = workoutsAsync.value;
+
     return Scaffold(
       backgroundColor: Colors.white,
       body: Stack(
@@ -129,32 +67,77 @@ class _ProgressViewState extends State<ProgressView> {
           SingleChildScrollView(
             physics: const ClampingScrollPhysics(),
             padding: EdgeInsets.only(bottom: 80.h),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                SizedBox(height: 54.h),
-                SizedBox(height: 20.h),
-                _buildHeader(),
-                SizedBox(height: 30.h),
-                _buildSectionTitle('Günün Antrenmanı'),
-                SizedBox(height: 20.h),
-                _buildWorkoutCard(),
-                SizedBox(height: 30.h),
-                _buildStreakCard(),
-                SizedBox(height: 40.h),
-                _buildSectionTitle('Antrenman Özeti'),
-                SizedBox(height: 20.h),
-                _buildAntrenmanOzeti(),
-                SizedBox(height: 30.h),
-                _buildSectionTitle('Performans & İlerleme'),
-                SizedBox(height: 20.h),
-                _buildPerformansIlerleme(),
-                SizedBox(height: 15.h),
-                _buildStatsFooter(),
-                SizedBox(height: 20.h),
-                _buildActivityRow(),
-                SizedBox(height: 20.h),
-              ],
+            child: statsAsync.when(
+              loading: () => SizedBox(
+                height: 1.sh,
+                child: const Center(
+                  child: CircularProgressIndicator(color: Color(0xFF06C44F)),
+                ),
+              ),
+              error: (err, st) => Center(child: Text('Veri yüklenemedi: $err')),
+              data: (stats) {
+                final bool isGuest = stats == null;
+                final currentWeekDays = _getDynamicWeekDays(
+                  stats?.completedAtDates ?? [],
+                  langCode,
+                );
+
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    SizedBox(height: 54.h),
+                    SizedBox(height: 20.h),
+                    _buildHeader(langCode),
+                    SizedBox(height: 30.h),
+                    _buildSectionTitle(Translations.translate('daily_workout', langCode)),
+                    SizedBox(height: 20.h),
+                    _buildWorkoutCard(
+                      title: isGuest
+                          ? Translations.translate('activation', langCode)
+                          : (workoutList != null && workoutList.isNotEmpty
+                                ? Translations.translateWorkoutTitle(workoutList[0].title, langCode)
+                                : Translations.translate('activation', langCode)),
+                      isGuest: isGuest,
+                      workout: workoutList != null && workoutList.isNotEmpty
+                          ? workoutList[0]
+                          : null,
+                      langCode: langCode,
+                    ),
+                    SizedBox(height: 30.h),
+                    _buildStreakCard(
+                      streak: stats?.streak ?? 0,
+                      weekDays: currentWeekDays,
+                      langCode: langCode,
+                    ),
+                    SizedBox(height: 40.h),
+                    _buildSectionTitle(Translations.translate('workout_summary', langCode)),
+                    SizedBox(height: 20.h),
+                    _buildAntrenmanOzeti(stats, langCode),
+                    SizedBox(height: 30.h),
+                    _buildSectionTitle(Translations.translate('performance_progress', langCode)),
+                    SizedBox(height: 20.h),
+                    _buildPerformansIlerleme(stats, langCode),
+                    SizedBox(height: 15.h),
+                    _buildStatsFooter(stats, langCode),
+                    SizedBox(height: 15.h),
+                    _buildDetailedHealthStats(stats, langCode),
+                    SizedBox(height: 20.h),
+                    Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 24.w),
+                      child: Row(
+                        children: [
+                          Expanded(child: _buildAdimCard(stats?.steps ?? 0, langCode)),
+                          SizedBox(width: 12.w),
+                          Expanded(
+                            child: _buildSuIcCard(stats?.waterIntake ?? 0.0, langCode),
+                          ),
+                        ],
+                      ),
+                    ),
+                    SizedBox(height: 20.h),
+                  ],
+                );
+              },
             ),
           ),
           if (widget.onBackPressed == null)
@@ -163,7 +146,8 @@ class _ProgressViewState extends State<ProgressView> {
       ),
     );
   }
-  Widget _buildHeader() {
+
+  Widget _buildHeader(String langCode) {
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: 24.w),
       child: Row(
@@ -187,7 +171,7 @@ class _ProgressViewState extends State<ProgressView> {
           SizedBox(width: 7.w),
           Expanded(
             child: Text(
-              'İlerleme',
+              Translations.translate('progress', langCode),
               textAlign: TextAlign.center,
               style: GoogleFonts.montserrat(
                 fontSize: 20.sp,
@@ -203,6 +187,7 @@ class _ProgressViewState extends State<ProgressView> {
       ),
     );
   }
+
   Widget _buildSectionTitle(String title) {
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: 24.w),
@@ -218,7 +203,13 @@ class _ProgressViewState extends State<ProgressView> {
       ),
     );
   }
-  Widget _buildWorkoutCard() {
+
+  Widget _buildWorkoutCard({
+    required String title,
+    required bool isGuest,
+    required String langCode,
+    WorkoutModel? workout,
+  }) {
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: 24.w),
       child: Stack(
@@ -246,7 +237,9 @@ class _ProgressViewState extends State<ProgressView> {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Text(
-                        'Aktivasyon',
+                        title,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                         style: GoogleFonts.montserrat(
                           fontSize: 16.sp,
                           fontWeight: FontWeight.w600,
@@ -260,11 +253,15 @@ class _ProgressViewState extends State<ProgressView> {
                         runSpacing: 9.h,
                         children: [
                           _buildWorkoutBadge(
-                            '8 Egzersiz',
+                            workout != null
+                                ? '${workout.exerciseCount ?? 8} ${Translations.translate('exercises_count', langCode)}'
+                                : '8 ${Translations.translate('exercises_count', langCode)}',
                             'assets/images/Exercise_Body_Icon.svg',
                           ),
                           _buildWorkoutBadge(
-                            'Bölge:Karın',
+                            workout != null && workout.difficulty != null 
+                              ? '${Translations.translate('level', langCode)}: ${workout.difficulty}' 
+                              : '${Translations.translate('focus_area', langCode)}: ${Translations.translate('abs', langCode)}',
                             'assets/images/Abs_Zone_Icon.svg',
                           ),
                         ],
@@ -275,11 +272,15 @@ class _ProgressViewState extends State<ProgressView> {
                         runSpacing: 9.h,
                         children: [
                           _buildWorkoutBadge(
-                            '30 Dakika',
+                            workout != null
+                                ? '${(workout.duration / 60).toInt()} ${Translations.translate('minutes', langCode)}'
+                                : '30 ${Translations.translate('minutes', langCode)}',
                             'assets/images/Duration_Badge_Icon.svg',
                           ),
                           _buildWorkoutBadge(
-                            '250 Kcal',
+                            workout != null
+                                ? '${workout.calories ?? 200} Kcal'
+                                : '250 Kcal',
                             'assets/images/Calorie_Badge_Icon.svg',
                           ),
                         ],
@@ -287,7 +288,7 @@ class _ProgressViewState extends State<ProgressView> {
                     ],
                   ),
                 ),
-                SizedBox(width: 100.w),
+                SizedBox(width: 110.w),
               ],
             ),
           ),
@@ -308,8 +309,8 @@ class _ProgressViewState extends State<ProgressView> {
 
   Widget _buildWorkoutBadge(String label, String assetPath) {
     return Container(
-      width: 88.w,
-      padding: EdgeInsets.symmetric(horizontal: 5.w, vertical: 4.h),
+      constraints: BoxConstraints(maxWidth: 100.w),
+      padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 4.h),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(10.r),
@@ -332,20 +333,29 @@ class _ProgressViewState extends State<ProgressView> {
               fit: BoxFit.contain,
             ),
           SizedBox(width: 4.w),
-          Text(
-            label,
-            style: GoogleFonts.montserrat(
-              fontSize: 10.sp,
-              fontWeight: FontWeight.w500,
-              color: const Color(0xFF100F0F),
-              height: 1.0,
+          Flexible(
+            child: Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: GoogleFonts.montserrat(
+                fontSize: 10.sp,
+                fontWeight: FontWeight.w500,
+                color: const Color(0xFF100F0F),
+                height: 1.0,
+              ),
             ),
           ),
         ],
       ),
     );
   }
-  Widget _buildStreakCard() {
+
+  Widget _buildStreakCard({
+    required int streak,
+    required List<Map<String, dynamic>> weekDays,
+    required String langCode,
+  }) {
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: 24.w),
       child: Container(
@@ -373,7 +383,7 @@ class _ProgressViewState extends State<ProgressView> {
                         ),
                         SizedBox(height: 5.82.h),
                         Text(
-                          '3',
+                          '$streak',
                           style: GoogleFonts.montserrat(
                             fontSize: 20.sp,
                             fontWeight: FontWeight.w500,
@@ -383,7 +393,7 @@ class _ProgressViewState extends State<ProgressView> {
                         ),
                         SizedBox(height: 3.h),
                         Text(
-                          'Günlük Seri',
+                          Translations.translate('streak', langCode),
                           style: GoogleFonts.montserrat(
                             fontSize: 10.sp,
                             fontWeight: FontWeight.w500,
@@ -398,12 +408,12 @@ class _ProgressViewState extends State<ProgressView> {
                       width: 322.w,
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: List.generate(_weekDays.length, (i) {
-                          final bool done = _weekDays[i]['done'] as bool;
+                        children: List.generate(weekDays.length, (i) {
+                          final bool done = weekDays[i]['done'] as bool;
                           return Column(
                             children: [
                               Text(
-                                _weekDays[i]['letter'] as String,
+                                weekDays[i]['letter'] as String,
                                 style: GoogleFonts.montserrat(
                                   fontSize: 16.sp,
                                   fontWeight: FontWeight.w500,
@@ -413,7 +423,7 @@ class _ProgressViewState extends State<ProgressView> {
                               ),
                               SizedBox(height: 8.h),
                               _buildDayCircle(
-                                num: _weekDays[i]['num'] as String,
+                                num: weekDays[i]['num'] as String,
                                 done: done,
                               ),
                             ],
@@ -431,15 +441,13 @@ class _ProgressViewState extends State<ProgressView> {
               child: Transform.rotate(
                 angle: -3.88 * 3.14159 / 180,
                 child: Container(
-                  width: 111.15.w,
-                  height: 18.h,
-                  alignment: Alignment.center,
+                  padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(4.r),
                   ),
                   child: Text(
-                    'Harika Gidiyorsun 🎉',
+                    Translations.translate('keep_going', langCode),
                     style: GoogleFonts.montserrat(
                       fontSize: 10.sp,
                       fontWeight: FontWeight.w500,
@@ -455,6 +463,7 @@ class _ProgressViewState extends State<ProgressView> {
       ),
     );
   }
+
   Widget _buildDayCircle({required String num, required bool done}) {
     return SizedBox(
       width: 34.w,
@@ -491,7 +500,8 @@ class _ProgressViewState extends State<ProgressView> {
       ),
     );
   }
-  Widget _buildAntrenmanOzeti() {
+
+  Widget _buildAntrenmanOzeti(UserStats? stats, String langCode) {
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: 24.w),
       child: Column(
@@ -500,18 +510,20 @@ class _ProgressViewState extends State<ProgressView> {
             children: [
               _buildOzetiCard(
                 width: 164.w,
-                label: 'Tamamlanan Günler',
+                label: Translations.translate('completed_days', langCode),
                 labelColor: const Color(0xFF000000),
-                value: '12/30',
+                value: stats == null ? '0/30' : '${stats.completedDays.length}/30',
                 valueColor: const Color(0xFF06C44F),
                 isGreen: false,
               ),
               SizedBox(width: 13.w),
               _buildOzetiCard(
                 width: 164.w,
-                label: 'Yakılan Kalori',
+                label: Translations.translate('calories_burned', langCode),
                 labelColor: const Color(0xFFEEEEEE),
-                value: '480 Kcal',
+                value: stats == null
+                    ? '0 Kcal'
+                    : '${(stats.completedDays.length * 250).toInt()} Kcal',
                 valueColor: Colors.white,
                 isGreen: true,
                 overlayLeft: 122,
@@ -530,9 +542,9 @@ class _ProgressViewState extends State<ProgressView> {
             children: [
               _buildOzetiCard(
                 width: 213.w,
-                label: 'Hareket Sayısı',
+                label: Translations.translate('total_moves', langCode) ?? 'Hareket Sayısı',
                 labelColor: const Color(0xFF000000),
-                value: '46',
+                value: stats == null ? '0' : '${stats.totalMoves}',
                 valueColor: const Color(0xFF06C44F),
                 isGreen: false,
                 overlayLeft: 64,
@@ -545,13 +557,17 @@ class _ProgressViewState extends State<ProgressView> {
                 ),
               ),
               SizedBox(width: 9.w),
-              _buildSureCard(),
+              _buildSureCard(
+                value: stats == null ? '0 ${Translations.translate('minutes', langCode)}' : '${stats.totalDuration} ${Translations.translate('minutes', langCode)}',
+                langCode: langCode,
+              ),
             ],
           ),
         ],
       ),
     );
   }
+
   Widget _buildOzetiCard({
     required double width,
     required String label,
@@ -640,7 +656,8 @@ class _ProgressViewState extends State<ProgressView> {
       ),
     );
   }
-  Widget _buildSureCard() {
+
+  Widget _buildSureCard({required String value, required String langCode}) {
     return ClipRRect(
       borderRadius: BorderRadius.circular(10.r),
       child: Container(
@@ -657,7 +674,7 @@ class _ProgressViewState extends State<ProgressView> {
               left: 8.w,
               top: 11.h,
               child: Text(
-                'Süre',
+                Translations.translate('duration', langCode) ?? 'Süre',
                 style: GoogleFonts.montserrat(
                   fontSize: 12.sp,
                   fontWeight: FontWeight.w500,
@@ -682,7 +699,7 @@ class _ProgressViewState extends State<ProgressView> {
                       fit: BoxFit.contain,
                     ),
                     Text(
-                      '40 Dk',
+                      value,
                       style: GoogleFonts.montserrat(
                         fontSize: 12.sp,
                         fontWeight: FontWeight.w600,
@@ -699,14 +716,15 @@ class _ProgressViewState extends State<ProgressView> {
       ),
     );
   }
-  Widget _buildPerformansIlerleme() {
+
+  Widget _buildPerformansIlerleme(UserStats? stats, String langCode) {
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: 24.w),
       child: Column(
         children: [
           _buildListCard(
-            label: 'Antrenman Tamamlama Oranın',
-            value: '%72',
+            label: Translations.translate('completion_rate', langCode),
+            value: stats == null ? '%0' : '%${((stats.completedDays.length / 30) * 100).toInt()}',
             iconWidget: SizedBox(
               width: 54.w,
               height: 54.h,
@@ -722,7 +740,7 @@ class _ProgressViewState extends State<ProgressView> {
                     width: 54.w - 3.25.w,
                     height: 54.w - 3.25.w,
                     child: CircularProgressIndicator(
-                      value: 0.72,
+                      value: stats == null ? 0.0 : (stats.completedDays.length / 30),
                       strokeWidth: 3.3.sp,
                       backgroundColor: Colors.transparent,
                       strokeCap: StrokeCap.round,
@@ -743,14 +761,14 @@ class _ProgressViewState extends State<ProgressView> {
           ),
           SizedBox(height: 15.h),
           _buildListCard(
-            label: 'Toplam Yakılan Kalori',
-            value: '2100 Kcal',
+            label: Translations.translate('total_burned_calories', langCode),
+            value: stats == null ? '0 Kcal' : '${stats.totalKcal.toInt()} Kcal',
             iconWidget: SizedBox(
               width: 54.w,
               height: 54.h,
               child: Stack(
                 children: [
-                   Positioned(
+                  Positioned(
                     top: 10.h,
                     left: 0,
                     right: 0,
@@ -775,70 +793,161 @@ class _ProgressViewState extends State<ProgressView> {
               ),
             ),
           ),
-          SizedBox(height: 15.h),
-          Row(
-            children: [
-              _buildSmallCard(
-                title: 'Kalp Atışın',
-                bottomValue: '82',
-                iconAsset: 'assets/images/Heart_Plus_Icon.svg',
-                chartAsset: 'assets/images/Heart_Rhythm_Chart.svg',
-              ),
-              SizedBox(width: 14.w),
-              _buildSmallCard(
-                title: 'Mevcut Ağırlık',
-                value: '62 Kg',
-                subValue: '-3 Kg',
-                iconAsset: 'assets/images/Current_Weight_Icon_16.svg',
-              ),
-              SizedBox(width: 14.w),
-              _buildSmallCard(
-                title: 'Yağ Oranın',
-                value: '%12',
-                subValue: 'Az',
-                iconAsset: 'assets/images/Body_Fat_Icon.svg',
-                iconInContainer: false,
-              ),
-            ],
-          ),
-          SizedBox(height: 15.h),
-          _buildListCard(
-            label: 'Uykuda Geçirilen Süre',
-            value: '10 Saat',
-            iconWidget: SizedBox(
-              width: 54.w,
-              height: 54.h,
-              child: Stack(
-                children: [
-                  Positioned(
-                    top: 10.h,
-                    left: 0,
-                    right: 0,
-                    child: SvgPicture.asset(
-                      'assets/images/Total_Calories_Chart.svg',
-                      width: 54.w,
-                      height: 54.h,
-                      fit: BoxFit.contain,
-                    ),
-                  ),
-                  Positioned(
-                    top: 21.h,
-                    left: 11.w,
-                    child: SvgPicture.asset(
-                      'assets/images/Sleep_Moon_Icon.svg',
-                      width: 32.w,
-                      height: 32.h,
-                      fit: BoxFit.contain,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
         ],
       ),
     );
   }
+
+  Widget _buildStatsFooter(UserStats? stats, String langCode) {
+    if (stats == null) return const SizedBox.shrink();
+
+    final String bpm = '${stats.bpm}';
+    final String weight = '${stats.weight.toInt()} Kg';
+    final String weightChange = stats.weightLost > 0 ? '-${stats.weightLost.toInt()} Kg' : '0 Kg';
+    final String fatRate = '%${stats.fatRate}';
+
+    String fatStatus = 'Normal';
+    if (stats.fatRate > 0 && stats.fatRate <= 10) {
+      fatStatus = 'Az';
+    } else if (stats.fatRate >= 20) {
+      fatStatus = 'Fazla';
+    }
+
+    return Column(
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            _buildSmallCard(
+              title: Translations.translate('heart_rate', langCode),
+              bottomValue: bpm,
+              iconAsset: 'assets/images/Heart_Plus_Icon.svg',
+              chartAsset: 'assets/images/Heart_Rhythm_Chart.svg',
+            ),
+            SizedBox(width: 14.w),
+            _buildSmallCard(
+              title: Translations.translate('current_weight', langCode),
+              value: weight,
+              subValue: weightChange,
+              iconAsset: 'assets/images/Current_Weight_Icon_16.svg',
+            ),
+            SizedBox(width: 14.w),
+            _buildSmallCard(
+              title: Translations.translate('fat_rate', langCode),
+              value: fatRate,
+              subValue: fatStatus,
+              iconAsset: 'assets/images/Body_Fat_Icon.svg',
+              iconInContainer: false,
+            ),
+          ],
+        ),
+        SizedBox(height: 15.h),
+        _buildListCard(
+          label: Translations.translate('sleep_duration', langCode),
+          value: stats.sleepDuration,
+          iconWidget: SizedBox(
+            width: 54.w,
+            height: 54.h,
+            child: Stack(
+              children: [
+                Positioned(
+                  top: 10.h,
+                  left: 0,
+                  right: 0,
+                  child: SvgPicture.asset(
+                    'assets/images/Total_Calories_Chart.svg',
+                    width: 54.w,
+                    height: 54.h,
+                    fit: BoxFit.contain,
+                  ),
+                ),
+                Positioned(
+                  top: 21.h,
+                  left: 11.w,
+                  child: SvgPicture.asset(
+                    'assets/images/Sleep_Moon_Icon.svg',
+                    width: 32.w,
+                    height: 32.h,
+                    fit: BoxFit.contain,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildDetailedHealthStats(UserStats? stats, String langCode) {
+    if (stats == null) return const SizedBox.shrink();
+
+    final double weightDiff = (stats.initialWeight - stats.weight);
+    final displayedWeightLoss = weightDiff < 0 ? 0.0 : weightDiff;
+    
+    final weightLossGoal = (stats.initialWeight - stats.targetWeight).abs();
+    final weightLossProgress = weightLossGoal > 0
+        ? (displayedWeightLoss / weightLossGoal).clamp(0.0, 1.0)
+        : 0.0;
+
+    final waterProgress = (stats.waterIntake / 3.0).clamp(0.0, 1.0);
+    final muscleProgress = (stats.muscleMass / 100.0).clamp(0.0, 1.0);
+
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: 24.w),
+      child: Container(
+        width: 345.w,
+        height: 148.h,
+        decoration: BoxDecoration(
+          color: const Color(0xFFF7F7F7),
+          borderRadius: BorderRadius.circular(15.r),
+          border: Border.all(color: const Color(0xFFF2F2F2), width: 1),
+        ),
+        child: Padding(
+          padding: EdgeInsets.only(top: 17.h),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildStatColumn(
+                label: Translations.translate('weight_lost', langCode),
+                valuePart1: '-${displayedWeightLoss.toStringAsFixed(1)}',
+                valuePart2: ' ${Translations.translate('weight_unit', langCode) ?? 'Kg'}',
+                valuePart1Color: const Color(0xFF06C44F),
+                valuePart2Color: Colors.black,
+                progressColor: const Color(0xFF06C44F),
+                progressValue: weightLossProgress,
+                iconAsset:
+                    'assets/images/iconstack.io - (Scale Light Line) (1).png',
+                iconColor: const Color(0xFF06C44F),
+              ),
+              _buildStatColumn(
+                label: Translations.translate('body_water', langCode),
+                valuePart1: '%${(stats.waterIntake / 3.0 * 100).toInt()}',
+                valuePart1Color: const Color(0xFF55C5FC),
+                progressColor: const Color(0xFF55C5FC),
+                progressValue: waterProgress,
+                iconAsset: 'assets/images/iconstack.io - (Water Drop 1).png',
+                iconColor: const Color(0xFF55C5FC),
+              ),
+              _buildStatColumn(
+                label: Translations.translate('muscle_rate', langCode),
+                valuePart1: '%${stats.muscleMass.toInt()}',
+                valuePart1Color: const Color(0xFFFBCF33),
+                progressColor: const Color(0xFFFBCF33),
+                progressValue: muscleProgress,
+                iconAsset:
+                    'assets/images/iconstack.io - (Body Part Six Pack) (1).png',
+                iconColor: const Color(0xFFFBCF33),
+                showArrow: true,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildListCard({
     required String label,
     required String value,
@@ -890,6 +999,7 @@ class _ProgressViewState extends State<ProgressView> {
       ),
     );
   }
+
   Widget _buildSmallCard({
     required String title,
     String value = '',
@@ -972,7 +1082,7 @@ class _ProgressViewState extends State<ProgressView> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   SizedBox(
-                    width: 60.w,
+                    width: 80.w,
                     child: Text(
                       title,
                       style: GoogleFonts.montserrat(
@@ -982,6 +1092,8 @@ class _ProgressViewState extends State<ProgressView> {
                         height: 1.2,
                         letterSpacing: -0.11.sp,
                       ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
                   SizedBox(height: 7.h),
@@ -1037,18 +1149,18 @@ class _ProgressViewState extends State<ProgressView> {
                             ),
                     )
                   : (iconAsset.endsWith('.svg')
-                      ? SvgPicture.asset(
-                          iconAsset,
-                          width: 20.w,
-                          height: 20.h,
-                          fit: BoxFit.contain,
-                        )
-                      : Image.asset(
-                          iconAsset,
-                          width: 20.w,
-                          height: 20.h,
-                          fit: BoxFit.contain,
-                        )),
+                        ? SvgPicture.asset(
+                            iconAsset,
+                            width: 20.w,
+                            height: 20.h,
+                            fit: BoxFit.contain,
+                          )
+                        : Image.asset(
+                            iconAsset,
+                            width: 20.w,
+                            height: 20.h,
+                            fit: BoxFit.contain,
+                          )),
             ),
           if (bottomValue != null)
             Positioned(
@@ -1068,59 +1180,7 @@ class _ProgressViewState extends State<ProgressView> {
       ),
     );
   }
-  Widget _buildStatsFooter() {
-    return Padding(
-      padding: EdgeInsets.symmetric(horizontal: 24.w),
-      child: Container(
-        width: 345.w,
-        height: 148.h,
-        decoration: BoxDecoration(
-          color: const Color(0xFFF7F7F7),
-          borderRadius: BorderRadius.circular(15.r),
-          border: Border.all(color: const Color(0xFFF2F2F2), width: 1),
-        ),
-        child: Padding(
-          padding: EdgeInsets.only(top: 17.h),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildStatColumn(
-                label: 'Verilen Kilo',
-                valuePart1: '-3',
-                valuePart2: ' Kilo',
-                valuePart1Color: const Color(0xFF06C44F),
-                valuePart2Color: Colors.black,
-                progressColor: const Color(0xFF06C44F),
-                progressValue: 0.75,
-                iconAsset: 'assets/images/iconstack.io - (Scale Light Line) (1).png',
-                iconColor: const Color(0xFF06C44F),
-              ),
-              _buildStatColumn(
-                label: 'Vücut Suyu',
-                valuePart1: '%45',
-                valuePart1Color: const Color(0xFF55C5FC),
-                progressColor: const Color(0xFF55C5FC),
-                progressValue: 0.45,
-                iconAsset: 'assets/images/iconstack.io - (Water Drop 1).png',
-                iconColor: const Color(0xFF55C5FC),
-              ),
-              _buildStatColumn(
-                label: 'Kas Oranı',
-                valuePart1: '%10',
-                valuePart1Color: const Color(0xFFFBCF33),
-                progressColor: const Color(0xFFFBCF33),
-                progressValue: 0.82,
-                iconAsset: 'assets/images/iconstack.io - (Body Part Six Pack) (1).png',
-                iconColor: const Color(0xFFFBCF33),
-                showArrow: true,
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
+
   Widget _buildStatColumn({
     required String label,
     required String valuePart1,
@@ -1134,16 +1194,17 @@ class _ProgressViewState extends State<ProgressView> {
     bool showArrow = false,
   }) {
     return SizedBox(
-      width: 75.w,
+      width: 90.w,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.center,
         mainAxisSize: MainAxisSize.min,
         children: [
           Text(
             label,
-            maxLines: 1,
-            softWrap: false,
-            overflow: TextOverflow.visible,
+            maxLines: 2,
+            softWrap: true,
+            textAlign: TextAlign.center,
+            overflow: TextOverflow.ellipsis,
             style: GoogleFonts.montserrat(
               fontSize: 12.sp,
               fontWeight: FontWeight.w500,
@@ -1236,21 +1297,10 @@ class _ProgressViewState extends State<ProgressView> {
       ),
     );
   }
-  Widget _buildActivityRow() {
-    return Padding(
-      padding: EdgeInsets.symmetric(horizontal: 24.w),
-      child: Row(
-        children: [
-          Expanded(child: _buildAdimCard()),
-          SizedBox(width: 12.w),
-          Expanded(child: _buildSuIcCard()),
-        ],
-      ),
-    );
-  }
-  Widget _buildAdimCard() {
+
+  Widget _buildAdimCard(int steps, String langCode) {
     return Container(
-      height: 95.h,
+      height: 125.h,
       padding: EdgeInsets.all(12.w),
       decoration: BoxDecoration(
         color: Colors.white,
@@ -1261,7 +1311,7 @@ class _ProgressViewState extends State<ProgressView> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Adım',
+            Translations.translate('steps', langCode),
             style: GoogleFonts.montserrat(
               fontSize: 13.sp,
               fontWeight: FontWeight.bold,
@@ -1281,7 +1331,7 @@ class _ProgressViewState extends State<ProgressView> {
                       width: 44.w,
                       height: 44.h,
                       child: CircularProgressIndicator(
-                        value: 0.4,
+                        value: (steps / _selectedStepGoalValue).clamp(0.0, 1.0),
                         strokeWidth: 3.5.sp,
                         color: const Color(0xFF06C44F),
                         backgroundColor: const Color(0xFFF2F2F2),
@@ -1297,9 +1347,21 @@ class _ProgressViewState extends State<ProgressView> {
                 ),
               ),
               const Spacer(),
-              GestureDetector(
-                key: _hedefSecKey,
-                onTap: _openStepGoalDropdown,
+              PopupMenuButton<int>(
+                offset: const Offset(
+                  0,
+                  -100,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10.r),
+                ),
+                onSelected: (val) => setState(() => _selectedStepGoalValue = val),
+                itemBuilder: (context) => [
+                  _buildPopupItem('Günlük 6 bin', 6000, isSelected: _selectedStepGoalValue == 6000),
+                  _buildPopupItem('Günlük 10 bin', 10000, isSelected: _selectedStepGoalValue == 10000),
+                  _buildPopupItem('Haftada 40 bin', 40000, isSelected: _selectedStepGoalValue == 40000),
+                  _buildPopupItem('Haftada 90 bin', 90000, isSelected: _selectedStepGoalValue == 90000),
+                ],
                 child: Container(
                   width: 85.w,
                   height: 22.h,
@@ -1315,7 +1377,7 @@ class _ProgressViewState extends State<ProgressView> {
                     borderRadius: BorderRadius.circular(10.r),
                   ),
                   child: Text(
-                    'Hedef seç',
+                    Translations.translate('select_goal', langCode),
                     maxLines: 1,
                     overflow: TextOverflow.visible,
                     style: GoogleFonts.montserrat(
@@ -1334,9 +1396,39 @@ class _ProgressViewState extends State<ProgressView> {
       ),
     );
   }
-  Widget _buildSuIcCard() {
+
+  PopupMenuItem<int> _buildPopupItem(
+    String label,
+    int value, {
+    bool isSelected = false,
+  }) {
+    return PopupMenuItem<int>(
+      value: value,
+      height: 35.h,
+      child: Container(
+        padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+        decoration: BoxDecoration(
+          color: isSelected ? const Color(0xFFD9D9D9) : Colors.transparent,
+          borderRadius: BorderRadius.circular(4.r),
+        ),
+        child: Center(
+          child: Text(
+            label,
+            style: GoogleFonts.montserrat(
+              fontSize: 10.sp,
+              fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+              color: Colors.black,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSuIcCard(double water, String langCode) {
+    final progressPercent = (water / 2.5).clamp(0.0, 1.0);
     return Container(
-      height: 95.h,
+      height: 125.h, 
       padding: EdgeInsets.all(12.w),
       decoration: BoxDecoration(
         color: Colors.white,
@@ -1347,7 +1439,7 @@ class _ProgressViewState extends State<ProgressView> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Su iç',
+            Translations.translate('water_intake', langCode),
             style: GoogleFonts.montserrat(
               fontSize: 13.sp,
               fontWeight: FontWeight.bold,
@@ -1359,94 +1451,92 @@ class _ProgressViewState extends State<ProgressView> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: List.generate(
               5,
-              (i) => SvgPicture.asset(
-                'assets/images/water_glass_icon.svg',
-                width: 19.sp,
-                height: 19.sp,
-                colorFilter: ColorFilter.mode(
-                  i < (_waterIntake * 5).round()
-                      ? const Color(0xFF27BEEA)
-                      : const Color(0xFFBBBBBB),
-                  BlendMode.srcIn,
+              (i) => GestureDetector(
+                onTap: () {
+                  final newAmount = (i + 1) * 0.5;
+                  ref.read(statsProvider.notifier).updateWater(newAmount);
+                },
+                child: SvgPicture.asset(
+                  'assets/images/water_glass_icon.svg',
+                  width: 22.sp,
+                  height: 22.sp,
+                  colorFilter: ColorFilter.mode(
+                    i < (water / 0.5).floor().clamp(0, 5)
+                        ? const Color(0xFF27BEEA)
+                        : const Color(0xFFBBBBBB),
+                    BlendMode.srcIn,
+                  ),
                 ),
               ),
             ),
           ),
           const Spacer(),
-          _buildWaterBar(),
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final double w = constraints.maxWidth > 0
+                  ? constraints.maxWidth
+                  : 100.0;
+              return GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTapDown: (details) {
+                  final double tapLoc = details.localPosition.dx;
+                  final double ratio = (tapLoc / w).clamp(0.0, 1.0);
+                  final double newAmount = (ratio * 2.5);
+                  ref.read(statsProvider.notifier).updateWater(newAmount);
+                },
+                child: SizedBox(
+                  height: 20.h,
+                  width: double.infinity,
+                  child: Stack(
+                    alignment: Alignment.centerLeft,
+                    clipBehavior: Clip.none,
+                    children: [
+                      Container(
+                        height: 3.h,
+                        width: double.infinity,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFC3F1FF),
+                          borderRadius: BorderRadius.circular(10.r),
+                        ),
+                      ),
+                      Container(
+                        height: 3.h,
+                        width: w * progressPercent,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF06C44F),
+                          borderRadius: BorderRadius.circular(10.r),
+                        ),
+                      ),
+                      Positioned(
+                        left: (w * progressPercent).clamp(0.0, w) - 5,
+                        top: 5.h,
+                        child: Container(
+                          width: 10.w,
+                          height: 10.h,
+                          decoration: const BoxDecoration(
+                            color: Color(0xFF06C44F),
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
         ],
       ),
     );
   }
-  Widget _buildWaterBar() {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final double w = constraints.maxWidth > 0
-            ? constraints.maxWidth
-            : 100.0;
-        return GestureDetector(
-          behavior: HitTestBehavior.opaque,
-          onHorizontalDragUpdate: (d) {
-            setState(
-              () => _waterIntake = (_waterIntake + d.delta.dx / w).clamp(
-                0.0,
-                1.0,
-              ),
-            );
-          },
-          onTapDown: (d) {
-            setState(
-              () => _waterIntake = (d.localPosition.dx / w).clamp(0.0, 1.0),
-            );
-          },
-          child: SizedBox(
-            height: 15.h,
-            width: double.infinity,
-            child: Stack(
-              alignment: Alignment.centerLeft,
-              clipBehavior: Clip.none,
-              children: [
-                Container(
-                  height: 3.h,
-                  width: double.infinity,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFC3F1FF),
-                    borderRadius: BorderRadius.circular(10.r),
-                  ),
-                ),
-                Container(
-                  height: 3.h,
-                  width: w * _waterIntake,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF06C44F),
-                    borderRadius: BorderRadius.circular(10.r),
-                  ),
-                ),
-                Positioned(
-                  left: (w * _waterIntake).clamp(0.0, w) - 5,
-                  top: 2.5.h,
-                  child: Container(
-                    width: 10.w,
-                    height: 10.h,
-                    decoration: const BoxDecoration(
-                      color: Color(0xFF06C44F),
-                      shape: BoxShape.circle,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
+
   Widget _buildBottomNav() {
+    final langCode = ref.watch(localeProvider).languageCode;
     final tabs = [
-      {'label': 'Anasayfa', 'icon': Icons.home_outlined},
-      {'label': 'Antrenman', 'icon': Icons.sports_gymnastics},
-      {'label': 'İlerleme', 'icon': Icons.bar_chart},
-      {'label': 'Profil', 'icon': Icons.person_outline},
+      {'label': Translations.translate('home', langCode), 'icon': Icons.home_outlined},
+      {'label': Translations.translate('training', langCode), 'icon': Icons.sports_gymnastics},
+      {'label': Translations.translate('progress', langCode), 'icon': Icons.bar_chart},
+      {'label': Translations.translate('profile', langCode), 'icon': Icons.person_outline},
     ];
     return Container(
       width: double.infinity,

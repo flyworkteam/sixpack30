@@ -1,20 +1,151 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
-class ProfileEditView extends StatefulWidget {
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:six_pack_30/Riverpod/Controllers/user_provider.dart';
+import '../../Riverpod/Controllers/locale_provider.dart';
+import '../../Core/Localization/translations.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+import 'dart:io';
+import 'package:firebase_auth/firebase_auth.dart';
+
+class ProfileEditView extends ConsumerStatefulWidget {
   const ProfileEditView({super.key});
+
   @override
-  State<ProfileEditView> createState() => _ProfileEditViewState();
+  ConsumerState<ProfileEditView> createState() => _ProfileEditViewState();
 }
-class _ProfileEditViewState extends State<ProfileEditView> {
+
+class _ProfileEditViewState extends ConsumerState<ProfileEditView> {
   bool _isDropdownOpen = false;
   String _selectedBodyType = 'Normal';
   String _activeField = '';
   int _age = 26;
   int _height = 165;
   int _weight = 52;
+  bool _isSaving = false;
+  bool _isUploadingImage = false;
+  late TextEditingController _nameController;
+
+  @override
+  void initState() {
+    super.initState();
+    _nameController = TextEditingController();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _initializeData();
+    });
+  }
+
+  void _initializeData() {
+    final user = ref.read(userProfileProvider).value;
+    if (user != null) {
+      final q = user.questionnaire;
+      _nameController.text = user.name ?? '';
+      setState(() {
+        if (q?.birthYear != null) {
+          _age = (DateTime.now().year - q!.birthYear!).toInt();
+        }
+        _height = q?.height?.toInt() ?? 165;
+        _weight = q?.weight?.toInt() ?? 52;
+        
+        final bt = q?.bodyType ?? 2.0;
+        if (bt <= 1.5) {
+          _selectedBodyType = 'thin';
+        } else if (bt <= 3.0) {
+          _selectedBodyType = 'normal';
+        } else if (bt <= 4.5) {
+          _selectedBodyType = 'fat';
+        } else {
+          _selectedBodyType = 'very_fat';
+        }
+      });
+    }
+  }
+
+  Future<void> _pickAndUploadImage() async {
+    final picker = ImagePicker();
+    final pickedFile = await picker.pickImage(source: ImageSource.gallery, imageQuality: 50);
+
+    if (pickedFile == null) return;
+
+    setState(() => _isUploadingImage = true);
+
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) return;
+
+      final file = File(pickedFile.path);
+      
+      final storage = FirebaseStorage.instanceFor(bucket: 'sixpack30-f3484.firebasestorage.app');
+      final storageRef = storage
+          .ref()
+          .child('profile_pictures')
+          .child('${user.uid}.jpg');
+
+      
+      final bytes = await file.readAsBytes();
+      await storageRef.putData(bytes);
+      
+      final downloadUrl = await storageRef.getDownloadURL();
+
+      await ref.read(userProfileProvider.notifier).updateProfile({'photoUrl': downloadUrl});
+      
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Profil fotoğrafı güncellendi')),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Fotoğraf yüklenirken hata oluştu')),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isUploadingImage = false);
+      }
+    }
+  }
+
+  Future<void> _saveChanges() async {
+    setState(() => _isSaving = true);
+
+    double btValue = 2.0;
+    if (_selectedBodyType == 'thin') btValue = 1.0;
+    else if (_selectedBodyType == 'normal') btValue = 2.0;
+    else if (_selectedBodyType == 'fat') btValue = 4.0;
+    else if (_selectedBodyType == 'very_fat') btValue = 5.0;
+
+    final data = {
+      'name': _nameController.text,
+      'height': _height,
+      'weight': _weight,
+      'birthYear': DateTime.now().year - _age,
+      'bodyType': btValue,
+    };
+
+    final success = await ref.read(userProfileProvider.notifier).updateProfile(data);
+
+    if (mounted) {
+      final langCode = ref.read(localeProvider).languageCode;
+      setState(() => _isSaving = false);
+      if (success) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(Translations.translate('profile_updated', langCode))),
+        );
+        Navigator.pop(context);
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(Translations.translate('update_error', langCode))),
+        );
+      }
+    }
+  }
   @override
   Widget build(BuildContext context) {
+    final langCode = ref.watch(localeProvider).languageCode;
     return Scaffold(
       backgroundColor: Colors.white,
       body: Stack(
@@ -47,7 +178,7 @@ class _ProfileEditViewState extends State<ProfileEditView> {
                       Expanded(
                         child: Center(
                           child: Text(
-                            'Profili Düzenle',
+                            Translations.translate('edit_profile', langCode),
                             style: GoogleFonts.montserrat(
                               fontSize: 20.sp,
                               fontWeight: FontWeight.w600,
@@ -66,48 +197,64 @@ class _ProfileEditViewState extends State<ProfileEditView> {
                   padding: EdgeInsets.symmetric(horizontal: 48.w),
                   child: Row(
                     children: [
-                      SizedBox(
-                        width: 49.w,
-                        height: 49.w,
-                        child: Stack(
-                          children: [
-                            CircleAvatar(
-                              radius: 24.r,
-                              backgroundColor: const Color(0xFFD9D9D9),
-                              child: ClipOval(
-                                child: Image.asset(
-                                  'assets/images/genderWOMAN.png',
-                                  width: 48.w,
-                                  height: 48.h,
-                                  fit: BoxFit.cover,
+                      GestureDetector(
+                        onTap: _isUploadingImage ? null : _pickAndUploadImage,
+                        child: SizedBox(
+                          width: 49.w,
+                          height: 49.w,
+                          child: Stack(
+                            children: [
+                              CircleAvatar(
+                                radius: 24.r,
+                                backgroundColor: const Color(0xFFD9D9D9),
+                                child: ClipOval(
+                                  child: _isUploadingImage
+                                      ? const CircularProgressIndicator(strokeWidth: 2)
+                                      : (ref.watch(userProfileProvider).value?.photoUrl != null
+                                          ? Image.network(
+                                              ref.watch(userProfileProvider).value!.photoUrl!,
+                                              width: 48.w,
+                                              height: 48.h,
+                                              fit: BoxFit.cover,
+                                              errorBuilder: (context, error, stackTrace) => Icon(
+                                                Icons.person_rounded,
+                                                size: 28.sp,
+                                                color: const Color(0xFFADADAD),
+                                              ),
+                                            )
+                                          : Icon(
+                                              Icons.person_rounded,
+                                              size: 28.sp,
+                                              color: const Color(0xFFADADAD),
+                                            )),
                                 ),
                               ),
-                            ),
-                            Positioned(
-                              right: 0,
-                              bottom: 0,
-                              child: Container(
-                                width: 16.w,
-                                height: 16.w,
-                                decoration: BoxDecoration(
-                                  color: const Color.fromRGBO(240, 240, 240, 0.85),
-                                  shape: BoxShape.circle,
-                                  border: Border.all(
-                                      color: Colors.white, width: 1.w),
-                                ),
-                                child: Center(
-                                  child: Icon(Icons.edit,
-                                      size: 9.sp,
-                                      color: const Color.fromRGBO(78, 74, 74, 0.88)),
+                              Positioned(
+                                right: 0,
+                                bottom: 0,
+                                child: Container(
+                                  width: 16.w,
+                                  height: 16.w,
+                                  decoration: BoxDecoration(
+                                    color: const Color.fromRGBO(240, 240, 240, 0.85),
+                                    shape: BoxShape.circle,
+                                    border: Border.all(
+                                        color: Colors.white, width: 1.w),
+                                  ),
+                                  child: Center(
+                                    child: Icon(Icons.edit,
+                                        size: 9.sp,
+                                        color: const Color.fromRGBO(78, 74, 74, 0.88)),
+                                  ),
                                 ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
                       ),
                       SizedBox(width: 10.w),
                       Text(
-                        'Sinem Bakır',
+                        ref.watch(userProfileProvider).value?.name ?? Translations.translate('guest', langCode),
                         style: GoogleFonts.montserrat(
                           fontSize: 20.sp,
                           fontWeight: FontWeight.w700,
@@ -119,24 +266,31 @@ class _ProfileEditViewState extends State<ProfileEditView> {
                   ),
                 ),
                 SizedBox(height: 30.h),
-                _buildFormField(label: 'Adınız', value: 'Sinem Bakır', isEditable: false),
+                _buildFormField(
+                  label: Translations.translate('name_label', langCode), 
+                  value: _nameController.text.isEmpty ? (ref.watch(userProfileProvider).value?.name ?? Translations.translate('guest', langCode)) : _nameController.text, 
+                  onTap: () {
+                    setState(() => _activeField = Translations.translate('name_label', langCode));
+                    _showNameBottomSheet();
+                  },
+                ),
                 SizedBox(height: 20.h),
-                _buildBodyTypeField(),
+                _buildBodyTypeField(langCode),
                 SizedBox(height: 20.h),
                 _buildFormField(
-                  label: 'Yaşınız',
+                  label: Translations.translate('age_label', langCode),
                   value: _age.toString(),
                   onTap: () {
-                    setState(() => _activeField = 'Yaşınız');
+                    setState(() => _activeField = Translations.translate('age_label', langCode));
                     _showAgeBottomSheet();
                   },
                 ),
                 SizedBox(height: 20.h),
                 _buildFormField(
-                  label: 'Boyunuz',
+                  label: Translations.translate('height_label', langCode),
                   value: (_height / 100).toStringAsFixed(2),
                   onTap: () {
-                    setState(() => _activeField = 'Boyunuz');
+                    setState(() => _activeField = Translations.translate('height_label', langCode));
                     _showVerticalRulerBottomSheet(
                       unit: 'cm',
                       minValue: 100,
@@ -150,10 +304,10 @@ class _ProfileEditViewState extends State<ProfileEditView> {
                 ),
                 SizedBox(height: 20.h),
                 _buildFormField(
-                  label: 'Kilonuz',
+                  label: Translations.translate('weight_label', langCode),
                   value: _weight.toString(),
                   onTap: () {
-                    setState(() => _activeField = 'Kilonuz');
+                    setState(() => _activeField = Translations.translate('weight_label', langCode));
                     _showRulerBottomSheet(
                       unit: 'kg',
                       minValue: 30,
@@ -180,9 +334,7 @@ class _ProfileEditViewState extends State<ProfileEditView> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   GestureDetector(
-                    onTap: () {
-                      Navigator.pop(context);
-                    },
+                    onTap: _isSaving ? null : _saveChanges,
                     child: Container(
                       width: 342.w,
                       height: 44.h,
@@ -191,16 +343,22 @@ class _ProfileEditViewState extends State<ProfileEditView> {
                         borderRadius: BorderRadius.circular(10.r),
                       ),
                       child: Center(
-                        child: Text(
-                          'Değişiklikleri Kaydet',
-                          style: GoogleFonts.montserrat(
-                            fontSize: 16.sp,
-                            fontWeight: FontWeight.w500,
-                            color: Colors.black,
-                            height: 1.25,
-                            letterSpacing: -0.176.sp,
-                          ),
-                        ),
+                        child: _isSaving 
+                          ? SizedBox(
+                              width: 20.w,
+                              height: 20.w,
+                              child: const CircularProgressIndicator(color: Colors.black, strokeWidth: 2),
+                            )
+                          : Text(
+                              Translations.translate('save_changes', langCode),
+                              style: GoogleFonts.montserrat(
+                                fontSize: 16.sp,
+                                fontWeight: FontWeight.w500,
+                                color: Colors.black,
+                                height: 1.25,
+                                letterSpacing: -0.176.sp,
+                              ),
+                            ),
                       ),
                     ),
                   ),
@@ -212,7 +370,7 @@ class _ProfileEditViewState extends State<ProfileEditView> {
                       height: 20.h,
                       child: Center(
                         child: Text(
-                          'Hesabı Sil',
+                          Translations.translate('delete_account', langCode),
                           style: GoogleFonts.montserrat(
                             fontSize: 16.sp,
                             fontWeight: FontWeight.w500,
@@ -232,7 +390,7 @@ class _ProfileEditViewState extends State<ProfileEditView> {
             Positioned(
               left: 270.w,
               top: 360.h,
-              child: _buildDropdownOverlay(),
+              child: _buildDropdownOverlay(langCode),
             ),
         ],
       ),
@@ -294,14 +452,14 @@ class _ProfileEditViewState extends State<ProfileEditView> {
       ),
     );
   }
-  Widget _buildBodyTypeField() {
+  Widget _buildBodyTypeField(String langCode) {
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: 24.w),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Vücut Tipiniz',
+            Translations.translate('body_type_label', langCode),
             style: GoogleFonts.montserrat(
               fontSize: 12.sp,
               fontWeight: FontWeight.w500,
@@ -330,7 +488,7 @@ class _ProfileEditViewState extends State<ProfileEditView> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      _selectedBodyType,
+                      Translations.translate(_selectedBodyType, langCode),
                       style: GoogleFonts.montserrat(
                         fontSize: 12.sp,
                         fontWeight: FontWeight.w500,
@@ -352,8 +510,8 @@ class _ProfileEditViewState extends State<ProfileEditView> {
       ),
     );
   }
-  Widget _buildDropdownOverlay() {
-    final types = ['Zayıf', 'Normal', 'Kilolu', 'Çok Kilolu'];
+  Widget _buildDropdownOverlay(String langCode) {
+    final types = ['thin', 'normal', 'fat', 'very_fat'];
     return Container(
       width: 85.w,
       height: 82.h,
@@ -385,7 +543,7 @@ class _ProfileEditViewState extends State<ProfileEditView> {
               color: isSelected ? const Color.fromRGBO(208, 205, 205, 0.43) : Colors.transparent,
               child: Center(
                 child: Text(
-                  type,
+                  Translations.translate(type, langCode),
                   style: GoogleFonts.montserrat(
                     fontSize: 10.sp,
                     fontWeight: FontWeight.w500,
@@ -841,5 +999,61 @@ class _ProfileEditViewState extends State<ProfileEditView> {
     ).whenComplete(() {
       setState(() => _activeField = '');
     });
+  }
+
+  void _showNameBottomSheet() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (context) {
+        return Padding(
+          padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+          child: Container(
+            height: 200.h,
+            padding: EdgeInsets.symmetric(horizontal: 24.w),
+            decoration: BoxDecoration(
+              color: const Color(0xFFF1FFF6),
+              borderRadius: BorderRadius.vertical(top: Radius.circular(15.r)),
+            ),
+            child: Column(
+              children: [
+                SizedBox(height: 20.h),
+                Container(
+                  width: 36.w,
+                  height: 5.h,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFC9C9C9),
+                    borderRadius: BorderRadius.circular(100.r),
+                  ),
+                ),
+                SizedBox(height: 20.h),
+                TextField(
+                  controller: _nameController,
+                  autofocus: true,
+                  decoration: InputDecoration(
+                    hintText: 'Adınızı giriniz',
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(10.r)),
+                    filled: true,
+                    fillColor: Colors.white,
+                  ),
+                  onChanged: (val) => setState(() {}),
+                ),
+                SizedBox(height: 20.h),
+                ElevatedButton(
+                  onPressed: () => Navigator.pop(context),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF06C44F),
+                    minimumSize: Size(double.infinity, 45.h),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.r)),
+                  ),
+                  child: const Text('Tamam', style: TextStyle(color: Colors.white)),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    ).whenComplete(() => setState(() => _activeField = ''));
   }
 }

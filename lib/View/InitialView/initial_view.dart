@@ -1,21 +1,63 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
-class InitialView extends StatefulWidget {
+import 'package:six_pack_30/Riverpod/Controllers/auth_controller.dart';
+import 'package:six_pack_30/Riverpod/Controllers/user_provider.dart';
+
+class InitialView extends ConsumerStatefulWidget {
   const InitialView({super.key});
+
   @override
-  State<InitialView> createState() => _InitialViewState();
+  ConsumerState<InitialView> createState() => _InitialViewState();
 }
-class _InitialViewState extends State<InitialView> {
+
+class _InitialViewState extends ConsumerState<InitialView> {
   @override
   void initState() {
     super.initState();
-    Future.delayed(const Duration(seconds: 3), () {
+    _handleNavigation();
+  }
+
+  Future<void> _handleNavigation() async {
+    final stopwatch = Stopwatch()..start();
+    
+    try {
+      final status = await ref.read(authControllerProvider.notifier).checkInitialStatus();
+      final bool isLoggedIn = status['isLoggedIn'] ?? false;
+      final bool? hasCompletedSurvey = status['hasCompletedSurvey'];
+
+      final double targetSeconds = isLoggedIn ? 1.5 : 3.0;
+      final int elapsedMillis = stopwatch.elapsedMilliseconds;
+      final int remainingMillis = ((targetSeconds * 1000) - elapsedMillis).toInt();
+
+      if (remainingMillis > 0) {
+        await Future.delayed(Duration(milliseconds: remainingMillis));
+      }
+
+      if (!mounted) return;
+
+      if (isLoggedIn) {
+        await ref.read(userProfileProvider.notifier).fetchProfile();
+
+        if (hasCompletedSurvey == true) {
+          Navigator.pushReplacementNamed(context, '/home');
+        } else if (hasCompletedSurvey == false) {
+          Navigator.pushReplacementNamed(context, '/questions');
+        } else {
+          Navigator.pushReplacementNamed(context, '/home');
+        }
+      } else {
+        Navigator.pushReplacementNamed(context, '/onboard');
+      }
+    } catch (e) {
+      await Future.delayed(const Duration(milliseconds: 3000));
       if (mounted) {
         Navigator.pushReplacementNamed(context, '/onboard');
       }
-    });
+    }
   }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(

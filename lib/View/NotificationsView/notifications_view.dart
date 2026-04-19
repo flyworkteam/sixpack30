@@ -2,75 +2,27 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-class NotificationsView extends StatefulWidget {
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:six_pack_30/Riverpod/Controllers/notification_provider.dart';
+import '../../Riverpod/Controllers/locale_provider.dart';
+import '../../Core/Localization/translations.dart';
+
+class NotificationsView extends ConsumerStatefulWidget {
   const NotificationsView({super.key});
   @override
-  State<NotificationsView> createState() => _NotificationsViewState();
+  ConsumerState<NotificationsView> createState() => _NotificationsViewState();
 }
-class _NotificationsViewState extends State<NotificationsView> {
-  List<Map<String, dynamic>> todayNotifications = [
-    {
-      'id': '1',
-      'title': 'Spor saatin geldi',
-      'body': 'Bugün antrenman günün 💪 Hedefine bir adım daha yaklaşma zamanı.',
-      'time': '12:00',
-      'icon': Icons.sports_gymnastics,
-    },
-    {
-      'id': '2',
-      'title': 'Son 2 set',
-      'body': 'Şimdiye kadar harikasın. Devam et! Yanma hissi = gelişim.',
-      'time': '2 saat önce',
-      'icon': Icons.fitness_center,
-    },
-    {
-      'id': '3',
-      'title': 'İlerleme',
-      'body': '5 gündür üst üste aktif! Kendinle gurur duyma zamanı.',
-      'time': '6 saat önce',
-      'icon': Icons.trending_up,
-    },
-  ];
-  List<Map<String, dynamic>> yesterdayNotifications = [
-    {
-      'id': '4',
-      'title': 'Harekete Geç',
-      'body': '10 dakika bile yeter. Başla. Bugün kendin için bir şey yap.',
-      'time': '1 gün önce',
-      'icon': Icons.directions_run,
-    },
-    {
-      'id': '5',
-      'title': 'Bugünün Görevleri Tamamlandı',
-      'body': 'Günün tüm sorumluluklarını tamamladın, şimdi dinlenme zamanı.',
-      'time': '1 gün önce',
-      'icon': Icons.check_circle_outline,
-    },
-    {
-      'id': '6',
-      'title': 'Motivasyon',
-      'body': 'Ertelemek mi, başlamak mı? Seçim senin. Güç, konfor alanının dışında.',
-      'time': '1 gün önce',
-      'icon': Icons.sports_martial_arts,
-    },
-  ];
+class _NotificationsViewState extends ConsumerState<NotificationsView> {
   void _deleteAll() {
-    setState(() {
-      todayNotifications.clear();
-      yesterdayNotifications.clear();
-    });
+    ref.read(notificationProvider.notifier).deleteAll();
   }
-  void _deleteNotification(String id, bool isToday) {
-    setState(() {
-      if (isToday) {
-        todayNotifications.removeWhere((item) => item['id'] == id);
-      } else {
-        yesterdayNotifications.removeWhere((item) => item['id'] == id);
-      }
-    });
+  void _deleteNotification(String id) {
   }
   @override
   Widget build(BuildContext context) {
+    final notificationAsync = ref.watch(notificationProvider);
+    final langCode = ref.watch(localeProvider).languageCode;
+
     return Scaffold(
       backgroundColor: const Color(0xFFFEFEFE),
       appBar: AppBar(
@@ -97,7 +49,7 @@ class _NotificationsViewState extends State<NotificationsView> {
           ),
         ),
         title: Text(
-          'Bildirimler',
+          Translations.translate('notifications', langCode),
           style: GoogleFonts.montserrat(
             fontSize: 20.sp,
             fontWeight: FontWeight.w600,
@@ -126,7 +78,7 @@ class _NotificationsViewState extends State<NotificationsView> {
               PopupMenuItem<String>(
                 value: 'delete_all',
                 child: Text(
-                  'Tümünü sil',
+                  Translations.translate('delete_all', langCode),
                   style: GoogleFonts.montserrat(
                     fontSize: 14.sp,
                     fontWeight: FontWeight.w500,
@@ -139,64 +91,83 @@ class _NotificationsViewState extends State<NotificationsView> {
           SizedBox(width: 12.w),
         ],
       ),
-      body: SingleChildScrollView(
-        physics: const ClampingScrollPhysics(),
-        child: Padding(
-          padding: EdgeInsets.symmetric(horizontal: 24.w),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              SizedBox(height: 15.h),
-              SizedBox(height: 20.h),
-              if (todayNotifications.isNotEmpty) ...[
-                Text(
-                  'Bugün',
-                  style: GoogleFonts.nunito(
-                    fontSize: 16.sp,
-                    fontWeight: FontWeight.w700,
-                    color: const Color(0xFF0D0D0D),
-                    letterSpacing: -0.011.sp,
-                  ),
-                ),
-                SizedBox(height: 15.h),
-                ...todayNotifications.map((item) {
-                  return _buildNotificationItem(
-                    id: item['id'],
-                    title: item['title'],
-                    body: item['body'],
-                    time: item['time'],
-                    iconData: item['icon'],
-                    isToday: true,
-                  );
-                }),
-                SizedBox(height: 15.h),
-              ],
-              if (yesterdayNotifications.isNotEmpty) ...[
-                Text(
-                  'Dün',
-                  style: GoogleFonts.nunito(
-                    fontSize: 16.sp,
-                    fontWeight: FontWeight.w700,
-                    color: const Color(0xFF0D0D0D),
-                    letterSpacing: -0.011.sp,
-                  ),
-                ),
-                SizedBox(height: 15.h),
-                ...yesterdayNotifications.map((item) {
-                  return _buildNotificationItem(
-                    id: item['id'],
-                    title: item['title'],
-                    body: item['body'],
-                    time: item['time'],
-                    iconData: item['icon'],
-                    isToday: false,
-                  );
-                }),
-                SizedBox(height: 30.h),
-              ],
-            ],
+      body: notificationAsync.when(
+        loading: () => const Center(child: CircularProgressIndicator(color: Color(0xFF06C44F))),
+        error: (err, stack) => Center(child: Text('Hata: $err')),
+        data: (notifications) {
+          if (notifications.isEmpty) {
+            return _buildEmptyState(langCode);
+          }
+
+          return SingleChildScrollView(
+            physics: const ClampingScrollPhysics(),
+            child: Padding(
+              padding: EdgeInsets.symmetric(horizontal: 24.w),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  SizedBox(height: 20.h),
+                  ...notifications.map((item) {
+                    return _buildNotificationItem(
+                      id: item['id'].toString(),
+                      title: item['title'],
+                      body: item['body'],
+                      time: Translations.translate('now', langCode),
+                      iconData: Icons.notifications_active_rounded,
+                      isToday: true,
+                    );
+                  }),
+                  SizedBox(height: 30.h),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildEmptyState(String langCode) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            width: 80.w,
+            height: 80.w,
+            decoration: BoxDecoration(
+              color: const Color(0xFFF5F5F5),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              Icons.notifications_none_rounded,
+              size: 40.sp,
+              color: const Color(0xFFADADAD),
+            ),
           ),
-        ),
+          SizedBox(height: 20.h),
+          Text(
+            Translations.translate('no_notifications', langCode),
+            style: GoogleFonts.montserrat(
+              fontSize: 16.sp,
+              fontWeight: FontWeight.w600,
+              color: const Color(0xFF0D0D0D),
+              letterSpacing: -0.011.sp,
+            ),
+          ),
+          SizedBox(height: 8.h),
+          Text(
+            Translations.translate('no_notifications_desc', langCode),
+            textAlign: TextAlign.center,
+            style: GoogleFonts.montserrat(
+              fontSize: 14.sp,
+              fontWeight: FontWeight.w400,
+              color: const Color(0xFFADADAD),
+              letterSpacing: -0.011.sp,
+              height: 1.4,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -214,7 +185,7 @@ class _NotificationsViewState extends State<NotificationsView> {
         key: Key(id),
         direction: DismissDirection.endToStart,
         onDismissed: (direction) {
-          _deleteNotification(id, isToday);
+          _deleteNotification(id);
         },
         background: Container(
           alignment: Alignment.centerRight,

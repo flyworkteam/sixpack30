@@ -49,5 +49,45 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>This app requires access to your photo library to let you upload a profile picture.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>This app requires access to your camera to let you take a photo for your profile picture.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>This app requires access to your microphone (if needed for video/audio picking).</string>
+	<key>LSApplicationQueriesSchemes</key>
+	<array>
+		<string>https</string>
+		<string>http</string>
+		<string>fbapi</string>
+		<string>fb-messenger-share-api</string>
+	</array>
+	<!-- ⚠️ FACEBOOK LOGIN KURULUMU
+	     Şirketten App ID gelince aşağıdaki değerleri güncelle:
+	     BURAYA_FACEBOOK_APP_ID → gerçek App ID ile değiştir (örn: 1234567890)
+	-->
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>fbBURAYA_FACEBOOK_APP_ID_YAZILACAK</string>
+			</array>
+		</dict>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>com.googleusercontent.apps.653562759267-cmoum4066rfseegvvnccjjonm11vdsfq</string>
+			</array>
+		</dict>
+	</array>
+	<key>FacebookAppID</key>
+	<string>BURAYA_FACEBOOK_APP_ID_YAZILACAK</string>
+	<key>FacebookClientToken</key>
+	<string>BURAYA_FACEBOOK_CLIENT_TOKEN_YAZILACAK</string>
+	<key>FacebookDisplayName</key>
+	<string>SixPack30</string>
 </dict>
 </plist>

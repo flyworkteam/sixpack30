@@ -1,15 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
-class RateAppView extends StatefulWidget {
+import '../../Riverpod/Controllers/locale_provider.dart';
+import '../../Core/Localization/translations.dart';
+class RateAppView extends ConsumerStatefulWidget {
   const RateAppView({super.key});
   @override
-  State<RateAppView> createState() => _RateAppViewState();
+  ConsumerState<RateAppView> createState() => _RateAppViewState();
 }
-class _RateAppViewState extends State<RateAppView> {
+class _RateAppViewState extends ConsumerState<RateAppView> {
   int _rating = 4;
   @override
   Widget build(BuildContext context) {
+    final langCode = ref.watch(localeProvider).languageCode;
     return Scaffold(
       backgroundColor: const Color(0xFFFEFEFE),
       appBar: AppBar(
@@ -36,7 +40,7 @@ class _RateAppViewState extends State<RateAppView> {
           ),
         ),
         title: Text(
-          'Uygulamayı Puanla',
+          Translations.translate('rate_app_title', langCode),
           style: GoogleFonts.montserrat(
             fontSize: 20.sp,
             fontWeight: FontWeight.w600,
@@ -125,7 +129,7 @@ class _RateAppViewState extends State<RateAppView> {
                           Column(
                             children: [
                               Text(
-                                'SixPack30’ u Beğendin mi?',
+                                Translations.translate('do_you_like_sixpack30', langCode),
                                 textAlign: TextAlign.center,
                                 style: GoogleFonts.montserrat(
                                   fontSize: 20.sp,
@@ -136,7 +140,7 @@ class _RateAppViewState extends State<RateAppView> {
                               ),
                               SizedBox(height: 10.h),
                               Text(
-                                'Görüşleriniz bizim için çok değerli',
+                                Translations.translate('your_feedback_valuable', langCode),
                                 textAlign: TextAlign.center,
                                 style: GoogleFonts.montserrat(
                                   fontSize: 16.sp,
@@ -190,7 +194,7 @@ class _RateAppViewState extends State<RateAppView> {
                             Navigator.pop(context);
                           },
                           child: Text(
-                            'Gönder',
+                            Translations.translate('send', langCode),
                             style: GoogleFonts.montserrat(
                               fontSize: 16.sp,
                               fontWeight: FontWeight.w500,

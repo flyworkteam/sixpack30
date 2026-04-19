@@ -1,11 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
-class ShareAppView extends StatelessWidget {
+import '../../Riverpod/Controllers/locale_provider.dart';
+import '../../Core/Localization/translations.dart';
+class ShareAppView extends ConsumerWidget {
   const ShareAppView({super.key});
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final langCode = ref.watch(localeProvider).languageCode;
     return Scaffold(
       backgroundColor: const Color(0xFFFEFEFE),
       appBar: AppBar(
@@ -32,7 +36,7 @@ class ShareAppView extends StatelessWidget {
           ),
         ),
         title: Text(
-          'Uygulamayı Paylaş',
+          Translations.translate('share_app_title', langCode),
           style: GoogleFonts.montserrat(
             fontSize: 20.sp,
             fontWeight: FontWeight.w600,
@@ -53,7 +57,7 @@ class ShareAppView extends StatelessWidget {
             Column(
               children: [
                 Text(
-                  'Arkadaşlarını Davet Et',
+                  Translations.translate('invite_friends_title', langCode),
                   textAlign: TextAlign.center,
                   style: GoogleFonts.montserrat(
                     fontSize: 24.sp,
@@ -64,7 +68,7 @@ class ShareAppView extends StatelessWidget {
                 ),
                 SizedBox(height: 5.h),
                 Text(
-                  'Arkadaşlarını davet et,\nbirlikte güçlenin!',
+                  Translations.translate('invite_friends_desc', langCode),
                   textAlign: TextAlign.center,
                   style: GoogleFonts.montserrat(
                     fontSize: 16.sp,
@@ -76,7 +80,7 @@ class ShareAppView extends StatelessWidget {
               ],
             ),
             SizedBox(height: 24.h),
-            _buildShareLink(context),
+            _buildShareLink(context, langCode),
             SizedBox(height: 24.h),
             _buildSocialLinks(),
             SizedBox(height: 40.h),
@@ -185,13 +189,13 @@ class ShareAppView extends StatelessWidget {
       ),
     );
   }
-  Widget _buildShareLink(BuildContext context) {
+  Widget _buildShareLink(BuildContext context, String langCode) {
     const String link = 'https://sixpack30.com';
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Paylaşım Linki',
+          Translations.translate('share_link', langCode),
           style: GoogleFonts.montserrat(
             fontSize: 12.sp,
             fontWeight: FontWeight.w500,
@@ -233,8 +237,8 @@ class ShareAppView extends StatelessWidget {
                 onTap: () {
                   Clipboard.setData(const ClipboardData(text: link));
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Link kopyalandı!'),
+                    SnackBar(
+                      content: Text(Translations.translate('link_copied', langCode)),
                       duration: Duration(seconds: 2),
                     ),
                   );
@@ -252,7 +256,7 @@ class ShareAppView extends StatelessWidget {
                   ),
                   child: Center(
                     child: Text(
-                      'Kopyala',
+                      Translations.translate('copy', langCode),
                       style: GoogleFonts.montserrat(
                         fontSize: 14.sp,
                         fontWeight: FontWeight.w600,

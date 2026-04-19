@@ -1,55 +1,28 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import '../../Core/Data/workout_data.dart';
+import '../../Core/Localization/translations.dart';
+import '../../Riverpod/Controllers/locale_provider.dart';
 import '../TrainingActiveView/training_active_view.dart';
-class TrainingDetailView extends StatelessWidget {
+class TrainingDetailView extends ConsumerWidget {
+  final int dayNumber;
+  final String title;
+  final List<ExerciseInfo> exercises;
   final String gender;
-  const TrainingDetailView({super.key, this.gender = 'woman'});
+
+  const TrainingDetailView({
+    super.key,
+    required this.dayNumber,
+    required this.title,
+    required this.exercises,
+    this.gender = 'woman',
+  });
   @override
-  Widget build(BuildContext context) {
-    final List<Map<String, String>> exercises = [
-      {
-        "name": "Crunch",
-        "sets": "3 Set × 20 Tekrar",
-        "rest": "20 - 30 sn",
-      },
-      {
-        "name": "Toe Touch Crunch",
-        "sets": "3 Set × 15 Tekrar",
-        "rest": "20 - 30 sn",
-      },
-      {
-        "name": "Bent Knee Leg Raise",
-        "sets": "3 Set × 15 Tekrar",
-        "rest": "30 sn",
-      },
-      {
-        "name": "Lying Knee Raise",
-        "sets": "3 Set × 15 Tekrar",
-        "rest": "30 sn",
-      },
-      {
-        "name": "Heel Touch",
-        "sets": "3 Set × 20 Tekrar",
-        "rest": "20 - 30 sn",
-      },
-      {
-        "name": "Standing Side Crunch",
-        "sets": "3 Set × 20 Tekrar",
-        "rest": "20 - 30 sn",
-      },
-      {
-        "name": "Forearm Plank",
-        "sets": "3 Set × 30 Tekrar",
-        "rest": "30 sn",
-      },
-      {
-        "name": "Mountain Climber",
-        "sets": "3 Set × 30 Tekrar",
-        "rest": "30 sn",
-      },
-    ];
+  Widget build(BuildContext context, WidgetRef ref) {
+    final langCode = ref.watch(localeProvider).languageCode;
     return Scaffold(
       backgroundColor: const Color(0xFFFEFEFE),
       body: Stack(
@@ -70,8 +43,8 @@ class TrainingDetailView extends StatelessWidget {
               child: Stack(
                 fit: StackFit.expand,
                 children: [
-                  Image.asset(
-                    'assets/images/detayantrenman.jpg',
+                  Image.network(
+                    'https://sixpack30.b-cdn.net/banners/training_banner.jpg',
                     fit: BoxFit.cover,
                     errorBuilder: (context, error, stackTrace) => Container(
                       color: const Color(0xFF323232),
@@ -115,13 +88,15 @@ class TrainingDetailView extends StatelessWidget {
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             crossAxisAlignment: CrossAxisAlignment.center,
                             children: [
-                              Text(
-                                '1.Gün: Aktivasyon',
-                                style: GoogleFonts.montserrat(
-                                  fontWeight: FontWeight.w700,
-                                  fontSize: 20.sp,
-                                  color: const Color(0xFF100F0F),
-                                  height: 1.1,
+                              Expanded(
+                                child: Text(
+                                  '${dayNumber}. ${Translations.translate('workout_day', langCode)}: $title',
+                                  style: GoogleFonts.montserrat(
+                                    fontWeight: FontWeight.w700,
+                                    fontSize: 20.sp,
+                                    color: const Color(0xFF100F0F),
+                                    height: 1.1,
+                                  ),
                                 ),
                               ),
                               GestureDetector(
@@ -135,23 +110,24 @@ class TrainingDetailView extends StatelessWidget {
                             ],
                           ),
                           SizedBox(height: 15.h),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          Wrap(
+                            spacing: 8.w,
+                            runSpacing: 8.h,
                             children: [
                               _buildBadge(
                                 iconData: Icons.access_time,
                                 iconAsset: 'assets/images/detail_clock_icon.svg',
-                                text: '30 Dakika',
+                                text: exercises.isEmpty ? Translations.translate('rest', langCode) : '10 ${Translations.translate('minutes', langCode)}',
                               ),
                               _buildBadge(
                                 iconData: Icons.fitness_center,
                                 iconAsset: 'assets/images/detail_abs_zone_icon.svg',
-                                text: 'Bölge: Karın',
+                                text: '${Translations.translate('focus_area', langCode)}: ${Translations.translate('abs', langCode)}',
                               ),
                               _buildBadge(
                                 iconData: Icons.accessibility_new,
                                 iconAsset: 'assets/images/detail_exercise_icon.svg',
-                                text: '8 Egzersiz',
+                                text: exercises.isEmpty ? Translations.translate('active_rest', langCode) : '${exercises.length} ${Translations.translate('exercises_count', langCode)}',
                               ),
                             ],
                           ),
@@ -177,62 +153,104 @@ class TrainingDetailView extends StatelessWidget {
                                       MaterialPageRoute(
                                         builder: (context) => TrainingActiveView(
                                           gender: gender,
+                                          exercises: exercises,
                                           initialIndex: index,
+                                          dayNumber: dayNumber,
                                         ),
                                       ),
                                     );
                                   },
                                   child: _buildExerciseCard(
-                                    title: ex['name']!,
-                                    sets: ex['sets']!,
-                                    rest: 'Set arası: ${ex['rest']}',
-                                    imagePath: 'assets/images/${ex['name']} $gender.png',
+                                    title: ex.name,
+                                    sets: ex.sets,
+                                    rest: '${Translations.translate('rest', langCode)}: ${ex.rest}',
+                                    imagePath: ex.imagePath,
                                   ),
                                 ),
                               );
                             },
                           ),
                           SizedBox(height: 24.h),
-                          GestureDetector(
-                            onTap: () {
-                              Navigator.of(context).push(
+                          if (exercises.isNotEmpty)
+                            GestureDetector(
+                              onTap: () {
+                                Navigator.of(context).push(
                                   MaterialPageRoute(
                                     builder: (context) => TrainingActiveView(
                                       gender: gender,
+                                      exercises: exercises,
                                       initialIndex: 0,
+                                      dayNumber: dayNumber,
                                     ),
                                   ),
-                              );
-                            },
-                            child: Container(
-                              width: double.infinity,
-                              height: 44.h,
-                              decoration: BoxDecoration(
-                                color: const Color(0xFF00EF5B),
-                                borderRadius: BorderRadius.circular(10.r),
-                              ),
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Text(
-                                    'Antrenmana Başla',
-                                    style: GoogleFonts.montserrat(
-                                      fontWeight: FontWeight.w600,
-                                      fontSize: 16.sp,
+                                );
+                              },
+                              child: Container(
+                                width: double.infinity,
+                                height: 44.h,
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFF00EF5B),
+                                  borderRadius: BorderRadius.circular(10.r),
+                                ),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Text(
+                                      Translations.translate('start_workout', langCode),
+                                      style: GoogleFonts.montserrat(
+                                        fontWeight: FontWeight.w600,
+                                        fontSize: 16.sp,
+                                        color: const Color(0xFF0A0A0A),
+                                        letterSpacing: -0.011,
+                                      ),
+                                    ),
+                                    SizedBox(width: 10.w),
+                                    Icon(
+                                      Icons.arrow_forward,
+                                      size: 18.sp,
                                       color: const Color(0xFF0A0A0A),
-                                      letterSpacing: -0.011,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          if (exercises.isEmpty)
+                            Container(
+                              padding: EdgeInsets.all(20.r),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFF06C44F).withValues(alpha: 0.1),
+                                borderRadius: BorderRadius.circular(15.r),
+                                border: Border.all(
+                                    color: const Color(0xFF06C44F)
+                                        .withValues(alpha: 0.3)),
+                              ),
+                              child: Column(
+                                children: [
+                                  Icon(Icons.nightlight_round,
+                                      color: const Color(0xFF06C44F), size: 40.sp),
+                                  SizedBox(height: 10.h),
+                                  Text(
+                                    Translations.translate('no_workout_today', langCode),
+                                    textAlign: TextAlign.center,
+                                    style: GoogleFonts.montserrat(
+                                      fontWeight: FontWeight.w700,
+                                      fontSize: 16.sp,
+                                      color: const Color(0xFF100F0F),
                                     ),
                                   ),
-                                  SizedBox(width: 10.w),
-                                  Icon(
-                                    Icons.arrow_forward,
-                                    size: 18.sp,
-                                    color: const Color(0xFF0A0A0A),
+                                  SizedBox(height: 5.h),
+                                  Text(
+                                    Translations.translate('no_workout_today_desc', langCode),
+                                    textAlign: TextAlign.center,
+                                    style: GoogleFonts.montserrat(
+                                      fontWeight: FontWeight.w500,
+                                      fontSize: 13.sp,
+                                      color: const Color(0xFF6B6B6B),
+                                    ),
                                   ),
                                 ],
                               ),
                             ),
-                          ),
                           SizedBox(height: 50.h),
                         ],
                       ),
@@ -273,14 +291,14 @@ class TrainingDetailView extends StatelessWidget {
     required String text,
   }) {
     return Container(
-      width: 108.w,
-      height: 34.h,
+      padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 8.h),
       decoration: BoxDecoration(
         color: const Color(0xFFF8F8F8),
         border: Border.all(color: const Color(0xFFEBEBEB)),
         borderRadius: BorderRadius.circular(6.r),
       ),
       child: Row(
+        mainAxisSize: MainAxisSize.min,
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           iconAsset.endsWith('.svg')
@@ -301,12 +319,16 @@ class TrainingDetailView extends StatelessWidget {
                   ),
                 ),
           SizedBox(width: 6.w),
-          Text(
-            text,
-            style: GoogleFonts.montserrat(
-              fontWeight: FontWeight.w600,
-              fontSize: 11.sp,
-              color: const Color(0xFF100F0F),
+          Flexible(
+            child: Text(
+              text,
+              style: GoogleFonts.montserrat(
+                fontWeight: FontWeight.w600,
+                fontSize: 11.sp,
+                color: const Color(0xFF100F0F),
+              ),
+              overflow: TextOverflow.ellipsis,
+              maxLines: 1,
             ),
           ),
         ],
@@ -334,14 +356,12 @@ class TrainingDetailView extends StatelessWidget {
             top: 4.h,
             child: ClipRRect(
               borderRadius: BorderRadius.circular(10.r),
-              child: Image.asset(
+              child: Image.network(
                 imagePath,
                 width: 81.w,
                 height: 61.h,
                 fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) {
-                  return _tryAlternativeImage(imagePath, context);
-                },
+                errorBuilder: (context, error, stackTrace) => _buildPlaceholder(),
               ),
             ),
           ),
@@ -386,52 +406,6 @@ class TrainingDetailView extends StatelessWidget {
       ),
     );
   }
-  Widget _tryAlternativeImage(String imagePath, BuildContext context) {
-    String noSpacePath = imagePath.replaceFirst(' woman.png', 'woman.png')
-                                  .replaceFirst(' man.png', 'man.png');
-
-    if (noSpacePath != imagePath) {
-      return Image.asset(
-        noSpacePath,
-        width: 81.w,
-        height: 61.h,
-        fit: BoxFit.cover,
-        errorBuilder: (context, error, stackTrace) => _tryInvisibleCharacters(imagePath, context),
-      );
-    }
-    return _tryInvisibleCharacters(imagePath, context);
-  }
-
-  Widget _tryInvisibleCharacters(String imagePath, BuildContext context) {
-    String withSepPath = imagePath.replaceFirst(' woman.png', '  woman.png')
-                                  .replaceFirst(' man.png', '  man.png');
-
-    if (withSepPath != imagePath) {
-      return Image.asset(
-        withSepPath,
-        width: 81.w,
-        height: 61.h,
-        fit: BoxFit.cover,
-        errorBuilder: (context, error, stackTrace) => _tryWomenVariant(imagePath, context),
-      );
-    }
-    return _tryWomenVariant(imagePath, context);
-  }
-
-  Widget _tryWomenVariant(String imagePath, BuildContext context) {
-    if (imagePath.contains('woman.png')) {
-      String womenPath = imagePath.replaceFirst('woman.png', 'women.png');
-      return Image.asset(
-        womenPath,
-        width: 81.w,
-        height: 61.h,
-        fit: BoxFit.cover,
-        errorBuilder: (context, error, stackTrace) => _buildPlaceholder(),
-      );
-    }
-    return _buildPlaceholder();
-  }
-
   Widget _buildPlaceholder() {
     return Container(
       width: 81.w,

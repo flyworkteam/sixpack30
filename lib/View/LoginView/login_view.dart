@@ -5,10 +5,15 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:six_pack_30/Core/Routes/app_routes.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-class LoginView extends StatelessWidget {
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:six_pack_30/Riverpod/Controllers/auth_controller.dart';
+import 'package:six_pack_30/Riverpod/Controllers/user_provider.dart';
+import 'package:url_launcher/url_launcher.dart';
+
+class LoginView extends ConsumerWidget {
   const LoginView({super.key});
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final bool isIOS = Platform.isIOS;
     return Scaffold(
       backgroundColor: Colors.white,
@@ -69,10 +74,39 @@ class LoginView extends StatelessWidget {
               ),
               SizedBox(height: 15.h),
               _buildButton(
-                onTap: () => Navigator.pushNamed(context, AppRoutes.questions),
+                onTap: () async {
+                  bool? hasCompletedSurvey;
+                  if (isIOS) {
+                     hasCompletedSurvey = await ref.read(authControllerProvider.notifier).signInWithApple();
+                  } else {
+                     hasCompletedSurvey = await ref.read(authControllerProvider.notifier).signInWithGoogle();
+                  }
+                  
+                  final userState = ref.read(authControllerProvider);
+                  
+                  if (userState.hasValue && userState.value != null && context.mounted) {
+                      await ref.read(userProfileProvider.notifier).fetchProfile();
+                      
+                      if (hasCompletedSurvey == true) {
+                        Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
+                      } else if (hasCompletedSurvey == false) {
+                        Navigator.pushNamed(context, AppRoutes.questions);
+                      } else {
+                        Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
+                      }
+                  } else if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Giriş yapılamadı. Lütfen internet bağlantınızı ve sunucu durumunu kontrol edin.'),
+                          backgroundColor: Colors.redAccent,
+                        ),
+                      );
+                  }
+                },
                 width: double.infinity,
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
+
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     SvgPicture.asset(
@@ -99,7 +133,25 @@ class LoginView extends StatelessWidget {
                 children: [
                   Expanded(
                     child: _buildButton(
-                      onTap: () => Navigator.pushNamed(context, AppRoutes.questions),
+                      onTap: () async {
+                        bool? hasCompletedSurvey;
+                        if (isIOS) {
+                          hasCompletedSurvey = await ref.read(authControllerProvider.notifier).signInWithGoogle();
+                        } else {
+                          hasCompletedSurvey = await ref.read(authControllerProvider.notifier).signInWithApple();
+                        }
+
+                        final userState = ref.read(authControllerProvider);
+                        if (userState.hasValue && userState.value != null && context.mounted) {
+                            await ref.read(userProfileProvider.notifier).fetchProfile();
+
+                            if (hasCompletedSurvey == true) {
+                              Navigator.pushNamed(context, '/home');
+                            } else {
+                              Navigator.pushNamed(context, AppRoutes.questions);
+                            }
+                        }
+                      },
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         mainAxisSize: MainAxisSize.min,
@@ -127,7 +179,38 @@ class LoginView extends StatelessWidget {
                   SizedBox(width: 13.w),
                   Expanded(
                     child: _buildButton(
-                      onTap: () => Navigator.pushNamed(context, AppRoutes.questions),
+                      onTap: () async {
+                        final bool? hasCompletedSurvey = await ref
+                            .read(authControllerProvider.notifier)
+                            .signInWithFacebook();
+
+                        final userState = ref.read(authControllerProvider);
+                        if (userState.hasValue &&
+                            userState.value != null &&
+                            context.mounted) {
+                          await ref
+                              .read(userProfileProvider.notifier)
+                              .fetchProfile();
+
+                          if (hasCompletedSurvey == true) {
+                            Navigator.pushNamedAndRemoveUntil(
+                                context, '/home', (route) => false);
+                          } else if (hasCompletedSurvey == false) {
+                            Navigator.pushNamed(context, AppRoutes.questions);
+                          } else {
+                            Navigator.pushNamedAndRemoveUntil(
+                                context, '/home', (route) => false);
+                          }
+                        } else if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text(
+                                  'Facebook ile giriş yapılamadı. Lütfen tekrar deneyin.'),
+                              backgroundColor: Colors.redAccent,
+                            ),
+                          );
+                        }
+                      },
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         mainAxisSize: MainAxisSize.min,
@@ -194,9 +277,14 @@ class LoginView extends StatelessWidget {
                           height: 1.0,
                           letterSpacing: 0,
                         ),
-                        recognizer: TapGestureRecognizer()..onTap = () {},
+                        recognizer: TapGestureRecognizer()
+                          ..onTap = () => launchUrl(
+                              Uri.parse('https://fly-work.com/sixpack30/terms/'),
+                              mode: LaunchMode.externalApplication),
                       ),
-                      const TextSpan(text: ' kabul etmiş olursunuz. Verilerinizi nasıl işlediğimiz hakkında daha fazla bilgi edinmek için '),
+                      const TextSpan(
+                          text:
+                              ' kabul etmiş olursunuz. Verilerinizi nasıl işlediğimiz hakkında daha fazla bilgi edinmek için '),
                       TextSpan(
                         text: 'Gizlilik Politikamızı',
                         style: GoogleFonts.montserrat(
@@ -207,9 +295,12 @@ class LoginView extends StatelessWidget {
                           height: 1.0,
                           letterSpacing: 0,
                         ),
-                        recognizer: TapGestureRecognizer()..onTap = () {},
+                        recognizer: TapGestureRecognizer()
+                          ..onTap = () => launchUrl(
+                              Uri.parse('https://fly-work.com/sixpack30/privacy-policy/'),
+                              mode: LaunchMode.externalApplication),
                       ),
-                      const TextSpan(text: ' ve '),
+                      const TextSpan(text: ', '),
                       TextSpan(
                         text: 'Çerez Politikamızı',
                         style: GoogleFonts.montserrat(
@@ -220,7 +311,26 @@ class LoginView extends StatelessWidget {
                           height: 1.0,
                           letterSpacing: 0,
                         ),
-                        recognizer: TapGestureRecognizer()..onTap = () {},
+                        recognizer: TapGestureRecognizer()
+                          ..onTap = () => launchUrl(
+                              Uri.parse('https://fly-work.com/sixpack30/cookies/'),
+                              mode: LaunchMode.externalApplication),
+                      ),
+                      const TextSpan(text: ' ve '),
+                      TextSpan(
+                        text: 'CSAE Politikamızı',
+                        style: GoogleFonts.montserrat(
+                          fontSize: 10.sp,
+                          fontWeight: FontWeight.w600,
+                          color: const Color(0xFF464646),
+                          decoration: TextDecoration.underline,
+                          height: 1.0,
+                          letterSpacing: 0,
+                        ),
+                        recognizer: TapGestureRecognizer()
+                          ..onTap = () => launchUrl(
+                              Uri.parse('https://fly-work.com/sixpack30/csae/'),
+                              mode: LaunchMode.externalApplication),
                       ),
                       const TextSpan(text: ' inceleyiniz.'),
                     ],
@@ -241,6 +351,7 @@ class LoginView extends StatelessWidget {
   }) {
     return GestureDetector(
       onTap: onTap,
+      behavior: HitTestBehavior.opaque,
       child: Container(
         width: width,
         height: 44.h,

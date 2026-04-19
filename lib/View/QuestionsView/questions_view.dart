@@ -3,16 +3,20 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:six_pack_30/Core/Network/api_service.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:six_pack_30/Riverpod/Controllers/user_provider.dart';
 
-class QuestionsView extends StatefulWidget {
+class QuestionsView extends ConsumerStatefulWidget {
   const QuestionsView({super.key});
   @override
-  State<QuestionsView> createState() => _QuestionsViewState();
+  ConsumerState<QuestionsView> createState() => _QuestionsViewState();
 }
 
 enum QuestionFlow { hedefOdak, vucut, vucudunuzuBilin }
 
-class _QuestionsViewState extends State<QuestionsView> {
+class _QuestionsViewState extends ConsumerState<QuestionsView> {
   int _currentStep = 1;
   bool _isLoading = false;
   bool _isFinalLoading = false;
@@ -50,6 +54,33 @@ class _QuestionsViewState extends State<QuestionsView> {
     _bgPageController?.dispose();
     _bgTimer?.cancel();
     super.dispose();
+  }
+
+  Future<void> _saveProfileData() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      final token = await user.getIdToken();
+      if (token != null) {
+        final data = {
+          'gender': _selectedGender == 1 ? 'man' : 'woman',
+          'goal': _selectedGoal == 0 ? 'Göbek Eritme' : 'Karın Kası Yapma',
+          'height': _selectedHeight,
+          'weight': _selectedWeight,
+          'targetWeight': _targetWeight,
+          'birthYear': _selectedYear,
+          'bodyType': _bodyTypeIndex,
+          'targetBodyType': _targetBodyTypeIndex,
+          'speed': _selectedSpeed,
+          'experience': _selectedExperience,
+          'trainingType': _selectedTrainingType,
+          'activityLevel': _selectedActivity,
+          'trainingDays': _selectedDays.toList().join(','),
+          'trainingDuration': _selectedDuration,
+        };
+        await ApiService().updateProfile(token, data);
+        ref.read(userProfileProvider.notifier).fetchProfile();
+      }
+    }
   }
   @override
   Widget build(BuildContext context) {
@@ -1495,7 +1526,12 @@ class _QuestionsViewState extends State<QuestionsView> {
           top: 756.h,
           child: GestureDetector(
             onTap: isComplete
-                ? () => Navigator.pushReplacementNamed(context, '/home')
+                ? () async {
+                    await _saveProfileData();
+                    if (mounted) {
+                      Navigator.pushReplacementNamed(context, '/home');
+                    }
+                  }
                 : null,
             child: Container(
               width: 342.w,

@@ -1,35 +1,51 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import '../../Riverpod/Controllers/locale_provider.dart';
+import '../../Core/Localization/translations.dart';
+
 class LanguageModel {
   final String flag;
   final String code;
   final String name;
   LanguageModel(this.flag, this.code, this.name);
 }
-class LanguageView extends StatefulWidget {
+
+class LanguageView extends ConsumerStatefulWidget {
   const LanguageView({super.key});
   @override
-  State<LanguageView> createState() => _LanguageViewState();
+  ConsumerState<LanguageView> createState() => _LanguageViewState();
 }
-class _LanguageViewState extends State<LanguageView> {
+
+class _LanguageViewState extends ConsumerState<LanguageView> {
   final List<LanguageModel> languages = [
-    LanguageModel('🇺🇸', 'en', 'İngilizce'),
+    LanguageModel('🇺🇸', 'en', 'English'),
     LanguageModel('🇹🇷', 'tr', 'Türkçe'),
-    LanguageModel('🇪🇸', 'es', 'İspanyolca'),
-    LanguageModel('🇵🇹', 'pt', 'Portekizce'),
-    LanguageModel('🇫🇷', 'fr', 'Fransızca'),
-    LanguageModel('🇮🇹', 'it', 'İtalyanca'),
-    LanguageModel('🇩🇪', 'de', 'Almanca'),
-    LanguageModel('🇷🇺', 'ru', 'Rusça'),
-    LanguageModel('🇯🇵', 'ja', 'Japonca'),
-    LanguageModel('🇰🇷', 'ko', 'Korece'),
-    LanguageModel('🇮🇳', 'hi', 'Hintçe'),
+    LanguageModel('🇪🇸', 'es', 'Español'),
+    LanguageModel('🇵🇹', 'pt', 'Português'),
+    LanguageModel('🇫🇷', 'fr', 'Français'),
+    LanguageModel('🇮🇹', 'it', 'Italiano'),
+    LanguageModel('🇩🇪', 'de', 'Deutsch'),
+    LanguageModel('🇷🇺', 'ru', 'Русский'),
+    LanguageModel('🇯🇵', 'ja', '日本語'),
+    LanguageModel('🇰🇷', 'ko', '한국어'),
+    LanguageModel('🇮🇳', 'hi', 'हिन्दी'),
   ];
-  String _selectedLanguageCode = 'tr';
+
+  late String _selectedLanguageCode;
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedLanguageCode = ref.read(localeProvider).languageCode;
+  }
+
   @override
   Widget build(BuildContext context) {
+    final langCode = ref.watch(localeProvider).languageCode;
+    
     return Scaffold(
       backgroundColor: const Color(0xFFFEFEFE),
       appBar: AppBar(
@@ -57,7 +73,7 @@ class _LanguageViewState extends State<LanguageView> {
           ),
         ),
         title: Text(
-          'Dil Tercihleri',
+          Translations.translate('language_preferences', langCode),
           style: GoogleFonts.montserrat(
             fontSize: 20.sp,
             fontWeight: FontWeight.w600,
@@ -129,8 +145,9 @@ class _LanguageViewState extends State<LanguageView> {
               ),
               SizedBox(height: 10.h),
               GestureDetector(
-                onTap: () {
-                  Navigator.pop(context);
+                onTap: () async {
+                  await ref.read(localeProvider.notifier).setLocale(_selectedLanguageCode);
+                  if (mounted) Navigator.pop(context);
                 },
                 child: Container(
                   width: double.infinity,
@@ -150,7 +167,7 @@ class _LanguageViewState extends State<LanguageView> {
                       ),
                       SizedBox(width: 4.w),
                       Text(
-                        'Kaydet',
+                        Translations.translate('save', langCode),
                         style: GoogleFonts.montserrat(
                           fontSize: 16.sp,
                           fontWeight: FontWeight.w500,
