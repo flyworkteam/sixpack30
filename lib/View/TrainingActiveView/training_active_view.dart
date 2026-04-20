@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../Core/Data/workout_data.dart';
 import '../../Riverpod/Controllers/stats_provider.dart';
 import '../../Riverpod/Controllers/user_provider.dart';
+import './video_player_widget.dart';
 import '../BreakView/break_view.dart';
 import '../MotivationView/motivation_view.dart';
 
@@ -193,10 +194,10 @@ class _TrainingActiveViewState extends State<TrainingActiveView> {
                   ),
                 ),
                 clipBehavior: Clip.hardEdge,
-                child: Image.network(
-                  exercises[currentIndex].imagePath,
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) => _buildPlaceholder(),
+                child: ExerciseVideoPlayer(
+                  videoUrl: exercises[currentIndex].videoPath,
+                  placeholderUrl: exercises[currentIndex].getImagePath(widget.gender),
+                  isPlaying: isPlaying,
                 ),
               ),
             ),
@@ -335,7 +336,7 @@ class _TrainingActiveViewState extends State<TrainingActiveView> {
                                 ClipRRect(
                                   borderRadius: BorderRadius.circular(3.r),
                                   child: Image.network(
-                                    exercises[currentIndex + 1].imagePath,
+                                    exercises[currentIndex + 1].getImagePath(widget.gender),
                                     width: 29.w,
                                     height: 21.w,
                                     fit: BoxFit.cover,

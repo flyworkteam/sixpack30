@@ -200,7 +200,7 @@ class ProfileView extends ConsumerWidget {
                           }),
                       if (!effectiveIsPremium)
                         _buildSettingsItem(
-                            iconPath: 'assets/images/iconstack.io - (Certificate Badge   Svg).png',
+                            iconPath: 'assets/images/premium_badge.png',
                             title: 'Premium',
                             isLast: true,
                             onTap: () {

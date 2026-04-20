@@ -4,9 +4,11 @@ import 'package:six_pack_30/Core/Models/workout_model.dart';
 import 'package:six_pack_30/Core/Network/api_service_provider.dart';
 import 'package:six_pack_30/Core/Network/api_service.dart';
 
+final workoutProvider = StateNotifierProvider<WorkoutNotifier, AsyncValue<List<WorkoutModel>>>((ref) {
   return WorkoutNotifier(ref.watch(apiServiceProvider));
 });
 
+class WorkoutNotifier extends StateNotifier<AsyncValue<List<WorkoutModel>>> {
   final ApiService _apiService;
 
   WorkoutNotifier(this._apiService) : super(const AsyncValue.loading()) {

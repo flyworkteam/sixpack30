@@ -3,13 +3,20 @@ class ExerciseInfo {
   final String sets;
   final String rest;
   final String imagePath;
+  final String videoPath;
 
   ExerciseInfo({
     required this.name,
     required this.sets,
     required this.rest,
     required this.imagePath,
+    required this.videoPath,
   });
+
+  String getImagePath(String gender) {
+    final String normalized = (gender == 'female' || gender == 'woman') ? 'woman' : 'man';
+    return imagePath.replaceAll('{gender}', normalized);
+  }
 }
 
 class WorkoutData {
@@ -26,12 +33,24 @@ class WorkoutData {
 
 class StaticWorkoutData {
   static List<ExerciseInfo> _generateCdnExercises(List<Map<String, String>> data) {
-    return data.map((ex) => ExerciseInfo(
-      name: ex['name']!,
-      sets: ex['sets']!,
-      rest: ex['rest']!,
-      imagePath: 'https://sixpack30.b-cdn.net/exercises/${ex['name']!.toLowerCase().replaceAll(' ', '_').replaceAll('(', '').replaceAll(')', '').replaceAll('+', '').trim()}.jpg',
-    )).toList();
+    return data.map((ex) {
+      final String cleanName = ex['name']!.split('(')[0].trim();
+      
+      final mp4List = [
+        'Plank Hip Dip', 'Sit-Up', 'Pulse Crunch', 'Russian Twist', 
+        'Scissor Kicks', 'Seated Twist', 'Standing Oblique Crunch', 
+        'Standing Side Crunch', 'Mountain Climber', 'Leg Raise'
+      ];
+      final String ext = mp4List.contains(cleanName) ? 'mp4' : 'mov';
+
+      return ExerciseInfo(
+        name: ex['name']!,
+        sets: ex['sets']!,
+        rest: ex['rest']!,
+        imagePath: 'https://sixpack30.b-cdn.net/images/$cleanName {gender}.png',
+        videoPath: 'https://sixpack30.b-cdn.net/videos/$cleanName.$ext',
+      );
+    }).toList();
   }
 
   static final Map<int, WorkoutData> _allWorkouts = {

@@ -12,6 +12,7 @@ import '../../Core/Data/workout_data.dart';
 import '../../Core/Network/api_service.dart';
 import '../HomeView/home_view.dart';
 import '../PaywallView/paywall_view.dart';
+import '../../Riverpod/Controllers/user_provider.dart';
 import '../TrainingDetailView/training_detail_view.dart';
 
 class WorkoutDay {
@@ -82,8 +83,11 @@ class _TrainingViewState extends ConsumerState<TrainingView> {
               final workoutsAsync = ref.watch(workoutProvider);
               final statsAsync = ref.watch(statsProvider);
               final premiumAsync = ref.watch(premiumProvider);
+              final userAsync = ref.watch(userProfileProvider);
               
               final bool isPremium = premiumAsync.value ?? false;
+              final String rawGender = userAsync.value?.questionnaire?.gender ?? 'man';
+              final String gender = (rawGender == 'female') ? 'woman' : (rawGender == 'male' ? 'man' : rawGender);
 
               return workoutsAsync.when(
                 data: (workoutList) {
@@ -138,6 +142,7 @@ class _TrainingViewState extends ConsumerState<TrainingView> {
                           isLast, 
                           isPremiumLocked: isPremiumLocked,
                           isSequentialLocked: isSequentialLocked,
+                          gender: gender,
                         );
                       },
                       childCount: activeList.length,
@@ -169,8 +174,9 @@ class _TrainingViewState extends ConsumerState<TrainingView> {
         color: Colors.black,
         borderRadius: BorderRadius.vertical(bottom: Radius.circular(15.r)),
         image: DecorationImage(
-          image: const NetworkImage('https://sixpack30.b-cdn.net/banners/training_banner.jpg'),
+          image: const NetworkImage('https://sixpack30.b-cdn.net/images/training_banner.jpg'),
           fit: BoxFit.cover,
+          alignment: Alignment.topCenter,
           colorFilter: ColorFilter.mode(
             Colors.black.withValues(alpha: 0.38),
             BlendMode.darken,
@@ -258,7 +264,7 @@ class _TrainingViewState extends ConsumerState<TrainingView> {
       ),
     );
   }
-  Widget _buildTimelineItem(WorkoutDay day, bool isLast, {required bool isPremiumLocked, required bool isSequentialLocked}) {
+  Widget _buildTimelineItem(WorkoutDay day, bool isLast, {required bool isPremiumLocked, required bool isSequentialLocked, required String gender}) {
     final bool isLocked = isPremiumLocked || isSequentialLocked;
     return Stack(
       children: [
@@ -293,6 +299,7 @@ class _TrainingViewState extends ConsumerState<TrainingView> {
                       dayNumber: data.day,
                       title: Translations.translateWorkoutTitle(data.title, langCode),
                       exercises: data.exercises,
+                      gender: gender,
                     );
                   },
                 ),
@@ -317,7 +324,7 @@ class _TrainingViewState extends ConsumerState<TrainingView> {
                         BlendMode.darken,
                       ),
                       child: Image.network(
-                        'https://sixpack30.b-cdn.net/days/day_${day.imageIndex}.${day.imageIndex <= 6 ? 'png' : 'jpg'}',
+                        'https://sixpack30.b-cdn.net/images/day_${day.imageIndex}.${day.imageIndex <= 6 ? 'png' : 'jpg'}',
                         width: 115.w,
                         height: 80.h,
                         fit: BoxFit.cover,

@@ -26,7 +26,7 @@ class WorkoutModel {
     String? rawPath = json['imagePath'];
     String? finalPath = rawPath;
     if (rawPath != null && !rawPath.startsWith('http')) {
-      finalPath = 'https://sixpack30.b-cdn.net/exercises/${rawPath.split('/').last}';
+      finalPath = 'https://sixpack30.b-cdn.net/images/${rawPath.split('/').last}';
     }
 
     return WorkoutModel(

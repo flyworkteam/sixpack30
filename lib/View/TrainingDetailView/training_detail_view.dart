@@ -44,8 +44,9 @@ class TrainingDetailView extends ConsumerWidget {
                 fit: StackFit.expand,
                 children: [
                   Image.network(
-                    'https://sixpack30.b-cdn.net/banners/training_banner.jpg',
+                    'https://sixpack30.b-cdn.net/images/detayantrenman.jpg',
                     fit: BoxFit.cover,
+                    alignment: Alignment.topCenter,
                     errorBuilder: (context, error, stackTrace) => Container(
                       color: const Color(0xFF323232),
                       child: Icon(
@@ -164,7 +165,7 @@ class TrainingDetailView extends ConsumerWidget {
                                     title: ex.name,
                                     sets: ex.sets,
                                     rest: '${Translations.translate('rest', langCode)}: ${ex.rest}',
-                                    imagePath: ex.imagePath,
+                                    imagePath: ex.getImagePath(gender),
                                   ),
                                 ),
                               );

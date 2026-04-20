@@ -129,108 +129,51 @@ class LoginView extends ConsumerWidget {
                 ),
               ),
               SizedBox(height: 10.h),
-              Row(
-                children: [
-                  Expanded(
-                    child: _buildButton(
-                      onTap: () async {
-                        bool? hasCompletedSurvey;
-                        if (isIOS) {
-                          hasCompletedSurvey = await ref.read(authControllerProvider.notifier).signInWithGoogle();
-                        } else {
-                          hasCompletedSurvey = await ref.read(authControllerProvider.notifier).signInWithApple();
-                        }
+              _buildButton(
+                onTap: () async {
+                  bool? hasCompletedSurvey;
+                  if (isIOS) {
+                    hasCompletedSurvey = await ref.read(authControllerProvider.notifier).signInWithGoogle();
+                  } else {
+                    hasCompletedSurvey = await ref.read(authControllerProvider.notifier).signInWithApple();
+                  }
 
-                        final userState = ref.read(authControllerProvider);
-                        if (userState.hasValue && userState.value != null && context.mounted) {
-                            await ref.read(userProfileProvider.notifier).fetchProfile();
+                  final userState = ref.read(authControllerProvider);
+                  if (userState.hasValue && userState.value != null && context.mounted) {
+                      await ref.read(userProfileProvider.notifier).fetchProfile();
 
-                            if (hasCompletedSurvey == true) {
-                              Navigator.pushNamed(context, '/home');
-                            } else {
-                              Navigator.pushNamed(context, AppRoutes.questions);
-                            }
-                        }
-                      },
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          SvgPicture.asset(
-                            isIOS ? 'assets/images/material-icon-theme_google.svg' : 'assets/images/ic_baseline-apple.svg',
-                            width: 28.w,
-                            height: 28.h,
-                            fit: BoxFit.cover,
-                          ),
-                          SizedBox(width: 5.w),
-                          Text(
-                            isIOS ? 'Google' : 'Apple',
-                            style: GoogleFonts.montserrat(
-                              fontSize: 14.sp,
-                              fontWeight: FontWeight.w600,
-                              color: const Color(0xFF0D0D0D),
-                              height: 17 / 14,
-                            ),
-                          ),
-                        ],
+                      if (hasCompletedSurvey == true) {
+                        Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
+                      } else if (hasCompletedSurvey == false) {
+                        Navigator.pushNamed(context, AppRoutes.questions);
+                      } else {
+                        Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
+                      }
+                  }
+                },
+                width: double.infinity,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    SvgPicture.asset(
+                      isIOS ? 'assets/images/material-icon-theme_google.svg' : 'assets/images/ic_baseline-apple.svg',
+                      width: 28.w,
+                      height: 28.h,
+                      fit: BoxFit.cover,
+                    ),
+                    SizedBox(width: 5.w),
+                    Text(
+                      isIOS ? 'Google ile giriş yapın' : 'Apple ile giriş yapın',
+                      style: GoogleFonts.montserrat(
+                        fontSize: 14.sp,
+                        fontWeight: FontWeight.w600,
+                        color: const Color(0xFF0D0D0D),
+                        height: 17 / 14,
                       ),
                     ),
-                  ),
-                  SizedBox(width: 13.w),
-                  Expanded(
-                    child: _buildButton(
-                      onTap: () async {
-                        final bool? hasCompletedSurvey = await ref
-                            .read(authControllerProvider.notifier)
-                            .signInWithFacebook();
-
-                        final userState = ref.read(authControllerProvider);
-                        if (userState.hasValue &&
-                            userState.value != null &&
-                            context.mounted) {
-                          await ref
-                              .read(userProfileProvider.notifier)
-                              .fetchProfile();
-
-                          if (hasCompletedSurvey == true) {
-                            Navigator.pushNamedAndRemoveUntil(
-                                context, '/home', (route) => false);
-                          } else if (hasCompletedSurvey == false) {
-                            Navigator.pushNamed(context, AppRoutes.questions);
-                          } else {
-                            Navigator.pushNamedAndRemoveUntil(
-                                context, '/home', (route) => false);
-                          }
-                        } else if (context.mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text(
-                                  'Facebook ile giriş yapılamadı. Lütfen tekrar deneyin.'),
-                              backgroundColor: Colors.redAccent,
-                            ),
-                          );
-                        }
-                      },
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          SvgPicture.asset('assets/images/logos_facebook.svg', width: 28.w, height: 28.h, fit: BoxFit.cover),
-                          SizedBox(width: 5.w),
-                          Text(
-                            'Facebook',
-                            style: GoogleFonts.montserrat(
-                              fontSize: 14.sp,
-                              fontWeight: FontWeight.w600,
-                              color: const Color(0xFF0D0D0D),
-                              height: 17 / 14,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
+                  ],
+                ),
               ),
               SizedBox(height: 15.h),
               GestureDetector(

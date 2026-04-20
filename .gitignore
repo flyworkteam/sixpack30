@@ -1,3 +1,12 @@
+# Backend (Atılmayacak)
+backend/
+
+# Metadata and Junk files
+.DS_Store
+._*
+Desktop.ini
+Thumbs.db
+
 # Miscellaneous
 *.class
 *.log
@@ -43,7 +52,3 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
-
-# Backend
-backend/
-

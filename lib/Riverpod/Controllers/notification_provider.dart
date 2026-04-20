@@ -2,9 +2,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:six_pack_30/Core/Network/api_service.dart';
 
+final notificationProvider = StateNotifierProvider<NotificationNotifier, AsyncValue<List<dynamic>>>((ref) {
   return NotificationNotifier();
 });
 
+class NotificationNotifier extends StateNotifier<AsyncValue<List<dynamic>>> {
   final ApiService _apiService = ApiService();
 
   NotificationNotifier() : super(const AsyncValue.loading()) {
