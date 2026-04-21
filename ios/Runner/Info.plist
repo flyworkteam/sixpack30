@@ -48,6 +48,10 @@
     <string>This app requires access to your microphone (if needed for video/audio picking).</string>
     <key>NSPhotoLibraryUsageDescription</key>
     <string>This app requires access to your photo library to let you upload a profile picture.</string>
+    <key>NSHealthShareUsageDescription</key>
+    <string>This app requires access to your health data to track your fitness and activity levels.</string>
+    <key>NSHealthUpdateUsageDescription</key>
+    <string>This app requires permission to update your health data to record your workout results and progress.</string>
     <key>UIApplicationSceneManifest</key>
     <dict>
         <key>UIApplicationSupportsMultipleScenes</key>
