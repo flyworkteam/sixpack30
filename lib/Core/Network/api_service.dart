@@ -1,4 +1,5 @@
 import 'dart:io';
+
 import 'package:dio/dio.dart';
 
 class ApiService {
@@ -6,15 +7,17 @@ class ApiService {
   String _languageCode = 'tr';
 
   ApiService() {
-    _dio = Dio(BaseOptions(
-      baseUrl: Platform.isAndroid ? 'http://10.0.2.2:3000/api' : 'http://127.0.0.1:3000/api',
-      connectTimeout: const Duration(seconds: 10),
-      receiveTimeout: const Duration(seconds: 10),
-      responseType: ResponseType.json,
-      headers: {
-        'Accept-Language': 'tr',
-      },
-    ));
+    _dio = Dio(
+      BaseOptions(
+        baseUrl: Platform.isAndroid
+            ? 'https://sixpack30.fly-work.com/api'
+            : 'https://sixpack30.fly-work.com/api',
+        connectTimeout: const Duration(seconds: 10),
+        receiveTimeout: const Duration(seconds: 10),
+        responseType: ResponseType.json,
+        headers: {'Accept-Language': 'tr'},
+      ),
+    );
   }
 
   void setLanguage(String code) {
@@ -22,7 +25,9 @@ class ApiService {
     _dio.options.headers['Accept-Language'] = code;
   }
 
-  Future<Map<String, dynamic>?> syncUserWithBackend(String firebaseIdToken) async {
+  Future<Map<String, dynamic>?> syncUserWithBackend(
+    String firebaseIdToken,
+  ) async {
     try {
       final response = await _dio.post(
         '/user/auth',
@@ -40,13 +45,15 @@ class ApiService {
       return null;
     } catch (e) {
       if (e is DioException) {
-      } else {
-      }
+      } else {}
       return null;
     }
   }
 
-  Future<bool> updateProfile(String firebaseIdToken, Map<String, dynamic> data) async {
+  Future<bool> updateProfile(
+    String firebaseIdToken,
+    Map<String, dynamic> data,
+  ) async {
     try {
       final response = await _dio.put(
         '/user/profile',
@@ -61,8 +68,7 @@ class ApiService {
 
       return response.statusCode == 200;
     } catch (e) {
-      if (e is DioException) {
-      }
+      if (e is DioException) {}
       return false;
     }
   }
@@ -71,11 +77,7 @@ class ApiService {
     try {
       final response = await _dio.get(
         '/user/profile',
-        options: Options(
-          headers: {
-            'Authorization': 'Bearer $firebaseIdToken',
-          },
-        ),
+        options: Options(headers: {'Authorization': 'Bearer $firebaseIdToken'}),
       );
 
       if (response.statusCode == 200) {
@@ -83,8 +85,7 @@ class ApiService {
       }
       return null;
     } catch (e) {
-      if (e is DioException) {
-      }
+      if (e is DioException) {}
       return null;
     }
   }
@@ -93,11 +94,7 @@ class ApiService {
     try {
       final response = await _dio.get(
         '/user/stats',
-        options: Options(
-          headers: {
-            'Authorization': 'Bearer $firebaseIdToken',
-          },
-        ),
+        options: Options(headers: {'Authorization': 'Bearer $firebaseIdToken'}),
       );
       if (response.statusCode == 200) {
         return response.data;
@@ -122,8 +119,7 @@ class ApiService {
       );
       return response.statusCode == 200;
     } catch (e) {
-      if (e is DioException) {
-      }
+      if (e is DioException) {}
       return false;
     }
   }
@@ -132,11 +128,7 @@ class ApiService {
     try {
       final response = await _dio.get(
         '/notifications',
-        options: Options(
-          headers: {
-            'Authorization': 'Bearer $firebaseIdToken',
-          },
-        ),
+        options: Options(headers: {'Authorization': 'Bearer $firebaseIdToken'}),
       );
       if (response.statusCode == 200) {
         return response.data;
@@ -151,11 +143,7 @@ class ApiService {
     try {
       final response = await _dio.delete(
         '/notifications',
-        options: Options(
-          headers: {
-            'Authorization': 'Bearer $firebaseIdToken',
-          },
-        ),
+        options: Options(headers: {'Authorization': 'Bearer $firebaseIdToken'}),
       );
       return response.statusCode == 200;
     } catch (e) {
@@ -167,11 +155,7 @@ class ApiService {
     try {
       final response = await _dio.get(
         '/workouts',
-        options: Options(
-          headers: {
-            'Authorization': 'Bearer $firebaseIdToken',
-          },
-        ),
+        options: Options(headers: {'Authorization': 'Bearer $firebaseIdToken'}),
       );
       if (response.statusCode == 200) {
         return response.data;
@@ -182,7 +166,10 @@ class ApiService {
     }
   }
 
-  Future<bool> syncHealthData(String firebaseIdToken, Map<String, dynamic> data) async {
+  Future<bool> syncHealthData(
+    String firebaseIdToken,
+    Map<String, dynamic> data,
+  ) async {
     try {
       final response = await _dio.post(
         '/user/sync-health',
@@ -196,8 +183,7 @@ class ApiService {
       );
       return response.statusCode == 200;
     } catch (e) {
-      if (e is DioException) {
-      }
+      if (e is DioException) {}
       return false;
     }
   }
@@ -216,8 +202,7 @@ class ApiService {
       );
       return response.statusCode == 200 || response.statusCode == 201;
     } catch (e) {
-      if (e is DioException) {
-      }
+      if (e is DioException) {}
       return false;
     }
   }
