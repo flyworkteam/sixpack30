@@ -29,7 +29,20 @@ class NotificationNotifier extends StateNotifier<AsyncValue<List<dynamic>>> {
       }
 
       final notifications = await _apiService.getNotifications(token);
-      state = AsyncValue.data(notifications ?? []);
+      
+      final updatedNotifications = (notifications ?? []).map((notif) {
+        final notifMap = Map<String, dynamic>.from(notif as Map);
+        final String title = notifMap['title']?.toString() ?? '';
+        final String body = notifMap['body']?.toString() ?? '';
+        
+        if (title.contains('Anket') || body.contains('Anket')) {
+          notifMap['title'] = 'Tebrikler! 🎉';
+          notifMap['body'] = 'Profilini başarıyla oluşturduk. Hayalindeki vücuda ulaşmak için ilk antrenmanına hemen başla!';
+        }
+        return notifMap;
+      }).toList();
+
+      state = AsyncValue.data(updatedNotifications);
     } catch (e, st) {
       state = AsyncValue.error(e, st);
     }

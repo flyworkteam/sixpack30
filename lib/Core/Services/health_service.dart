@@ -1,6 +1,9 @@
-import 'package:health/health.dart';
+import 'package:health/health.dart' as health_pkg;
+import 'package:health/health.dart' show HealthDataType, HealthDataPoint, Health;
+import 'package:flutter/foundation.dart';
 import '../Network/api_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 class HealthService {
   static final HealthService _instance = HealthService._internal();
@@ -10,65 +13,66 @@ class HealthService {
   final Health _health = Health();
   final ApiService _apiService = ApiService();
 
-  final List<HealthDataType> _types = [
+  
+  final List<HealthDataType> types = [
+    HealthDataType.HEART_RATE,
+    HealthDataType.SLEEP_IN_BED,
+    HealthDataType.SLEEP_ASLEEP,
     HealthDataType.STEPS,
-    HealthDataType.ACTIVE_ENERGY_BURNED,
-    HealthDataType.SLEEP_SESSION,
   ];
 
   Future<bool> requestPermissions() async {
     try {
-      bool? hasPermissions = await _health.hasPermissions(_types);
-      if (hasPermissions != true) {
-        return await _health.requestAuthorization(_types);
-      }
-      return true;
+      bool requested = await _health.requestAuthorization(types);
+      return requested;
     } catch (e) {
+      debugPrint('Health Auth Error: $e');
       return false;
     }
   }
 
   Future<void> syncHealthData() async {
-    final user = FirebaseAuth.instance.currentUser;
-    if (user == null) return;
-
-    final bool hasPermission = await requestPermissions();
-    if (!hasPermission) return;
-
-    final now = DateTime.now();
-    final todayStart = DateTime(now.year, now.month, now.day);
-
     try {
-      List<HealthDataPoint> dataPoints = await _health.getHealthDataFromTypes(
-        types: _types,
-        startTime: todayStart,
-        endTime: now,
-      );
+      final bool hasPermission = await _health.hasPermissions(types) ?? false;
+      if (!hasPermission) return;
 
+      final now = DateTime.now();
+      final yesterday = now.subtract(const Duration(days: 1));
+
+      
+      List<HealthDataPoint> healthData = await _health.getHealthDataFromTypes(
+          startTime: yesterday, endTime: now, types: types);
+
+      
+      double heartRate = 0;
+      double sleepMinutes = 0;
       int steps = 0;
-      double calories = 0;
-      int sleepMinutes = 0;
 
-      for (var point in dataPoints) {
-        if (point.type == HealthDataType.STEPS) {
+      for (var point in healthData) {
+        if (point.type == HealthDataType.HEART_RATE) {
+          heartRate = double.tryParse(point.value.toString()) ?? 0;
+        } else if (point.type == HealthDataType.SLEEP_IN_BED || point.type == HealthDataType.SLEEP_ASLEEP) {
+          sleepMinutes += double.tryParse(point.value.toString()) ?? 0;
+        } else if (point.type == HealthDataType.STEPS) {
           steps += int.tryParse(point.value.toString()) ?? 0;
-        } else if (point.type == HealthDataType.ACTIVE_ENERGY_BURNED) {
-          calories += double.tryParse(point.value.toString()) ?? 0;
-        } else if (point.type == HealthDataType.SLEEP_SESSION) {
-          final duration = point.dateTo.difference(point.dateFrom).inMinutes;
-          sleepMinutes += duration;
         }
       }
 
-      final token = await user.getIdToken();
-      if (token != null) {
-        await _apiService.syncHealthData(token, {
-          'steps': steps,
-          'calories': calories,
-          'sleepMinutes': sleepMinutes,
-        });
+      
+      final user = FirebaseAuth.instance.currentUser;
+      if (user != null) {
+        final token = await user.getIdToken();
+        if (token != null) {
+          await _apiService.syncHealthData(token, {
+            'heartRate': heartRate,
+            'sleepMinutes': sleepMinutes,
+            'steps': steps,
+            'syncDate': now.toIso8601String(),
+          });
+        }
       }
     } catch (e) {
+      debugPrint('Health Sync Error: $e');
     }
   }
 }

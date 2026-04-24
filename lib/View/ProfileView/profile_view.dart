@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:six_pack_30/Riverpod/Controllers/user_provider.dart';
 import 'package:six_pack_30/Riverpod/Controllers/auth_controller.dart';
@@ -31,19 +33,33 @@ class ProfileView extends ConsumerWidget {
     final user = userProfile.value;
     final langCode = ref.watch(localeProvider).languageCode;
     
+    debugPrint('[PROFILE] Build triggered. Health: ${user?.healthConnected}, Notifications: ${user?.notificationsEnabled}');
+    
     final bool isLoading = userProfile.isLoading && user == null;
     final bool isGuest = user == null && !userProfile.isLoading;
     
-    final String displayName = isLoading 
-        ? Translations.translate('loading', langCode) 
-        : (isGuest ? 'Sinem Akın' : (user?.name ?? Translations.translate('guest', langCode)));
+    final firebaseUser = FirebaseAuth.instance.currentUser;
+    
+    final String firebaseDisplayName = firebaseUser?.displayName ?? '';
+    final String firebaseEmailPart = firebaseUser?.email != null 
+        ? (firebaseUser!.email!.contains('privaterelay.appleid.com') ? '' : firebaseUser.email!.split('@').first) 
+        : '';
+    final String displayName = isLoading
+        ? Translations.translate('loading', langCode)
+        : (user?.name != null && user!.name!.trim().isNotEmpty
+            ? user.name!
+            : (firebaseDisplayName.isNotEmpty 
+                ? firebaseDisplayName 
+                : (firebaseEmailPart.isNotEmpty 
+                    ? firebaseEmailPart 
+                    : 'Kullanıcı')));
         
     final String defaultProfileImage = 'assets/images/iconstack.io - (User Circle Regular).png';
-    final bool effectiveIsPremium = isGuest ? true : isPremium;
+    final bool effectiveIsPremium = isPremium;
 
     return SingleChildScrollView(
       physics: const ClampingScrollPhysics(),
-      padding: EdgeInsets.only(bottom: 80.h, top: 73.h),
+      padding: EdgeInsets.only(bottom: 80.h, top: MediaQuery.of(context).padding.top + 10.h),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
@@ -89,17 +105,18 @@ class ProfileView extends ConsumerWidget {
                   backgroundColor: const Color(0xFFF3F3F3),
                   child: ClipOval(
                     child: user?.photoUrl != null
-                        ? Image.network(
-                            user!.photoUrl!,
-                            width: 48.w,
-                            height: 48.h,
-                            fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) => Icon(
-                              Icons.person_rounded,
-                              size: 28.sp,
-                              color: const Color(0xFFADADAD),
-                            ),
-                          )
+                        ? CachedNetworkImage(
+                      imageUrl: user!.photoUrl!,
+                      width: 48.w,
+                      height: 48.h,
+                      fit: BoxFit.cover,
+                      placeholder: (context, url) => const CircularProgressIndicator(strokeWidth: 2),
+                      errorWidget: (context, url, error) => Icon(
+                        Icons.person_rounded,
+                        size: 28.sp,
+                        color: const Color(0xFFADADAD),
+                      ),
+                    )
                         : Icon(
                             Icons.person_rounded,
                             size: 28.sp,
@@ -207,7 +224,7 @@ class ProfileView extends ConsumerWidget {
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (context) => const PaywallView(),
+                                  builder: (context) => const RevenueCatPaywallView(),
                                 ),
                               );
                             }),
@@ -461,32 +478,29 @@ class ProfileView extends ConsumerWidget {
     );
   }
   Widget _buildCustomSwitch(bool value, ValueChanged<bool>? onToggle) {
-    return GestureDetector(
-      onTap: () => onToggle?.call(!value),
-      child: Container(
-        width: 37.w,
-        height: 20.h,
-        decoration: BoxDecoration(
-          color: value ? const Color.fromRGBO(52, 47, 47, 0.96) : const Color(0xFFE2E2E2),
-          borderRadius: BorderRadius.circular(10.r),
-        ),
-        child: Stack(
-          alignment: Alignment.center,
-          children: [
-            Positioned(
-              left: value ? null : 1.58.w,
-              right: value ? 1.58.w : null,
-              child: Container(
-                width: 16.w,
-                height: 16.w,
-                decoration: const BoxDecoration(
-                  color: Colors.white,
-                  shape: BoxShape.circle,
-                ),
+    return Container(
+      width: 37.w,
+      height: 20.h,
+      decoration: BoxDecoration(
+        color: value ? const Color(0xF5342F2F) : const Color(0xFFE2E2E2),
+        borderRadius: BorderRadius.circular(10.r),
+      ),
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          Positioned(
+            left: value ? null : 1.58.w,
+            right: value ? 1.58.w : null,
+            child: Container(
+              width: 16.w,
+              height: 16.w,
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                shape: BoxShape.circle,
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

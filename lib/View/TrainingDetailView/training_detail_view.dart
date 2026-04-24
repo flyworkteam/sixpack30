@@ -3,11 +3,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import '../../Core/Data/workout_data.dart';
 import '../../Core/Localization/translations.dart';
 import '../../Riverpod/Controllers/locale_provider.dart';
 import '../TrainingActiveView/training_active_view.dart';
-class TrainingDetailView extends ConsumerWidget {
+import '../../Riverpod/Controllers/workout_progress_provider.dart';
+
+class TrainingDetailView extends ConsumerStatefulWidget {
   final int dayNumber;
   final String title;
   final List<ExerciseInfo> exercises;
@@ -20,9 +23,24 @@ class TrainingDetailView extends ConsumerWidget {
     required this.exercises,
     this.gender = 'woman',
   });
+
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<TrainingDetailView> createState() => _TrainingDetailViewState();
+}
+
+class _TrainingDetailViewState extends ConsumerState<TrainingDetailView> {
+  @override
+  Widget build(BuildContext context) {
     final langCode = ref.watch(localeProvider).languageCode;
+    final progress = ref.watch(workoutProgressProvider);
+    
+    
+    final currentProgress = (progress != null && progress.dayNumber == widget.dayNumber) ? progress : null;
+
+    final dayNumber = widget.dayNumber;
+    final title = widget.title;
+    final exercises = widget.exercises;
+    final gender = widget.gender;
     return Scaffold(
       backgroundColor: const Color(0xFFFEFEFE),
       body: Stack(
@@ -43,8 +61,8 @@ class TrainingDetailView extends ConsumerWidget {
               child: Stack(
                 fit: StackFit.expand,
                 children: [
-                  Image.network(
-                    'https://sixpack30.b-cdn.net/images/detayantrenman.jpg',
+                  Image.asset(
+                    'assets/images/detayantrenman.jpg',
                     fit: BoxFit.cover,
                     alignment: Alignment.topCenter,
                     errorBuilder: (context, error, stackTrace) => Container(
@@ -180,8 +198,10 @@ class TrainingDetailView extends ConsumerWidget {
                                     builder: (context) => TrainingActiveView(
                                       gender: gender,
                                       exercises: exercises,
-                                      initialIndex: 0,
+                                      initialIndex: currentProgress?.exerciseIndex ?? 0,
+                                      initialSetIndex: currentProgress?.setIndex ?? 0,
                                       dayNumber: dayNumber,
+                                      title: title,
                                     ),
                                   ),
                                 );
@@ -197,7 +217,9 @@ class TrainingDetailView extends ConsumerWidget {
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
                                     Text(
-                                      Translations.translate('start_workout', langCode),
+                                      currentProgress != null 
+                                        ? Translations.translate('continue_where_left', langCode)
+                                        : Translations.translate('start_workout', langCode),
                                       style: GoogleFonts.montserrat(
                                         fontWeight: FontWeight.w600,
                                         fontSize: 16.sp,
@@ -262,7 +284,7 @@ class TrainingDetailView extends ConsumerWidget {
             ),
           ),
           Positioned(
-            top: 74.h,
+            top: MediaQuery.of(context).padding.top + 10.h,
             left: 25.w,
             child: GestureDetector(
               onTap: () => Navigator.of(context).pop(),
@@ -357,13 +379,28 @@ class TrainingDetailView extends ConsumerWidget {
             top: 4.h,
             child: ClipRRect(
               borderRadius: BorderRadius.circular(10.r),
-              child: Image.network(
-                imagePath,
-                width: 81.w,
-                height: 61.h,
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) => _buildPlaceholder(),
-              ),
+              child: imagePath.startsWith('http')
+                  ? CachedNetworkImage(
+                      imageUrl: imagePath,
+                      width: 81.w,
+                      height: 61.h,
+                      fit: BoxFit.cover,
+                      placeholder: (context, url) => Center(
+                        child: SizedBox(
+                          width: 20.w,
+                          height: 20.w,
+                          child: const CircularProgressIndicator(strokeWidth: 2),
+                        ),
+                      ),
+                      errorWidget: (context, url, error) => _buildPlaceholder(),
+                    )
+                  : Image.asset(
+                      imagePath,
+                      width: 81.w,
+                      height: 61.h,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) => _buildPlaceholder(),
+                    ),
             ),
           ),
           Positioned(

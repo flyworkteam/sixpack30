@@ -45,9 +45,18 @@ class PremiumNotifier extends StateNotifier<AsyncValue<bool>> {
   Future<void> updatePurchaseStatus() async {
     try {
       CustomerInfo customerInfo = await Purchases.getCustomerInfo();
+      
       final bool isPremium = customerInfo.entitlements.active.containsKey('premium');
+      
+      if (kDebugMode) {
+        print('RevenueCat Status:');
+        print('Active Entitlements: ${customerInfo.entitlements.active.keys}');
+        print('Is Premium: $isPremium');
+      }
+
       state = AsyncValue.data(isPremium);
     } catch (e) {
+      if (kDebugMode) print('RevenueCat Error: $e');
       state = AsyncValue.data(false);
     }
   }
@@ -92,5 +101,11 @@ class PremiumNotifier extends StateNotifier<AsyncValue<bool>> {
     } catch (e) {
       await updatePurchaseStatus();
     }
+  }
+
+  void debugTogglePremium() {
+    state.whenData((isPremium) {
+      state = AsyncValue.data(!isPremium);
+    });
   }
 }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -16,6 +17,10 @@ import '../TrainingView/training_view.dart';
 import '../NotificationsView/notifications_view.dart';
 import '../PaywallView/paywall_view.dart';
 import '../TrainingDetailView/training_detail_view.dart';
+import '../TrainingActiveView/training_active_view.dart';
+import 'package:cached_network_image/cached_network_image.dart';
+import '../../Core/Services/workout_progress_service.dart';
+import '../../Riverpod/Controllers/workout_progress_provider.dart';
 
 class HomeView extends ConsumerStatefulWidget {
   const HomeView({super.key});
@@ -28,7 +33,6 @@ class _HomeViewState extends ConsumerState<HomeView> {
   int _selectedDay = 0;
   late final List<Map<String, String>> _days;
   int _completedDaysPage = 0;
-
   @override
   void initState() {
     super.initState();
@@ -56,6 +60,8 @@ class _HomeViewState extends ConsumerState<HomeView> {
     final langCode = ref.watch(localeProvider).languageCode;
     final user = userProfileValue.value;
     final stats = statsValue.value;
+    final inProgressWorkout = ref.watch(workoutProgressProvider);
+    final gender = user?.questionnaire?.gender ?? 'woman';
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -82,11 +88,11 @@ class _HomeViewState extends ConsumerState<HomeView> {
                 : SingleChildScrollView(
                     key: const ValueKey('HomeTab'),
                     physics: const ClampingScrollPhysics(),
-                    padding: EdgeInsets.only(bottom: 80.h),
+                    padding: EdgeInsets.only(bottom: 80.h, top: MediaQuery.of(context).padding.top + 10.h),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        SizedBox(height: 54.h),
+                        SizedBox(height: 10.h),
                         _buildHeader(),
                         SizedBox(height: 18.h),
                         _buildDaySelector(langCode),
@@ -94,20 +100,14 @@ class _HomeViewState extends ConsumerState<HomeView> {
                         _buildSectionTitle(Translations.translate('daily_workout', langCode)),
                         SizedBox(height: 18.h),
                         _buildWorkoutCard(),
-                        if (stats != null && stats.recentExercises.isNotEmpty) ...[
+                        if (inProgressWorkout != null) ...[
                           SizedBox(height: 30.h),
                           _buildSectionTitle(Translations.translate('continue_where_left', langCode)),
-                          SizedBox(height: 20.h),
-                          ...stats.recentExercises.map((ex) => Padding(
-                                padding: EdgeInsets.only(bottom: 15.h, left: 24.w, right: 24.w),
-                                child: _buildExerciseCard(
-                                  imagePath: ex.imagePath ?? 'assets/images/Gemini_Generated_Image_wgw42fwgw42fwgw4.png',
-                                  title: ex.title,
-                                  category: ex.category,
-                                  progress: ex.progress,
-                                  progressText: ex.progressText,
-                                ),
-                              )),
+                          SizedBox(height: 18.h),
+                          Padding(
+                            padding: EdgeInsets.only(bottom: 15.h),
+                            child: _buildContinueCard(inProgressWorkout!, langCode),
+                          ),
                         ],
                         SizedBox(height: 30.h),
                         _buildProgressBadge(),
@@ -143,14 +143,32 @@ class _HomeViewState extends ConsumerState<HomeView> {
     final bool isLoading = userProfile.isLoading && user == null;
     final bool isGuest = user == null && !userProfile.isLoading;
     
-    final String displayName = isLoading 
-        ? Translations.translate('loading', langCode) 
-        : (isGuest ? Translations.translate('guest', langCode) : (user?.name ?? 'Kullanıcı'));
+    final firebaseUser = FirebaseAuth.instance.currentUser;
+    
+    final String firebaseDisplayName = firebaseUser?.displayName ?? '';
+    final String firebaseEmailPart = firebaseUser?.email != null 
+        ? (firebaseUser!.email!.contains('privaterelay.appleid.com') ? '' : firebaseUser.email!.split('@').first) 
+        : '';
+    final String displayName = isLoading
+        ? Translations.translate('loading', langCode)
+        : (user?.name != null && user!.name!.trim().isNotEmpty
+            ? user.name!
+            : (firebaseDisplayName.isNotEmpty 
+                ? firebaseDisplayName 
+                : (firebaseEmailPart.isNotEmpty 
+                    ? firebaseEmailPart 
+                    : 'Kullanıcı')));
         
-    final bool isMan = !isGuest && user != null && user.questionnaire?.gender == 'man';
+    final String rawGender = (user?.questionnaire?.gender ?? '').toLowerCase().trim();
+    final bool isMale = rawGender.contains('male') || 
+                       rawGender.contains('man') || 
+                       rawGender.contains('erkek');
+    final bool isMan = !isGuest && user != null && isMale;
+    final String gender = isMale ? 'man' : 'woman';
     final String? userPhoto = user?.photoUrl;
     final String defaultProfileImage = 'assets/images/iconstack.io - (User Circle Regular).png';
-    isPremium = isGuest ? false : (user?.isPremium ?? false);
+    final bool isPremiumUser = ref.watch(premiumProvider).value ?? false;
+    isPremium = isGuest ? false : isPremiumUser;
 
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: 24.w),
@@ -163,12 +181,13 @@ class _HomeViewState extends ConsumerState<HomeView> {
               backgroundColor: const Color(0xFFF3F3F3),
               child: ClipOval(
                 child: userPhoto != null 
-                  ? Image.network(
-                      userPhoto,
+                  ? CachedNetworkImage(
+                      imageUrl: userPhoto,
                       width: 40.w,
                       height: 40.h,
                       fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) => Icon(
+                      placeholder: (context, url) => const CircularProgressIndicator(strokeWidth: 2),
+                      errorWidget: (context, url, error) => Icon(
                         Icons.person_rounded,
                         size: 24.sp,
                         color: const Color(0xFFADADAD),
@@ -351,6 +370,13 @@ class _HomeViewState extends ConsumerState<HomeView> {
   }
   Widget _buildWorkoutCard() {
     final langCode = ref.watch(localeProvider).languageCode;
+    final user = ref.watch(userProfileProvider).value;
+    final String rawGender = (user?.questionnaire?.gender ?? '').toLowerCase().trim();
+    final bool isMale = rawGender.contains('male') || 
+                       rawGender.contains('man') || 
+                       rawGender.contains('erkek');
+    final String gender = isMale ? 'man' : 'woman';
+
     final workoutsAsync = ref.watch(workoutProvider);
     final statsAsync = ref.watch(statsProvider);
     final premiumAsync = ref.watch(premiumProvider);
@@ -381,7 +407,7 @@ class _HomeViewState extends ConsumerState<HomeView> {
       child: GestureDetector(
         onTap: () {
           if (isLocked) {
-            Navigator.push(context, MaterialPageRoute(builder: (_) => const PaywallView()));
+            Navigator.push(context, MaterialPageRoute(builder: (_) => const RevenueCatPaywallView()));
           } else {
             Navigator.push(
               context, 
@@ -389,21 +415,18 @@ class _HomeViewState extends ConsumerState<HomeView> {
                 dayNumber: currentDay, 
                 title: workoutTitle, 
                 exercises: workoutData.exercises,
+                gender: gender,
               ))
             );
           }
         },
         child: Stack(
-          clipBehavior: Clip.none,
+          clipBehavior: Clip.antiAlias,
           children: [
             Container(
-              width: 342.w,
-              padding: EdgeInsets.only(
-                left: 20.w,
-                top: 20.h,
-                bottom: 20.h,
-                right: 10.w,
-              ),
+              width: double.infinity,
+              height: 121.h,
+              padding: EdgeInsets.fromLTRB(20.w, 10.h, 0, 10.h),
               decoration: BoxDecoration(
                 color: const Color(0xFF06C44F),
                 border: Border.all(color: const Color(0xFFEBEBEB)),
@@ -425,45 +448,70 @@ class _HomeViewState extends ConsumerState<HomeView> {
                             color: Colors.black,
                             letterSpacing: -0.176.sp,
                           ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
                         SizedBox(height: 11.h),
-                        Wrap(
-                          spacing: 8.w,
-                          runSpacing: 9.h,
-                          children: [
-                            _buildWorkoutBadge(
-                              exerciseCount == 0 ? Translations.translate('rest', langCode) : '$exerciseCount ${Translations.translate('exercises_count', langCode)}',
-                              'assets/images/Exercise_Body_Icon.svg',
-                            ),
-                            _buildWorkoutBadge(
-                              '${Translations.translate('focus_area', langCode)}:${Translations.translate('abs', langCode)}',
-                              'assets/images/Abs_Zone_Icon.svg',
-                            ),
-                            _buildWorkoutBadge(
-                              '$duration ${Translations.translate('minutes', langCode)}',
-                              'assets/images/Duration_Badge_Icon.svg',
-                            ),
-                            _buildWorkoutBadge(
-                              '$kcal Kcal',
-                              'assets/images/Calorie_Badge_Icon.svg',
-                            ),
-                          ],
+                        SizedBox(
+                          width: 186.w,
+                          child: Table(
+                            columnWidths: const {
+                              0: FixedColumnWidth(88),
+                              1: FixedColumnWidth(88),
+                            },
+                            children: [
+                              TableRow(
+                                children: [
+                                  Padding(
+                                    padding: EdgeInsets.only(bottom: 10.h),
+                                    child: _buildWorkoutBadge(
+                                      exerciseCount == 0 ? Translations.translate('rest', langCode) : '$exerciseCount ${Translations.translate('exercises_count', langCode)}',
+                                      'assets/images/Exercise_Body_Icon.svg',
+                                    ),
+                                  ),
+                                  Padding(
+                                    padding: EdgeInsets.only(left: 10.w, bottom: 10.h),
+                                    child: _buildWorkoutBadge(
+                                      '${Translations.translate('focus_area', langCode)}:${Translations.translate('abs', langCode)}',
+                                      'assets/images/Abs_Zone_Icon.svg',
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              TableRow(
+                                children: [
+                                  _buildWorkoutBadge(
+                                    '$duration ${Translations.translate('minutes', langCode)}',
+                                    'assets/images/Duration_Badge_Icon.svg',
+                                  ),
+                                  Padding(
+                                    padding: EdgeInsets.only(left: 10.w),
+                                    child: _buildWorkoutBadge(
+                                      '$kcal Kcal',
+                                      'assets/images/Calorie_Badge_Icon.svg',
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
                         ),
                       ],
                     ),
                   ),
-                  SizedBox(width: 110.w),
+                  SizedBox(width: 45.w),
                 ],
               ),
             ),
             Positioned(
-              right: -10.w,
-              bottom: 0,
+              left: 223.w,
+              top: -52.h,
               child: Opacity(
                 opacity: 1.0,
                 child: Image.asset(
                   'assets/images/Adsız tasarım-6.png',
                   width: 127.8.w,
+                  height: 225.38.h,
                   fit: BoxFit.contain,
                   errorBuilder: (_, __, ___) => const SizedBox.shrink(),
                 ),
@@ -474,43 +522,48 @@ class _HomeViewState extends ConsumerState<HomeView> {
       ),
     );
   }
-  Widget _buildWorkoutBadge(String label, String assetPath) {
+  Widget _buildWorkoutBadge(String label, String assetPath, {double? width}) {
     return Container(
-      constraints: BoxConstraints(maxWidth: 100.w),
-      padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 4.h),
+      width: width ?? 88.w,
+      height: 20.h,
+      padding: EdgeInsets.symmetric(horizontal: 2.w),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(10.r),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           if (assetPath.endsWith('.svg'))
             SvgPicture.asset(
               assetPath,
-              width: 12.w,
-              height: 12.h,
+              width: 12.sp,
+              height: 12.sp,
               fit: BoxFit.contain,
+              colorFilter: const ColorFilter.mode(Color(0xFF06C44F), BlendMode.srcIn),
             )
           else
             Image.asset(
               assetPath,
-              width: 12.w,
-              height: 12.h,
+              width: 12.sp,
+              height: 12.sp,
               fit: BoxFit.contain,
             ),
-          SizedBox(width: 4.w),
-          Flexible(
+          SizedBox(width: 3.w),
+          Expanded(
             child: Text(
               label,
               style: GoogleFonts.montserrat(
                 fontSize: 10.sp,
                 fontWeight: FontWeight.w500,
                 color: const Color(0xFF100F0F),
-                height: 1.0,
+                height: 1.2,
+                letterSpacing: -0.5,
               ),
-              overflow: TextOverflow.ellipsis,
               maxLines: 1,
+              overflow: TextOverflow.visible,
             ),
           ),
         ],
@@ -524,162 +577,430 @@ class _HomeViewState extends ConsumerState<HomeView> {
     required double progress,
     required String progressText,
   }) {
-    return Padding(
-      padding: EdgeInsets.symmetric(horizontal: 23.w),
-      child: Container(
-        width: 345.w,
-        height: 103.h,
-        decoration: BoxDecoration(
-          color: Colors.white,
-          border: Border.all(color: const Color(0xFFEBEBEB)),
-          borderRadius: BorderRadius.circular(10.r),
-        ),
-        child: Stack(
-          children: [
-            Positioned(
-              left: 10.w,
-              top: 9.h,
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  ClipRRect(
+    return Container(
+      width: 345.w,
+      height: 103.h,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        border: Border.all(color: const Color(0xFFEBEBEB)),
+        borderRadius: BorderRadius.circular(15.r),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Stack(
+        children: [
+          
+          Positioned(
+            left: 10.w,
+            top: 9.h,
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(10.r),
+              child: Container(
+                width: 97.w,
+                height: 86.h,
+                color: const Color(0xFFF0F0F0),
+                child: imagePath.startsWith('http')
+                    ? CachedNetworkImage(
+                        imageUrl: imagePath,
+                        fit: BoxFit.cover,
+                        placeholder: (context, url) => const Center(child: CircularProgressIndicator(strokeWidth: 2)),
+                        errorWidget: (context, url, error) => const Icon(Icons.fitness_center),
+                      )
+                    : Image.asset(
+                        imagePath,
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, __, ___) => const Icon(Icons.fitness_center),
+                      ),
+              ),
+            ),
+          ),
+          
+          Positioned(
+            left: 118.w,
+            top: 15.h,
+            right: 15.w,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Expanded(
+                      child: Text(
+                        title,
+                        style: GoogleFonts.montserrat(
+                          fontSize: 16.sp,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.black,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    Icon(Icons.play_circle_outline, color: const Color(0xFF7E8896), size: 22.sp),
+                  ],
+                ),
+                SizedBox(height: 8.h),
+                Container(
+                  padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 2.h),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF7E8896).withValues(alpha: 0.8),
                     borderRadius: BorderRadius.circular(10.r),
-                    child: Container(
-                      width: 97.w,
-                      height: 86.h,
-                      color: const Color(0xFFF0F0F0),
-                      child: imagePath.startsWith('http')
-                        ? Image.network(
-                            imagePath,
-                            fit: BoxFit.cover,
-                            errorBuilder: (_, __, ___) => Center(
-                              child: Icon(
-                                Icons.fitness_center,
-                                color: const Color(0xFF06C44F),
-                                size: 32.sp,
-                              ),
-                            ),
-                          )
-                        : Center(
-                            child: Icon(
-                              Icons.fitness_center,
-                              color: const Color(0xFF06C44F),
-                              size: 32.sp,
-                            ),
-                          ),
+                  ),
+                  child: Text(
+                    category.isEmpty ? 'Karin' : category,
+                    style: GoogleFonts.montserrat(
+                      fontSize: 10.sp,
+                      fontWeight: FontWeight.w500,
+                      color: Colors.white,
                     ),
                   ),
-                  SizedBox(width: 11.w),
-                  SizedBox(
-                    width: 213.w,
+                ),
+                const Spacer(),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    Text(
+                      progressText,
+                      style: GoogleFonts.montserrat(
+                        fontSize: 14.sp,
+                        fontWeight: FontWeight.w500,
+                        color: Colors.black,
+                      ),
+                    ),
+                  ],
+                ),
+                SizedBox(height: 4.h),
+                Stack(
+                  children: [
+                    Container(
+                      width: double.infinity,
+                      height: 5.h,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFE0E0E0),
+                        borderRadius: BorderRadius.circular(5.r),
+                      ),
+                    ),
+                    Container(
+                      width: (345.w - 133.w) * (progress.clamp(0.0, 1.0)),
+                      height: 5.h,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF00EF5B),
+                        borderRadius: BorderRadius.circular(5.r),
+                      ),
+                    ),
+                  ],
+                ),
+                SizedBox(height: 10.h),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+  Widget _buildContinueCard(WorkoutProgress progress, String langCode) {
+    final workout = StaticWorkoutData.getWorkoutForDay(progress.dayNumber);
+    final user = ref.read(userProfileProvider).value;
+    final isPremiumUser = ref.watch(premiumProvider).value ?? false;
+    final bool isLocked = progress.dayNumber > 3 && !isPremiumUser;
+
+    if (workout.exercises.isEmpty) {
+      
+      return Padding(
+        padding: EdgeInsets.symmetric(horizontal: 24.w),
+        child: Container(
+          width: 345.w,
+          height: 103.h,
+          decoration: BoxDecoration(
+            color: Colors.white,
+            border: Border.all(color: const Color(0xFFEBEBEB)),
+            borderRadius: BorderRadius.circular(10.r),
+          ),
+          child: Stack(
+            children: [
+              Positioned(
+                left: 10.w,
+                top: 9.h,
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(10.r),
+                  child: Container(
+                    width: 97.w,
                     height: 86.h,
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                    child: Image.asset(
+                      'assets/images/day_4.png',
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                ),
+              ),
+              Positioned(
+                left: 118.w,
+                top: 15.h,
+                right: 14.w,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            SizedBox(
-                              width: 168.w,
-                              child: Text(
-                                title,
-                                style: GoogleFonts.montserrat(
-                                  fontSize: 16.sp,
-                                  fontWeight: FontWeight.w600,
-                                  color: Colors.black,
-                                  letterSpacing: -0.176.sp,
-                                ),
-                              ),
+                        Expanded(
+                          child: Text(
+                            '${progress.dayNumber}. ${Translations.translate('workout_day', langCode)}: ${Translations.translate('active_rest', langCode)}',
+                            style: GoogleFonts.montserrat(
+                              fontSize: 16.sp,
+                              fontWeight: FontWeight.w600,
+                              color: const Color(0xFF5B5B5B),
+                              height: 1.2,
                             ),
-                            SvgPicture.asset(
-                              'assets/images/Exercise_Forward_Icon.svg',
-                              width: 22.w,
-                              height: 22.h,
-                            ),
-                          ],
+                          ),
                         ),
-                        SizedBox(height: 15.h),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Container(
-                              width: 53.w,
-                              height: 17.h,
-                              alignment: Alignment.center,
-                              decoration: BoxDecoration(
-                                color: const Color(
-                                  0xFF5B5B5B,
-                                ).withValues(alpha: 0.77),
-                                borderRadius: BorderRadius.circular(10.r),
-                              ),
-                              child: Text(
-                                category,
-                                style: GoogleFonts.montserrat(
-                                  fontSize: 10.sp,
-                                  fontWeight: FontWeight.w500,
-                                  color: Colors.white,
-                                  letterSpacing: -0.11.sp,
-                                ),
-                              ),
-                            ),
-                            Text(
-                              progressText,
-                              style: GoogleFonts.montserrat(
-                                fontSize: 14.sp,
-                                fontWeight: FontWeight.w500,
-                                color: Colors.black,
-                                letterSpacing: -0.154.sp,
-                              ),
-                            ),
-                          ],
-                        ),
-                        SizedBox(height: 6.h),
-                        Stack(
-                          children: [
-                            Container(
-                              width: 213.w,
-                              height: 5.h,
-                              decoration: BoxDecoration(
-                                color: const Color(0xFFDDDDDD),
-                                borderRadius: BorderRadius.circular(6.r),
-                              ),
-                            ),
-                            Container(
-                              width: 213.w * progress,
-                              height: 5.h,
-                              decoration: BoxDecoration(
-                                color: const Color(0xFF00EF5B),
-                                borderRadius: BorderRadius.only(
-                                  topRight: Radius.circular(4.r),
-                                  bottomRight: Radius.circular(4.r),
-                                ),
-                              ),
-                            ),
-                          ],
+                        if (isLocked)
+                          Icon(Icons.lock_outline, color: Colors.grey, size: 20.sp),
+                      ],
+                    ),
+                    SizedBox(height: 8.h),
+                    Row(
+                      children: [
+                        Icon(Icons.access_time, color: const Color(0xFF5B5B5B), size: 14.sp),
+                        SizedBox(width: 5.w),
+                        Text(
+                          '10 ${Translations.translate('minutes', langCode)}',
+                          style: GoogleFonts.montserrat(
+                            fontSize: 12.sp,
+                            fontWeight: FontWeight.w500,
+                            color: const Color(0xFF5B5B5B),
+                          ),
                         ),
                       ],
                     ),
-                  ),
-                ],
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+    
+    final currentExercise = workout.exercises[progress.exerciseIndex.clamp(0, workout.exercises.length - 1)];
+    final String rawGender = (user?.questionnaire?.gender ?? '').toLowerCase().trim();
+    final bool isMale = rawGender.contains('male') || 
+                       rawGender.contains('man') || 
+                       rawGender.contains('erkek');
+    final String gender = isMale ? 'man' : 'woman';
+    final String imagePath = currentExercise.getImagePath(gender);
+    
+    
+    final int totalExercises = workout.exercises.length;
+    final double exerciseWeight = 1.0 / totalExercises;
+    
+    
+    final RegExp regExp = RegExp(r'(\d+)\s*Set', caseSensitive: false);
+    final match = regExp.firstMatch(currentExercise.sets);
+    final int totalSets = match != null ? int.parse(match.group(1)!) : 1;
+    final double setProgress = progress.setIndex / totalSets;
+    
+    final double totalProgress = (progress.exerciseIndex / totalExercises) + (setProgress * exerciseWeight);
+    final int percent = (totalProgress * 100).clamp(0, 100).toInt();
+
+    if (percent >= 100) return const SizedBox.shrink();
+
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: 24.w),
+      child: GestureDetector(
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => TrainingActiveView(
+                dayNumber: progress.dayNumber,
+                exercises: workout.exercises,
+                initialIndex: progress.exerciseIndex,
+                initialSetIndex: progress.setIndex,
+                gender: gender,
+                title: progress.title,
               ),
             ),
-          ],
+          );
+        },
+        child: Container(
+          width: 345.w,
+          height: 103.h,
+          decoration: BoxDecoration(
+            color: Colors.white,
+            border: Border.all(color: const Color(0xFFEBEBEB)),
+            borderRadius: BorderRadius.circular(10.r),
+          ),
+          child: Stack(
+            children: [
+              
+              Positioned(
+                left: 10.w,
+                top: 9.h,
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(10.r),
+                  child: Container(
+                    width: 97.w,
+                    height: 86.h,
+                    color: const Color(0xFFF0F0F0),
+                    child: imagePath.startsWith('http')
+                        ? CachedNetworkImage(
+                            imageUrl: imagePath,
+                            fit: BoxFit.cover,
+                            placeholder: (context, url) => const Center(child: CircularProgressIndicator(strokeWidth: 2)),
+                            errorWidget: (context, url, error) => const Icon(Icons.fitness_center),
+                          )
+                        : Image.asset(
+                            imagePath,
+                            fit: BoxFit.cover,
+                            errorBuilder: (_, __, ___) => const Icon(Icons.fitness_center),
+                          ),
+                  ),
+                ),
+              ),
+              
+              Positioned(
+                left: 118.w,
+                top: 9.h,
+                right: 14.w,
+                bottom: 8.h,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Expanded(
+                          child: Text(
+                            '${progress.dayNumber}. ${Translations.translate('workout_day', langCode)}: ${currentExercise.name}',
+                            style: GoogleFonts.montserrat(
+                              fontSize: 16.sp,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.black,
+                              height: 1.25,
+                              letterSpacing: -0.011,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        Container(
+                          width: 22.w,
+                          height: 22.w,
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFEDEDED).withValues(alpha: 0.85),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(Icons.skip_next_outlined, color: const Color(0xFF0D0D0D), size: 12.sp),
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: 13.h),
+                    
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Container(
+                          width: 53.w,
+                          height: 17.h,
+                          alignment: Alignment.center,
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF5B5B5B).withValues(alpha: 0.77),
+                            borderRadius: BorderRadius.circular(10.r),
+                          ),
+                          child: Text(
+                            Translations.translate('abs', langCode),
+                            style: GoogleFonts.montserrat(
+                              fontSize: 10.sp,
+                              fontWeight: FontWeight.w500,
+                              color: Colors.white,
+                              letterSpacing: -0.011,
+                            ),
+                          ),
+                        ),
+                        Text(
+                          '$percent%',
+                          style: GoogleFonts.montserrat(
+                            fontSize: 14.sp,
+                            fontWeight: FontWeight.w500,
+                            color: Colors.black,
+                            letterSpacing: -0.011,
+                          ),
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: 6.h),
+                    Stack(
+                      children: [
+                        Container(
+                          width: 213.w,
+                          height: 5.h,
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFDDDDDD),
+                            borderRadius: BorderRadius.circular(6.r),
+                          ),
+                        ),
+                        Container(
+                          width: 213.w * (percent / 100.0),
+                          height: 5.h,
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF00EF5B),
+                            borderRadius: BorderRadius.circular(4.r),
+                          ),
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: 10.h),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
+
   Widget _buildProgressBadge() {
     final userProfile = ref.watch(userProfileProvider);
     final stats = ref.watch(statsProvider).value;
+    final inProgressWorkout = ref.watch(workoutProgressProvider);
     final langCode = ref.watch(localeProvider).languageCode;
     final bool isGuest = userProfile.value == null;
     
     final todayStr = DateTime.now().toIso8601String().split('T')[0];
-    final bool finishedToday = stats?.completedAtDates.contains(todayStr) ?? false;
+    final bool finishedToday = stats?.completedAtDates.any((date) => date.startsWith(todayStr)) ?? false;
     
-    final String percentage = isGuest ? '86' : (finishedToday ? '100' : '0');
-    final double progressVal = isGuest ? 0.86 : (finishedToday ? 1.0 : 0.0);
+    double progressVal = 0.0;
+    if (finishedToday) {
+      progressVal = 1.0;
+    } else if (inProgressWorkout != null) {
+      final workout = StaticWorkoutData.getWorkoutForDay(inProgressWorkout!.dayNumber);
+      final int totalExercises = workout.exercises.length;
+      if (totalExercises > 0) {
+        final double exerciseWeight = 1.0 / totalExercises;
+        
+        final currentExercise = workout.exercises[inProgressWorkout!.exerciseIndex.clamp(0, totalExercises - 1)];
+        final RegExp regExp = RegExp(r'(\d+)\s*Set', caseSensitive: false);
+        final match = regExp.firstMatch(currentExercise.sets);
+        final int totalSets = match != null ? int.parse(match.group(1)!) : 1;
+        final double setProgress = inProgressWorkout!.setIndex / totalSets;
+        
+        progressVal = (inProgressWorkout!.exerciseIndex / totalExercises) + (setProgress * exerciseWeight);
+      }
+    }
+    
+    final String percentage = (progressVal * 100).toInt().toString();
 
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: 24.w),
@@ -940,7 +1261,7 @@ class _HomeViewState extends ConsumerState<HomeView> {
         onTap: () {
           Navigator.push(
             context,
-            MaterialPageRoute(builder: (context) => const PaywallView()),
+            MaterialPageRoute(builder: (context) => const RevenueCatPaywallView()),
           );
         },
         child: Container(
@@ -949,8 +1270,8 @@ class _HomeViewState extends ConsumerState<HomeView> {
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(15.r),
           gradient: const LinearGradient(
-            begin: Alignment(0.0, -1.0),
-            end: Alignment(0.0, 1.0),
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
             colors: [Color(0xFF20C729), Color(0xFF063527)],
             stops: [-0.0645, 1.1124],
           ),
@@ -958,17 +1279,18 @@ class _HomeViewState extends ConsumerState<HomeView> {
         child: Padding(
           padding: EdgeInsets.symmetric(horizontal: 18.w),
           child: Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Expanded(
                 child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
+                  mainAxisAlignment: MainAxisAlignment.start,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    SizedBox(height: 5.h),
                     Row(
                       children: [
-                        Padding(
-                          padding: EdgeInsets.only(top: 8.h),
+                        Transform.translate(
+                          offset: Offset(0, 4.h),
                           child: SvgPicture.asset(
                             'assets/images/Premium_Upgrade_Icon.svg',
                             width: 32.w,
@@ -1068,7 +1390,7 @@ class _HomeViewState extends ConsumerState<HomeView> {
             SizedBox(height: 15.h),
             Container(
               width: 320.w,
-              height: 127.h,
+              height: 150.h,
               decoration: BoxDecoration(
                 color: Colors.white,
                 border: Border.all(
@@ -1080,7 +1402,7 @@ class _HomeViewState extends ConsumerState<HomeView> {
                 children: [
                   Positioned(
                     left: 11.w,
-                    top: 15.h,
+                    top: 18.h,
                     child: SizedBox(
                       width: 105.5.w,
                       child: Column(
@@ -1111,8 +1433,10 @@ class _HomeViewState extends ConsumerState<HomeView> {
                               final statsAsync = ref.watch(statsProvider);
                               final stats = statsAsync.value;
                               
-                              final double kiloProgress = (stats == null || stats.totalActivity == 0) ? 0.0 : 0.6;
-                              final String kiloValue = stats == null ? '0.0' : (stats.weightLost == 0 ? '0.0' : '-${stats.weightLost}');
+                              final double kiloProgress = (stats == null || stats.initialWeight == stats.targetWeight) 
+                                  ? 0.0 
+                                  : (stats.weightLost / (stats.initialWeight - stats.targetWeight)).clamp(0.0, 1.0);
+                              final String kiloValue = stats == null ? '0.0' : (stats.weightLost == 0 ? '0.0' : '-${stats.weightLost.toStringAsFixed(1)}');
 
                                   return SizedBox(
                                     width: 71.2.w,
@@ -1156,9 +1480,9 @@ class _HomeViewState extends ConsumerState<HomeView> {
                     ),
                   ),
                   Positioned(
-                    left: 130.w,
+                    left: 115.w,
                     top: 15.h,
-                    right: 15.w,
+                    right: 10.w,
                     child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -1171,9 +1495,9 @@ class _HomeViewState extends ConsumerState<HomeView> {
                                 return Column(
                                   children: [
                                     _buildLinearProgress(title: Translations.translate('fat_rate_change', langCode), color: const Color(0xFFFF383C), percentage: 0, valueStr: '-%0'),
-                                    SizedBox(height: 12.h),
+                                    SizedBox(height: 6.h),
                                     _buildLinearProgress(title: Translations.translate('muscle_mass_increase', langCode), color: const Color(0xFFFFCC00), percentage: 0, valueStr: '+0.0 Kg'),
-                                    SizedBox(height: 12.h),
+                                    SizedBox(height: 6.h),
                                     _buildLinearProgress(title: Translations.translate('waist_circumference', langCode), color: const Color(0xFF6155F5), percentage: 0, valueStr: '-0.0 cm'),
                                   ],
                                 );
@@ -1213,14 +1537,14 @@ class _HomeViewState extends ConsumerState<HomeView> {
                                     percentage: fatProgress,
                                     valueStr: fatRateStr,
                                   ),
-                                  SizedBox(height: 12.h),
+                                  SizedBox(height: 4.h),
                                   _buildLinearProgress(
                                     title: Translations.translate('muscle_mass_increase', langCode),
                                     color: const Color(0xFFFFCC00),
                                     percentage: muscleProgress,
                                     valueStr: muscleMassStr,
                                   ),
-                                  SizedBox(height: 12.h),
+                                  SizedBox(height: 4.h),
                                   _buildLinearProgress(
                                     title: Translations.translate('waist_circumference', langCode),
                                     color: const Color(0xFF6155F5),
@@ -1236,76 +1560,73 @@ class _HomeViewState extends ConsumerState<HomeView> {
                     ),
                   ],
                 ),
-            ),
-          ],
+              ),
+            ],
+          ),
         ),
-      ),
-    );
+      );
   }
+
   Widget _buildLinearProgress({
     required String title,
     required Color color,
     required double percentage,
     required String valueStr,
   }) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.end,
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                title,
-                style: GoogleFonts.montserrat(
-                  fontSize: 10.sp,
-                  fontWeight: FontWeight.w400,
-                  color: Colors.black,
-                  letterSpacing: -0.11.sp,
+        Text(
+          title,
+          style: GoogleFonts.montserrat(
+            fontSize: 12.sp,
+            fontWeight: FontWeight.w500,
+            color: const Color(0xFF0D0D0D),
+          ),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
+        SizedBox(height: 3.h),
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Flexible(
+              child: Container(
+                width: 133.w,
+                height: 7.h,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFE2E2E2),
+                  borderRadius: BorderRadius.circular(10.r),
                 ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-              SizedBox(height: 5.h),
-              Stack(
-                children: [
-                  Container(
-                    width: double.infinity,
-                    height: 7.h,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFE2E2E2),
-                      borderRadius: BorderRadius.circular(10.r),
-                    ),
-                  ),
-                  FractionallySizedBox(
-                    widthFactor: percentage,
-                    child: Container(
+                child: Stack(
+                  children: [
+                    Container(
+                      width: (133.w * percentage).clamp(0, 133.w),
                       height: 7.h,
                       decoration: BoxDecoration(
                         color: color,
                         borderRadius: BorderRadius.circular(10.r),
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ],
-          ),
-        ),
-        SizedBox(width: 8.w),
-        Text(
-          valueStr,
-          style: GoogleFonts.montserrat(
-            fontSize: 10.sp,
-            fontWeight: FontWeight.w500,
-            color: color,
-            letterSpacing: -0.11.sp,
-          ),
+            ),
+            SizedBox(width: 8.w),
+            Text(
+              '($valueStr)',
+              style: GoogleFonts.montserrat(
+                fontSize: 11.sp,
+                fontWeight: FontWeight.w500,
+                color: color,
+              ),
+            ),
+          ],
         ),
       ],
     );
   }
+
   Widget _buildProgressSection() {
     final langCode = ref.watch(localeProvider).languageCode;
     return Padding(

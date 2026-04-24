@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:six_pack_30/Core/Models/user_model.dart';
@@ -20,7 +21,9 @@ class UserProfileNotifier extends StateNotifier<AsyncValue<UserModel?>> {
 
   Future<void> fetchProfile() async {
     try {
-      state = const AsyncValue.loading();
+      if (!state.hasValue) {
+        state = const AsyncValue.loading();
+      }
       final user = FirebaseAuth.instance.currentUser;
       if (user == null) {
         state = const AsyncValue.data(null);
@@ -34,11 +37,21 @@ class UserProfileNotifier extends StateNotifier<AsyncValue<UserModel?>> {
       }
 
       final profileData = await _apiService.getProfile(token);
+      debugPrint('Profile data from API: $profileData');
+      
       if (profileData != null) {
         final userModel = UserModel.fromJson(profileData);
         state = AsyncValue.data(userModel);
       } else {
-        state = const AsyncValue.data(null);
+        
+        state = AsyncValue.data(UserModel(
+          id: 0,
+          firebaseUid: user.uid,
+          email: user.email,
+          name: user.displayName ?? 'Kullanıcı',
+          healthConnected: false,
+          notificationsEnabled: true,
+        ));
       }
     } catch (e, st) {
       state = AsyncValue.error(e, st);
@@ -55,6 +68,14 @@ class UserProfileNotifier extends StateNotifier<AsyncValue<UserModel?>> {
 
       if (data.containsKey('notificationsEnabled')) {
         final bool enabled = data['notificationsEnabled'];
+        debugPrint('Notifications toggle clicked: $enabled');
+        
+        if (state.value != null) {
+          final updatedUser = state.value!.copyWith(notificationsEnabled: enabled);
+          state = AsyncValue.data(updatedUser);
+          debugPrint('Provider State Updated - Notifications: ${updatedUser.notificationsEnabled}');
+        }
+        
         if (enabled) {
           OneSignal.User.pushSubscription.optIn();
         } else {
@@ -62,9 +83,36 @@ class UserProfileNotifier extends StateNotifier<AsyncValue<UserModel?>> {
         }
       }
 
-      if (data.containsKey('healthConnected') && data['healthConnected'] == true) {
-        await _healthService.requestPermissions();
-        _healthService.syncHealthData();
+      if (data.containsKey('healthConnected')) {
+        final bool enabled = data['healthConnected'];
+        debugPrint('Health toggle clicked: $enabled');
+        
+        if (state.value != null) {
+          final updatedUser = state.value!.copyWith(healthConnected: enabled);
+          state = AsyncValue.data(updatedUser);
+          debugPrint('Provider State Updated - Health: ${updatedUser.healthConnected}');
+        }
+        
+        if (enabled) {
+          _healthService.requestPermissions().then((granted) {
+            debugPrint('Health permission status: $granted');
+            if (granted) {
+              _healthService.syncHealthData();
+            }
+          });
+        }
+      }
+
+      if (data.containsKey('name') && data['name'] != null) {
+        final String newName = data['name'];
+        await user.updateDisplayName(newName);
+        await user.reload();
+      }
+
+      if (data.containsKey('photoUrl') && data['photoUrl'] != null) {
+        final String newPhoto = data['photoUrl'];
+        await user.updatePhotoURL(newPhoto);
+        await user.reload();
       }
 
       final success = await _apiService.updateProfile(token, data);

@@ -12,7 +12,7 @@ class FaqView extends ConsumerStatefulWidget {
 class _FaqViewState extends ConsumerState<FaqView> {
   int? _expandedIndex = 0;
   List<Map<String, String>> _getFaqs(String langCode) {
-    return List.generate(7, (index) {
+    return List.generate(9, (index) {
       final i = index + 1;
       return {
         'question': Translations.translate('faq_q$i', langCode),

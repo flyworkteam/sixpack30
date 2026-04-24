@@ -17,6 +17,14 @@ class ExerciseInfo {
     final String normalized = (gender == 'female' || gender == 'woman') ? 'woman' : 'man';
     return imagePath.replaceAll('{gender}', normalized);
   }
+
+  String getVideoPath(String gender) {
+    if (videoPath.startsWith('http')) {
+      final String normalized = (gender == 'female' || gender == 'woman') ? 'woman' : 'man';
+      return videoPath.replaceAll('{gender}', normalized);
+    }
+    return videoPath;
+  }
 }
 
 class WorkoutData {
@@ -35,6 +43,7 @@ class StaticWorkoutData {
   static List<ExerciseInfo> _generateCdnExercises(List<Map<String, String>> data) {
     return data.map((ex) {
       final String cleanName = ex['name']!.split('(')[0].trim();
+      final String encodedName = Uri.encodeComponent(cleanName);
       
       final mp4List = [
         'Plank Hip Dip', 'Sit-Up', 'Pulse Crunch', 'Russian Twist', 
@@ -42,13 +51,45 @@ class StaticWorkoutData {
         'Standing Side Crunch', 'Mountain Climber', 'Leg Raise'
       ];
       final String ext = mp4List.contains(cleanName) ? 'mp4' : 'mov';
+      
+      final localExercisesLower = [
+        'v-up', 'double crunch', 'flutter kicks', 'scissor kicks', 
+        'russian twist', 'oblique v-up', 'side plank', 'high knees',
+        'crunch', 'heel touch', 'plank', 'leg raise', 'sit-up',
+        'bent knee leg raise', 'bicycle crunch', 'cross crunch', 'dead bug',
+        'forearm plank', 'high plank knee drive', 'jackknife', 'lying knee raise',
+        'lying leg hold', 'mountain climber', 'plank hip dip', 'plank shoulder tap',
+        'pulse crunch', 'reach up crunch', 'reverse crunch', 'seated twist',
+        'side crunch', 'side plank reach', 'standing oblique crunch',
+        'standing side crunch', 'toe touch crunch'
+      ];
+
+      if (localExercisesLower.contains(cleanName.toLowerCase())) {
+        String assetName = cleanName;
+        
+        if (cleanName.toLowerCase() == 'dead bug') assetName = 'Dead Bug';
+        if (cleanName.toLowerCase() == 'v-up') assetName = 'V_Up';
+        
+        
+        String videoAssetName = assetName.replaceAll(' ', '_');
+        if (cleanName.toLowerCase() == 'dead bug') videoAssetName = 'Dead_bug';
+        if (cleanName.toLowerCase() == 'v-up') videoAssetName = 'V_Up';
+
+        return ExerciseInfo(
+          name: ex['name']!,
+          sets: ex['sets']!,
+          rest: ex['rest']!,
+          imagePath: 'assets/images/$assetName {gender}.png',
+          videoPath: 'assets/videos/$videoAssetName.$ext',
+        );
+      }
 
       return ExerciseInfo(
         name: ex['name']!,
         sets: ex['sets']!,
         rest: ex['rest']!,
-        imagePath: 'https://sixpack30.b-cdn.net/images/$cleanName {gender}.png',
-        videoPath: 'https://sixpack30.b-cdn.net/videos/$cleanName.$ext',
+        imagePath: 'https://sixpack30.b-cdn.net/images/$encodedName%20{gender}.png',
+        videoPath: 'https://sixpack30.b-cdn.net/videos/$encodedName%20{gender}.mp4',
       );
     }).toList();
   }
@@ -64,8 +105,8 @@ class StaticWorkoutData {
         {"name": "Lying Knee Raise", "sets": "3 Set × 15 Tekrar", "rest": "30 sn"},
         {"name": "Heel Touch", "sets": "3 Set × 20 Tekrar (toplam)", "rest": "20–30 sn"},
         {"name": "Standing Side Crunch", "sets": "3 Set × 20 Tekrar (sağ + sol)", "rest": "20–30 sn"},
-        {"name": "Forearm Plank", "sets": "3 Set × 30 Saniye", "rest": "30 sn"},
-        {"name": "Mountain Climber (yavaş tempo)", "sets": "3 Set × 30 Saniye", "rest": "30 sn"},
+        {"name": "Forearm Plank", "sets": "3 Set × 45 Saniye", "rest": "30 sn"},
+        {"name": "Mountain Climber (yavaş tempo)", "sets": "3 Set × 45 Saniye", "rest": "30 sn"},
       ]),
     ),
     2: WorkoutData(
@@ -92,7 +133,7 @@ class StaticWorkoutData {
         {"name": "Scissor Kicks", "sets": "3 Set × 40 Saniye", "rest": "30 sn"},
         {"name": "Russian Twist", "sets": "3 Set × 20 Tekrar (sağ + sol)", "rest": "30 sn"},
         {"name": "Oblique V-Up", "sets": "3 Set × 12 Tekrar (sağ + sol)", "rest": "30 sn"},
-        {"name": "Side Plank", "sets": "3 Set × 25–30 Saniye (her iki taraf)", "rest": "30 sn"},
+        {"name": "Side Plank", "sets": "3 Set × 45 Saniye (her iki taraf)", "rest": "30 sn"},
         {"name": "High Knees", "sets": "3 Set × 40 Saniye", "rest": "30 sn"},
       ]),
     ),
@@ -139,7 +180,7 @@ class StaticWorkoutData {
         {"name": "Scissor Kicks", "sets": "3 Set × 45 Saniye", "rest": "30 sn"},
         {"name": "Russian Twist", "sets": "3 Set × 30 Tekrar (sağ + sol)", "rest": "30 sn"},
         {"name": "Oblique V-Up", "sets": "3 Set × 15 Tekrar (sağ + sol)", "rest": "30 sn"},
-        {"name": "Side Plank", "sets": "3 Set × 30 Saniye (her iki taraf)", "rest": "30 sn"},
+        {"name": "Side Plank", "sets": "3 Set × 45 Saniye (her iki taraf)", "rest": "30 sn"},
         {"name": "High Knees", "sets": "3 Set × 45 Saniye", "rest": "30 sn"},
       ]),
     ),

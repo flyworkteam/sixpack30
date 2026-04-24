@@ -65,8 +65,7 @@ class ApiService {
           },
         ),
       );
-
-      return response.statusCode == 200;
+      return response.statusCode != null && response.statusCode! >= 200 && response.statusCode! < 300;
     } catch (e) {
       if (e is DioException) {}
       return false;
@@ -203,6 +202,18 @@ class ApiService {
       return response.statusCode == 200 || response.statusCode == 201;
     } catch (e) {
       if (e is DioException) {}
+      return false;
+    }
+  }
+
+  Future<bool> deleteAccount(String firebaseIdToken) async {
+    try {
+      final response = await _dio.delete(
+        '/user/profile',
+        options: Options(headers: {'Authorization': 'Bearer $firebaseIdToken'}),
+      );
+      return response.statusCode != null && response.statusCode! >= 200 && response.statusCode! < 300;
+    } catch (e) {
       return false;
     }
   }

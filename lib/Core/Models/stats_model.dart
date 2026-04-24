@@ -85,7 +85,11 @@ class UserStats {
     required this.completedAtDates,
   });
 
-  factory UserStats.initial() {
+  factory UserStats.initial({
+    double weight = 70.0,
+    double initialWeight = 70.0,
+    double targetWeight = 70.0,
+  }) {
     return UserStats(
       totalActivity: 0,
       totalKcal: 0.0,
@@ -99,9 +103,9 @@ class UserStats {
       totalDuration: 0,
       totalMoves: 0,
       completionRate: 0,
-      weight: 70.0,
-      initialWeight: 70.0,
-      targetWeight: 70.0,
+      weight: weight,
+      initialWeight: initialWeight,
+      targetWeight: targetWeight,
       initialFatRate: 24,
       initialMuscleMass: 30.0,
       sleepDuration: '0 Saat',

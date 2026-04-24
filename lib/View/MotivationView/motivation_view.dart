@@ -8,11 +8,13 @@ class MotivationView extends StatefulWidget {
   final String userName;
   final int completedExercises;
   final int activeMinutes;
+  final bool isFinal;
   const MotivationView({
     super.key,
-    this.userName = "Sinem",
+    this.userName = "Kullanıcı",
     this.completedExercises = 4,
     this.activeMinutes = 10,
+    this.isFinal = false,
   });
   @override
   State<MotivationView> createState() => _MotivationViewState();
@@ -28,7 +30,9 @@ class _MotivationViewState extends State<MotivationView> {
     _confettiController = ConfettiController(duration: const Duration(seconds: 3));
     _confettiController.play();
     _timer = Timer(const Duration(seconds: 5), () {
-      if (mounted) Navigator.of(context).pop();
+      if (mounted && Navigator.of(context).canPop()) {
+        Navigator.of(context).pop();
+      }
     });
   }
 
@@ -127,7 +131,7 @@ class _MotivationViewState extends State<MotivationView> {
                   RichText(
                     textAlign: TextAlign.center,
                     text: TextSpan(
-                      text: 'Çok İyi Gidiyorsun, ',
+                      text: widget.userName.isEmpty ? 'Çok İyi Gidiyorsun, Kullanıcı' : 'Çok İyi Gidiyorsun, ',
                       style: GoogleFonts.manrope(
                         fontWeight: FontWeight.w600,
                         fontSize: 24.sp,
@@ -146,8 +150,10 @@ class _MotivationViewState extends State<MotivationView> {
                   ),
                   SizedBox(height: 22.h),
                   Text(
-                    'Yarısını Geçtin!\n'
-                    'Vücudun yorulabilir ama sen\ngüçleniyorsun.',
+                    widget.isFinal 
+                      ? 'Harika İş Çıkardın!\nBugünkü hedefine ulaştın ve\ngüçlendin.'
+                      : 'Yarısını Geçtin!\n'
+                        'Vücudun yorulabilir ama sen\ngüçleniyorsun.',
                     textAlign: TextAlign.center,
                     style: GoogleFonts.manrope(
                       fontWeight: FontWeight.w600,

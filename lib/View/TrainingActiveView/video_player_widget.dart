@@ -44,24 +44,56 @@ class _ExerciseVideoPlayerState extends State<ExerciseVideoPlayer> {
 
   void _initializePlayer() {
     _isError = false;
-    _controller = VideoPlayerController.networkUrl(Uri.parse(widget.videoUrl))
-      ..initialize().then((_) {
-        if (mounted) {
-          _controller.setLooping(true);
-          _controller.setVolume(0); 
-          if (widget.isPlaying) {
-            _controller.play();
-          }
-          setState(() {});
-        }
-      }).catchError((error) {
-        debugPrint("Video error: $error");
-        if (mounted) {
-          setState(() {
-            _isError = true;
-          });
-        }
-      });
+    _tryLoadingVideo(widget.videoUrl);
+  }
+
+  void _tryLoadingVideo(String url, {int fallbackIndex = 0}) {
+    if (fallbackIndex == 0) {
+      if (url.startsWith('http')) {
+        _controller = VideoPlayerController.networkUrl(Uri.parse(url));
+      } else {
+        _controller = VideoPlayerController.asset(url);
+      }
+    } else {
+      _controller = VideoPlayerController.networkUrl(Uri.parse(url));
+    }
+
+    _controller.initialize().then((_) {
+      if (mounted) {
+        _controller.setLooping(true);
+        _controller.setVolume(0);
+        if (widget.isPlaying) _controller.play();
+        setState(() { _isError = false; });
+      }
+    }).catchError((error) {
+      debugPrint("Failed to load: $url (Index: $fallbackIndex)");
+      _handleFallback(fallbackIndex);
+    });
+  }
+
+  void _handleFallback(int currentIndex) {
+    if (!mounted) return;
+
+    final String fileName = widget.videoUrl.split('/').last;
+    final String baseName = fileName.split('.').first;
+    final String gender = widget.placeholderUrl.toLowerCase().contains('woman') ? 'woman' : 'man';
+    
+    List<String> fallbacks = [
+      
+      'https://sixpack30.b-cdn.net/videos/${Uri.encodeComponent(baseName)}%20$gender.mp4',
+      
+      'https://sixpack30.b-cdn.net/videos/${Uri.encodeComponent(baseName)}.mp4',
+      
+      'https://sixpack30.b-cdn.net/videos/${baseName.replaceAll(' ', '_')}.mp4',
+      
+      'https://sixpack30.b-cdn.net/videos/${baseName.replaceAll(' ', '-')}.mp4',
+    ];
+
+    if (currentIndex < fallbacks.length) {
+      _tryLoadingVideo(fallbacks[currentIndex], fallbackIndex: currentIndex + 1);
+    } else {
+      setState(() { _isError = true; });
+    }
   }
 
   @override
@@ -73,10 +105,9 @@ class _ExerciseVideoPlayerState extends State<ExerciseVideoPlayer> {
   @override
   Widget build(BuildContext context) {
     if (_isError) {
-      return Image.network(
-        widget.placeholderUrl,
-        fit: BoxFit.cover,
-      );
+      return widget.placeholderUrl.startsWith('http')
+          ? Image.network(widget.placeholderUrl, fit: BoxFit.cover, width: double.infinity, height: double.infinity)
+          : Image.asset(widget.placeholderUrl, fit: BoxFit.cover);
     }
 
     if (_controller.value.isInitialized) {
@@ -94,10 +125,9 @@ class _ExerciseVideoPlayerState extends State<ExerciseVideoPlayer> {
 
     return Stack(
       children: [
-        Image.network(
-          widget.placeholderUrl,
-          fit: BoxFit.cover,
-        ),
+        widget.placeholderUrl.startsWith('http')
+            ? Image.network(widget.placeholderUrl, fit: BoxFit.cover, width: double.infinity, height: double.infinity)
+            : Image.asset(widget.placeholderUrl, fit: BoxFit.cover),
         const Center(
           child: CircularProgressIndicator(
             color: Color(0xFF00EF5B),

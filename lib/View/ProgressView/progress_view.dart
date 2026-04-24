@@ -11,6 +11,9 @@ import '../../Core/Services/health_service.dart';
 import '../../Riverpod/Controllers/user_provider.dart';
 import '../../Riverpod/Controllers/locale_provider.dart';
 import '../../Core/Localization/translations.dart';
+import '../../Core/Data/workout_data.dart';
+import '../../Riverpod/Controllers/workout_progress_provider.dart';
+import '../../Core/Services/workout_progress_service.dart';
 
 class ProgressView extends ConsumerStatefulWidget {
   final VoidCallback? onBackPressed;
@@ -21,7 +24,7 @@ class ProgressView extends ConsumerStatefulWidget {
 
 class _ProgressViewState extends ConsumerState<ProgressView> {
   int _selectedTab = 2;
-  int _selectedStepGoalValue = 10000;
+  int _selectedStepGoalValue = 15000;
 
   @override
   void initState() {
@@ -58,6 +61,7 @@ class _ProgressViewState extends ConsumerState<ProgressView> {
     final statsAsync = ref.watch(statsProvider);
     final workoutsAsync = ref.watch(workoutProvider);
     final langCode = ref.watch(localeProvider).languageCode;
+    final inProgressWorkout = ref.watch(workoutProgressProvider);
     final workoutList = workoutsAsync.value;
 
     return Scaffold(
@@ -66,7 +70,7 @@ class _ProgressViewState extends ConsumerState<ProgressView> {
         children: [
           SingleChildScrollView(
             physics: const ClampingScrollPhysics(),
-            padding: EdgeInsets.only(bottom: 80.h),
+            padding: EdgeInsets.only(bottom: 80.h, top: MediaQuery.of(context).padding.top + 10.h),
             child: statsAsync.when(
               loading: () => SizedBox(
                 height: 1.sh,
@@ -85,7 +89,7 @@ class _ProgressViewState extends ConsumerState<ProgressView> {
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    SizedBox(height: 54.h),
+                    SizedBox(height: 10.h),
                     SizedBox(height: 20.h),
                     _buildHeader(langCode),
                     SizedBox(height: 30.h),
@@ -213,16 +217,12 @@ class _ProgressViewState extends ConsumerState<ProgressView> {
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: 24.w),
       child: Stack(
-        clipBehavior: Clip.none,
+        clipBehavior: Clip.antiAlias,
         children: [
           Container(
             width: 342.w,
-            padding: EdgeInsets.only(
-              left: 20.w,
-              top: 20.h,
-              bottom: 20.h,
-              right: 10.w,
-            ),
+            height: 121.h,
+            padding: EdgeInsets.fromLTRB(20.w, 10.h, 0, 10.h),
             decoration: BoxDecoration(
               color: const Color(0xFF06C44F),
               border: Border.all(color: const Color(0xFFEBEBEB)),
@@ -248,56 +248,70 @@ class _ProgressViewState extends ConsumerState<ProgressView> {
                         ),
                       ),
                       SizedBox(height: 11.h),
-                      Wrap(
-                        spacing: 8.w,
-                        runSpacing: 9.h,
-                        children: [
-                          _buildWorkoutBadge(
-                            workout != null
-                                ? '${workout.exerciseCount ?? 8} ${Translations.translate('exercises_count', langCode)}'
-                                : '8 ${Translations.translate('exercises_count', langCode)}',
-                            'assets/images/Exercise_Body_Icon.svg',
-                          ),
-                          _buildWorkoutBadge(
-                            workout != null && workout.difficulty != null 
-                              ? '${Translations.translate('level', langCode)}: ${workout.difficulty}' 
-                              : '${Translations.translate('focus_area', langCode)}: ${Translations.translate('abs', langCode)}',
-                            'assets/images/Abs_Zone_Icon.svg',
-                          ),
-                        ],
-                      ),
-                      SizedBox(height: 9.h),
-                      Wrap(
-                        spacing: 8.w,
-                        runSpacing: 9.h,
-                        children: [
-                          _buildWorkoutBadge(
-                            workout != null
-                                ? '${(workout.duration / 60).toInt()} ${Translations.translate('minutes', langCode)}'
-                                : '30 ${Translations.translate('minutes', langCode)}',
-                            'assets/images/Duration_Badge_Icon.svg',
-                          ),
-                          _buildWorkoutBadge(
-                            workout != null
-                                ? '${workout.calories ?? 200} Kcal'
-                                : '250 Kcal',
-                            'assets/images/Calorie_Badge_Icon.svg',
-                          ),
-                        ],
+                      SizedBox(
+                        width: 186.w,
+                        child: Table(
+                          columnWidths: const {
+                            0: FixedColumnWidth(88),
+                            1: FixedColumnWidth(88),
+                          },
+                          children: [
+                            TableRow(
+                              children: [
+                                Padding(
+                                  padding: EdgeInsets.only(bottom: 10.h),
+                                  child: _buildWorkoutBadge(
+                                    workout != null
+                                        ? '${workout.exerciseCount ?? 8} ${Translations.translate('exercises_count', langCode)}'
+                                        : '8 ${Translations.translate('exercises_count', langCode)}',
+                                    'assets/images/Exercise_Body_Icon.svg',
+                                  ),
+                                ),
+                                Padding(
+                                  padding: EdgeInsets.only(left: 10.w, bottom: 10.h),
+                                  child: _buildWorkoutBadge(
+                                    '${Translations.translate('focus_area', langCode)}:${Translations.translate('abs', langCode)}',
+                                    'assets/images/Abs_Zone_Icon.svg',
+                                  ),
+                                ),
+                              ],
+                            ),
+                            TableRow(
+                              children: [
+                                _buildWorkoutBadge(
+                                  workout != null
+                                      ? '${(workout.duration / 60).toInt()} ${Translations.translate('minutes', langCode)}'
+                                      : '30 ${Translations.translate('minutes', langCode)}',
+                                  'assets/images/Duration_Badge_Icon.svg',
+                                ),
+                                Padding(
+                                  padding: EdgeInsets.only(left: 10.w),
+                                  child: _buildWorkoutBadge(
+                                    workout != null
+                                        ? '${workout.calories ?? 200} Kcal'
+                                        : '250 Kcal',
+                                    'assets/images/Calorie_Badge_Icon.svg',
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
                       ),
                     ],
                   ),
                 ),
-                SizedBox(width: 110.w),
+                const Spacer(),
               ],
             ),
           ),
           Positioned(
-            right: -10.w,
-            bottom: 0,
+            left: 223.w,
+            top: -52.h,
             child: Image.asset(
               'assets/images/Adsız tasarım-6.png',
               width: 127.8.w,
+              height: 225.38.h,
               fit: BoxFit.contain,
               errorBuilder: (_, __, ___) => const SizedBox.shrink(),
             ),
@@ -307,43 +321,48 @@ class _ProgressViewState extends ConsumerState<ProgressView> {
     );
   }
 
-  Widget _buildWorkoutBadge(String label, String assetPath) {
+  Widget _buildWorkoutBadge(String label, String assetPath, {double? width}) {
     return Container(
-      constraints: BoxConstraints(maxWidth: 100.w),
-      padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 4.h),
+      width: width ?? 88.w,
+      height: 20.h,
+      padding: EdgeInsets.symmetric(horizontal: 2.w),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(10.r),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           if (assetPath.endsWith('.svg'))
             SvgPicture.asset(
               assetPath,
-              width: 12.w,
-              height: 12.h,
+              width: 12.sp,
+              height: 12.sp,
               fit: BoxFit.contain,
+              colorFilter: const ColorFilter.mode(Color(0xFF06C44F), BlendMode.srcIn),
             )
           else
             Image.asset(
               assetPath,
-              width: 12.w,
-              height: 12.h,
+              width: 12.sp,
+              height: 12.sp,
               fit: BoxFit.contain,
             ),
-          SizedBox(width: 4.w),
-          Flexible(
+          SizedBox(width: 3.w),
+          Expanded(
             child: Text(
               label,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
               style: GoogleFonts.montserrat(
                 fontSize: 10.sp,
                 fontWeight: FontWeight.w500,
                 color: const Color(0xFF100F0F),
-                height: 1.0,
+                height: 1.2,
+                letterSpacing: -0.5,
               ),
+              maxLines: 1,
+              overflow: TextOverflow.visible,
             ),
           ),
         ],
@@ -502,6 +521,31 @@ class _ProgressViewState extends ConsumerState<ProgressView> {
   }
 
   Widget _buildAntrenmanOzeti(UserStats? stats, String langCode) {
+    final workoutsAsync = ref.watch(workoutProvider);
+    final workoutList = workoutsAsync.value;
+    final inProgressWorkout = ref.watch(workoutProgressProvider);
+
+    int totalKcal = (stats?.totalKcal ?? 0).toInt();
+    int totalMoves = stats?.totalMoves ?? 0;
+    int totalDuration = stats?.totalDuration ?? 0;
+
+    if (inProgressWorkout != null) {
+      final workoutData = StaticWorkoutData.getWorkoutForDay(inProgressWorkout!.dayNumber);
+      final int totalExercises = workoutData.exercises.length;
+      if (totalExercises > 0) {
+        final double progressFactor = (inProgressWorkout!.exerciseIndex / totalExercises);
+        
+        final currentWorkout = workoutList?.where((w) => w.id == inProgressWorkout!.dayNumber).firstOrNull;
+        final int dayKcal = currentWorkout?.calories ?? 250;
+        final int dayDuration = currentWorkout?.durationMinutes ?? 15;
+        final int dayMoves = currentWorkout?.exerciseCount ?? totalExercises;
+
+        totalKcal += (progressFactor * dayKcal).toInt();
+        totalMoves += inProgressWorkout!.exerciseIndex.toInt();
+        totalDuration += (progressFactor * dayDuration).toInt();
+      }
+    }
+
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: 24.w),
       child: Column(
@@ -521,9 +565,7 @@ class _ProgressViewState extends ConsumerState<ProgressView> {
                 width: 164.w,
                 label: Translations.translate('calories_burned', langCode),
                 labelColor: const Color(0xFFEEEEEE),
-                value: stats == null
-                    ? '0 Kcal'
-                    : '${(stats.completedDays.length * 250).toInt()} Kcal',
+                value: '$totalKcal Kcal',
                 valueColor: Colors.white,
                 isGreen: true,
                 overlayLeft: 122,
@@ -544,7 +586,7 @@ class _ProgressViewState extends ConsumerState<ProgressView> {
                 width: 213.w,
                 label: Translations.translate('total_moves', langCode) ?? 'Hareket Sayısı',
                 labelColor: const Color(0xFF000000),
-                value: stats == null ? '0' : '${stats.totalMoves}',
+                value: '$totalMoves',
                 valueColor: const Color(0xFF06C44F),
                 isGreen: false,
                 overlayLeft: 64,
@@ -558,7 +600,7 @@ class _ProgressViewState extends ConsumerState<ProgressView> {
               ),
               SizedBox(width: 9.w),
               _buildSureCard(
-                value: stats == null ? '0 ${Translations.translate('minutes', langCode)}' : '${stats.totalDuration} ${Translations.translate('minutes', langCode)}',
+                value: '$totalDuration ${Translations.translate('minutes', langCode)}',
                 langCode: langCode,
               ),
             ],
@@ -699,12 +741,14 @@ class _ProgressViewState extends ConsumerState<ProgressView> {
                       fit: BoxFit.contain,
                     ),
                     Text(
-                      value,
+                      value.replaceAll(' ', '\n'),
+                      textAlign: TextAlign.center,
                       style: GoogleFonts.montserrat(
-                        fontSize: 12.sp,
+                        fontSize: 10.sp,
                         fontWeight: FontWeight.w600,
                         color: const Color(0xFF06C44F),
                         letterSpacing: -0.132.sp,
+                        height: 1.1,
                       ),
                     ),
                   ],
@@ -724,7 +768,7 @@ class _ProgressViewState extends ConsumerState<ProgressView> {
         children: [
           _buildListCard(
             label: Translations.translate('completion_rate', langCode),
-            value: stats == null ? '%0' : '%${((stats.completedDays.length / 30) * 100).toInt()}',
+            value: stats == null ? '%0' : '%${stats.completionRate.toInt()}',
             iconWidget: SizedBox(
               width: 54.w,
               height: 54.h,
@@ -802,8 +846,8 @@ class _ProgressViewState extends ConsumerState<ProgressView> {
     if (stats == null) return const SizedBox.shrink();
 
     final String bpm = '${stats.bpm}';
-    final String weight = '${stats.weight.toInt()} Kg';
-    final String weightChange = stats.weightLost > 0 ? '-${stats.weightLost.toInt()} Kg' : '0 Kg';
+    final String weight = '${stats.weight.toStringAsFixed(1)} Kg';
+    final String weightChange = stats.weightLost > 0 ? '-${stats.weightLost.toStringAsFixed(1)} Kg' : '0 Kg';
     final String fatRate = '%${stats.fatRate}';
 
     String fatStatus = 'Normal';
@@ -820,7 +864,7 @@ class _ProgressViewState extends ConsumerState<ProgressView> {
           children: [
             _buildSmallCard(
               title: Translations.translate('heart_rate', langCode),
-              bottomValue: bpm,
+              value: stats.bpm > 0 ? '$bpm bpm' : '0',
               iconAsset: 'assets/images/Heart_Plus_Icon.svg',
               chartAsset: 'assets/images/Heart_Rhythm_Chart.svg',
             ),
@@ -890,7 +934,7 @@ class _ProgressViewState extends ConsumerState<ProgressView> {
         ? (displayedWeightLoss / weightLossGoal).clamp(0.0, 1.0)
         : 0.0;
 
-    final waterProgress = (stats.waterIntake / 3.0).clamp(0.0, 1.0);
+    final waterProgress = (stats.waterIntake / 2.5).clamp(0.0, 1.0);
     final muscleProgress = (stats.muscleMass / 100.0).clamp(0.0, 1.0);
 
     return Padding(
@@ -923,7 +967,7 @@ class _ProgressViewState extends ConsumerState<ProgressView> {
               ),
               _buildStatColumn(
                 label: Translations.translate('body_water', langCode),
-                valuePart1: '%${(stats.waterIntake / 3.0 * 100).toInt()}',
+                valuePart1: '%${(stats.waterIntake / 2.5 * 100).toInt()}',
                 valuePart1Color: const Color(0xFF55C5FC),
                 progressColor: const Color(0xFF55C5FC),
                 progressValue: waterProgress,
@@ -1021,104 +1065,70 @@ class _ProgressViewState extends ConsumerState<ProgressView> {
       ),
       child: Stack(
         children: [
-          if (bottomValue != null)
-            Positioned(
-              left: 11.w,
-              top: 8.5.h,
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
+          Positioned(
+            left: 12.w,
+            top: 9.h,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                SizedBox(
+                  width: 41.w,
+                  height: 24.h,
+                  child: Text(
                     title,
                     style: GoogleFonts.montserrat(
                       fontSize: 10.sp,
                       fontWeight: FontWeight.w600,
                       color: Colors.black,
+                      height: 1.2,
                       letterSpacing: -0.11.sp,
                     ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
                   ),
-                  if (iconAsset != null) ...[
-                    SizedBox(width: 11.w),
-                    Container(
-                      width: 20.w,
-                      height: 20.h,
-                      padding: EdgeInsets.all(1.94.w),
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(10.r),
+                ),
+                SizedBox(height: 9.h),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      value,
+                      style: GoogleFonts.montserrat(
+                        fontSize: 14.sp,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.black,
+                        letterSpacing: -0.11.sp,
+                        height: 1.1,
                       ),
-                      child: iconAsset.endsWith('.svg')
-                          ? SvgPicture.asset(
-                              iconAsset,
-                              width: 16.w,
-                              height: 16.h,
-                              fit: BoxFit.contain,
-                            )
-                          : Image.asset(
-                              iconAsset,
-                              width: 16.w,
-                              height: 16.h,
-                              fit: BoxFit.contain,
-                            ),
                     ),
+                    if (subValue != null) ...[
+                      SizedBox(height: 7.h),
+                      Text(
+                        subValue,
+                        style: GoogleFonts.montserrat(
+                          fontSize: 12.sp,
+                          fontWeight: FontWeight.w500,
+                          color: const Color(0xFF484848),
+                          letterSpacing: -0.11.sp,
+                        ),
+                      ),
+                    ],
                   ],
-                ],
-              ),
+                ),
+              ],
             ),
+          ),
           if (chartAsset != null)
             Positioned(
               left: 0,
               right: 0,
-              top: 25.h,
-              bottom: 12.h,
-              child: chartAsset.endsWith('.svg')
-                  ? SvgPicture.asset(chartAsset, fit: BoxFit.contain)
-                  : Image.asset(chartAsset, fit: BoxFit.contain),
-            ),
-          if (value.isNotEmpty)
-            Positioned(
-              left: 12.w,
-              top: 10.h,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  SizedBox(
-                    width: 80.w,
-                    child: Text(
-                      title,
-                      style: GoogleFonts.montserrat(
-                        fontSize: 12.sp,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.black,
-                        height: 1.2,
-                        letterSpacing: -0.11.sp,
-                      ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                  SizedBox(height: 7.h),
-                  Text(
-                    value,
-                    style: GoogleFonts.montserrat(
-                      fontSize: 18.sp,
-                      fontWeight: FontWeight.w700,
-                      color: Colors.black,
-                      letterSpacing: -0.154.sp,
-                    ),
-                  ),
-                  if (subValue != null) ...[
-                    SizedBox(height: 2.h),
-                    Text(
-                      subValue,
-                      style: GoogleFonts.montserrat(
-                        fontSize: 12.sp,
-                        fontWeight: FontWeight.w500,
-                        color: const Color(0xFF484848).withValues(alpha: 0.5),
-                        letterSpacing: -0.132.sp,
-                      ),
-                    ),
-                  ],
-                ],
+              top: 40.h,
+              bottom: 0,
+              child: Opacity(
+                opacity: 0.8,
+                child: chartAsset.endsWith('.svg')
+                    ? SvgPicture.asset(chartAsset, fit: BoxFit.cover)
+                    : Image.asset(chartAsset, fit: BoxFit.cover),
               ),
             ),
           if (iconAsset != null)
@@ -1300,125 +1310,137 @@ class _ProgressViewState extends ConsumerState<ProgressView> {
 
   Widget _buildAdimCard(int steps, String langCode) {
     return Container(
-      height: 125.h,
-      padding: EdgeInsets.all(12.w),
+      height: 95.h,
+      padding: EdgeInsets.only(left: 14.w, top: 12.h, right: 14.w, bottom: 12.h),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12.r),
+        color: const Color(0xFFFFFEFE),
+        borderRadius: BorderRadius.circular(10.r),
         border: Border.all(color: const Color(0xFFEBEBEB)),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Stack(
         children: [
           Text(
             Translations.translate('steps', langCode),
             style: GoogleFonts.montserrat(
-              fontSize: 13.sp,
-              fontWeight: FontWeight.bold,
+              fontSize: 14.sp,
+              fontWeight: FontWeight.w600,
               color: Colors.black,
+              letterSpacing: -0.011 * 14.sp,
             ),
           ),
-          const Spacer(),
-          Row(
-            children: [
-              SizedBox(
-                width: 44.w,
-                height: 44.h,
-                child: Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    SizedBox(
-                      width: 44.w,
-                      height: 44.h,
-                      child: CircularProgressIndicator(
-                        value: (steps / _selectedStepGoalValue).clamp(0.0, 1.0),
-                        strokeWidth: 3.5.sp,
-                        color: const Color(0xFF06C44F),
-                        backgroundColor: const Color(0xFFF2F2F2),
-                        strokeCap: StrokeCap.round,
-                      ),
+          Positioned(
+            left: 0,
+            top: 22.h,
+            child: SizedBox(
+              width: 44.w,
+              height: 44.h,
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  SizedBox(
+                    width: 44.w,
+                    height: 44.h,
+                    child: CircularProgressIndicator(
+                      value: (steps / _selectedStepGoalValue).clamp(0.0, 1.0),
+                      strokeWidth: 3.5.sp,
+                      color: const Color(0xFF06C44F),
+                      backgroundColor: const Color(0xFFA5A5A5).withOpacity(0.32),
+                      strokeCap: StrokeCap.round,
                     ),
-                    SvgPicture.asset(
-                      'assets/images/step_walk_icon.svg',
-                      width: 22.sp,
-                      height: 22.sp,
-                    ),
-                  ],
-                ),
+                  ),
+                  SvgPicture.asset(
+                    'assets/images/step_walk_icon.svg',
+                    width: 22.w,
+                    height: 22.h,
+                  ),
+                ],
               ),
-              const Spacer(),
-              PopupMenuButton<int>(
-                offset: const Offset(
-                  0,
-                  -100,
+            ),
+          ),
+          Positioned(
+            right: 0,
+            top: 42.h,
+            child: PopupMenuButton<int>(
+              offset: const Offset(0, -95),
+              color: const Color(0xFFECECEC),
+              elevation: 0,
+              padding: EdgeInsets.zero,
+              constraints: BoxConstraints(
+                minWidth: 85.w,
+                maxWidth: 85.w,
+              ),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(6.r),
+                side: const BorderSide(color: Color.fromRGBO(235, 235, 235, 0.11)),
+              ),
+              onSelected: (val) => setState(() => _selectedStepGoalValue = val),
+              itemBuilder: (context) => [
+                PopupMenuItem<int>(
+                  enabled: false,
+                  padding: EdgeInsets.zero,
+                  height: 76.h,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      _buildCustomPopupItem('Günlük 10 bin', 10000, isSelected: _selectedStepGoalValue == 10000),
+                      _buildCustomPopupItem('Günlük 15 bin', 15000, isSelected: _selectedStepGoalValue == 15000),
+                      _buildCustomPopupItem('Günlük 20 bin', 20000, isSelected: _selectedStepGoalValue == 20000),
+                      _buildCustomPopupItem('Günlük 30 bin', 30000, isSelected: _selectedStepGoalValue == 30000),
+                    ],
+                  ),
                 ),
-                shape: RoundedRectangleBorder(
+              ],
+              child: Container(
+                width: 85.w,
+                height: 22.h,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: Colors.black,
                   borderRadius: BorderRadius.circular(10.r),
                 ),
-                onSelected: (val) => setState(() => _selectedStepGoalValue = val),
-                itemBuilder: (context) => [
-                  _buildPopupItem('Günlük 6 bin', 6000, isSelected: _selectedStepGoalValue == 6000),
-                  _buildPopupItem('Günlük 10 bin', 10000, isSelected: _selectedStepGoalValue == 10000),
-                  _buildPopupItem('Haftada 40 bin', 40000, isSelected: _selectedStepGoalValue == 40000),
-                  _buildPopupItem('Haftada 90 bin', 90000, isSelected: _selectedStepGoalValue == 90000),
-                ],
-                child: Container(
-                  width: 85.w,
-                  height: 22.h,
-                  alignment: Alignment.center,
-                  padding: EdgeInsets.only(
-                    top: 5.h,
-                    bottom: 5.h,
-                    left: 9.w,
-                    right: 9.w,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.black,
-                    borderRadius: BorderRadius.circular(10.r),
-                  ),
-                  child: Text(
-                    Translations.translate('select_goal', langCode),
-                    maxLines: 1,
-                    overflow: TextOverflow.visible,
-                    style: GoogleFonts.montserrat(
-                      fontSize: 10.sp,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.white,
-                      height: 1.0,
-                      letterSpacing: -0.011 * 10.sp,
-                    ),
+                child: Text(
+                  Translations.translate('select_goal', langCode),
+                  maxLines: 1,
+                  style: GoogleFonts.montserrat(
+                    fontSize: 10.sp,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.white,
+                    height: 1.0,
+                    letterSpacing: -0.011 * 10.sp,
                   ),
                 ),
               ),
-            ],
+            ),
           ),
         ],
       ),
     );
   }
 
-  PopupMenuItem<int> _buildPopupItem(
+  Widget _buildCustomPopupItem(
     String label,
     int value, {
     bool isSelected = false,
   }) {
-    return PopupMenuItem<int>(
-      value: value,
-      height: 35.h,
+    return GestureDetector(
+      onTap: () {
+        Navigator.pop(context, value);
+      },
       child: Container(
-        padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+        width: 85.w,
+        height: 19.h,
+        alignment: Alignment.center,
         decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFFD9D9D9) : Colors.transparent,
-          borderRadius: BorderRadius.circular(4.r),
+          color: isSelected ? const Color.fromRGBO(208, 205, 205, 0.43) : Colors.transparent,
         ),
-        child: Center(
-          child: Text(
-            label,
-            style: GoogleFonts.montserrat(
-              fontSize: 10.sp,
-              fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-              color: Colors.black,
-            ),
+        child: Text(
+          label,
+          textAlign: TextAlign.center,
+          style: GoogleFonts.montserrat(
+            fontSize: 10.sp,
+            fontWeight: FontWeight.w500,
+            color: const Color(0xFF0D0D0D),
+            letterSpacing: -0.11,
           ),
         ),
       ),
@@ -1428,104 +1450,117 @@ class _ProgressViewState extends ConsumerState<ProgressView> {
   Widget _buildSuIcCard(double water, String langCode) {
     final progressPercent = (water / 2.5).clamp(0.0, 1.0);
     return Container(
-      height: 125.h, 
-      padding: EdgeInsets.all(12.w),
+      height: 95.h,
+      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 9.h),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12.r),
+        color: const Color(0xFFFFFEFE),
+        borderRadius: BorderRadius.circular(10.r),
         border: Border.all(color: const Color(0xFFEBEBEB)),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            Translations.translate('water_intake', langCode),
-            style: GoogleFonts.montserrat(
-              fontSize: 13.sp,
-              fontWeight: FontWeight.bold,
-              color: Colors.black,
-            ),
-          ),
-          SizedBox(height: 6.h),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: List.generate(
-              5,
-              (i) => GestureDetector(
-                onTap: () {
-                  final newAmount = (i + 1) * 0.5;
-                  ref.read(statsProvider.notifier).updateWater(newAmount);
-                },
-                child: SvgPicture.asset(
-                  'assets/images/water_glass_icon.svg',
-                  width: 22.sp,
-                  height: 22.sp,
-                  colorFilter: ColorFilter.mode(
-                    i < (water / 0.5).floor().clamp(0, 5)
-                        ? const Color(0xFF27BEEA)
-                        : const Color(0xFFBBBBBB),
-                    BlendMode.srcIn,
-                  ),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final double cardWidth = constraints.maxWidth;
+          final double barWidth = cardWidth - 20.w;
+          return Stack(
+            children: [
+              Text(
+                Translations.translate('water_intake', langCode),
+                style: GoogleFonts.montserrat(
+                  fontSize: 14.sp,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.black,
+                  letterSpacing: -0.011 * 14.sp,
                 ),
               ),
-            ),
-          ),
-          const Spacer(),
-          LayoutBuilder(
-            builder: (context, constraints) {
-              final double w = constraints.maxWidth > 0
-                  ? constraints.maxWidth
-                  : 100.0;
-              return GestureDetector(
-                behavior: HitTestBehavior.opaque,
-                onTapDown: (details) {
-                  final double tapLoc = details.localPosition.dx;
-                  final double ratio = (tapLoc / w).clamp(0.0, 1.0);
-                  final double newAmount = (ratio * 2.5);
-                  ref.read(statsProvider.notifier).updateWater(newAmount);
-                },
-                child: SizedBox(
-                  height: 20.h,
-                  width: double.infinity,
-                  child: Stack(
-                    alignment: Alignment.centerLeft,
-                    clipBehavior: Clip.none,
-                    children: [
-                      Container(
-                        height: 3.h,
-                        width: double.infinity,
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFC3F1FF),
-                          borderRadius: BorderRadius.circular(10.r),
-                        ),
-                      ),
-                      Container(
-                        height: 3.h,
-                        width: w * progressPercent,
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF06C44F),
-                          borderRadius: BorderRadius.circular(10.r),
-                        ),
-                      ),
-                      Positioned(
-                        left: (w * progressPercent).clamp(0.0, w) - 5,
-                        top: 5.h,
-                        child: Container(
-                          width: 10.w,
-                          height: 10.h,
-                          decoration: const BoxDecoration(
-                            color: Color(0xFF06C44F),
-                            shape: BoxShape.circle,
+              Positioned(
+                left: 2.w,
+                top: 29.h,
+                child: Row(
+                  children: List.generate(
+                    5,
+                    (i) => Padding(
+                      padding: EdgeInsets.only(right: 8.w),
+                      child: GestureDetector(
+                        onTap: () {
+                          final newAmount = (i + 1) * 0.5;
+                          ref.read(statsProvider.notifier).updateWater(newAmount);
+                        },
+                        child: SvgPicture.asset(
+                          'assets/images/water_glass_icon.svg',
+                          width: 19.w,
+                          height: 19.h,
+                          colorFilter: ColorFilter.mode(
+                            i < (water / 0.5 + 0.1).floor().clamp(0, 5)
+                                ? const Color(0xFF27BEEA)
+                                : const Color(0xFFBBBBBB),
+                            BlendMode.srcIn,
                           ),
                         ),
                       ),
-                    ],
+                    ),
                   ),
                 ),
-              );
-            },
-          ),
-        ],
+              ),
+              Positioned(
+                left: 10.w,
+                top: 60.h,
+                child: GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onPanUpdate: (details) {
+                    final double tapLoc = details.localPosition.dx;
+                    final double ratio = (tapLoc / barWidth).clamp(0.0, 1.0);
+                    final double newAmount = (ratio * 2.5);
+                    ref.read(statsProvider.notifier).updateWater(newAmount);
+                  },
+                  onTapDown: (details) {
+                    final double tapLoc = details.localPosition.dx;
+                    final double ratio = (tapLoc / barWidth).clamp(0.0, 1.0);
+                    final double newAmount = (ratio * 2.5);
+                    ref.read(statsProvider.notifier).updateWater(newAmount);
+                  },
+                  child: SizedBox(
+                    height: 10.h,
+                    width: barWidth,
+                    child: Stack(
+                      alignment: Alignment.centerLeft,
+                      clipBehavior: Clip.none,
+                      children: [
+                        Container(
+                          height: 4.h,
+                          width: barWidth,
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFC3F1FF),
+                            borderRadius: BorderRadius.circular(10.r),
+                          ),
+                        ),
+                        Container(
+                          height: 4.h,
+                          width: barWidth * progressPercent,
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF06C44F),
+                            borderRadius: BorderRadius.circular(10.r),
+                          ),
+                        ),
+                        Positioned(
+                          left: (barWidth * progressPercent).clamp(0.0, barWidth) - 5,
+                          top: 0,
+                          child: Container(
+                            width: 10.w,
+                            height: 10.h,
+                            decoration: const BoxDecoration(
+                              color: Color(0xFF06C44F),
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          );
+        },
       ),
     );
   }

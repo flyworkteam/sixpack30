@@ -23,14 +23,17 @@ class UserModel {
 
   factory UserModel.fromJson(Map<String, dynamic> json) {
     final List? qList = json['questionnaires'];
+    final Map<String, dynamic>? qSingular = json['questionnaire'];
     QuestionnaireModel? q;
     if (qList != null && qList.isNotEmpty) {
       q = QuestionnaireModel.fromJson(qList.first);
+    } else if (qSingular != null) {
+      q = QuestionnaireModel.fromJson(qSingular);
     }
 
     return UserModel(
-      id: json['id'],
-      firebaseUid: json['firebaseUid'],
+      id: json['id'] ?? 0,
+      firebaseUid: json['firebaseUid'] ?? '',
       email: json['email'],
       name: json['name'],
       isPremium: json['isPremium'] ?? false,
@@ -38,6 +41,30 @@ class UserModel {
       healthConnected: json['healthConnected'] ?? false,
       photoUrl: json['photoUrl'],
       questionnaire: q,
+    );
+  }
+
+  UserModel copyWith({
+    int? id,
+    String? firebaseUid,
+    String? email,
+    String? name,
+    bool? isPremium,
+    bool? notificationsEnabled,
+    bool? healthConnected,
+    String? photoUrl,
+    QuestionnaireModel? questionnaire,
+  }) {
+    return UserModel(
+      id: id ?? this.id,
+      firebaseUid: firebaseUid ?? this.firebaseUid,
+      email: email ?? this.email,
+      name: name ?? this.name,
+      isPremium: isPremium ?? this.isPremium,
+      notificationsEnabled: notificationsEnabled ?? this.notificationsEnabled,
+      healthConnected: healthConnected ?? this.healthConnected,
+      photoUrl: photoUrl ?? this.photoUrl,
+      questionnaire: questionnaire ?? this.questionnaire,
     );
   }
 }

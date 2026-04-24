@@ -3,12 +3,14 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:six_pack_30/Riverpod/Controllers/user_provider.dart';
+import 'package:six_pack_30/Riverpod/Controllers/auth_controller.dart';
 import '../../Riverpod/Controllers/locale_provider.dart';
 import '../../Core/Localization/translations.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'dart:io';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 class ProfileEditView extends ConsumerStatefulWidget {
   const ProfileEditView({super.key});
@@ -42,24 +44,24 @@ class _ProfileEditViewState extends ConsumerState<ProfileEditView> {
     if (user != null) {
       final q = user.questionnaire;
       _nameController.text = user.name ?? '';
-      setState(() {
-        if (q?.birthYear != null) {
-          _age = (DateTime.now().year - q!.birthYear!).toInt();
-        }
-        _height = q?.height?.toInt() ?? 165;
-        _weight = q?.weight?.toInt() ?? 52;
-        
-        final bt = q?.bodyType ?? 2.0;
-        if (bt <= 1.5) {
-          _selectedBodyType = 'thin';
-        } else if (bt <= 3.0) {
-          _selectedBodyType = 'normal';
-        } else if (bt <= 4.5) {
-          _selectedBodyType = 'fat';
-        } else {
-          _selectedBodyType = 'very_fat';
-        }
-      });
+      
+      if (q?.birthYear != null) {
+        _age = (DateTime.now().year - q!.birthYear!).toInt();
+      }
+      _height = q?.height?.toInt() ?? 165;
+      _weight = q?.weight?.toInt() ?? 52;
+      
+      final bt = q?.bodyType ?? 2.0;
+      if (bt <= 1.5) {
+        _selectedBodyType = 'thin';
+      } else if (bt <= 3.0) {
+        _selectedBodyType = 'normal';
+      } else if (bt <= 4.5) {
+        _selectedBodyType = 'fat';
+      } else {
+        _selectedBodyType = 'very_fat';
+      }
+      setState(() {});
     }
   }
 
@@ -118,12 +120,24 @@ class _ProfileEditViewState extends ConsumerState<ProfileEditView> {
     else if (_selectedBodyType == 'fat') btValue = 4.0;
     else if (_selectedBodyType == 'very_fat') btValue = 5.0;
 
+    final user = ref.read(userProfileProvider).value;
     final data = {
       'name': _nameController.text,
       'height': _height,
       'weight': _weight,
       'birthYear': DateTime.now().year - _age,
       'bodyType': btValue,
+      'gender': user?.questionnaire?.gender ?? 'man',
+      'goal': user?.questionnaire?.goal ?? 'Göbek Eritme',
+      
+      'questionnaire': {
+        'height': _height,
+        'weight': _weight,
+        'birthYear': DateTime.now().year - _age,
+        'bodyType': btValue,
+        'gender': user?.questionnaire?.gender ?? 'man',
+        'goal': user?.questionnaire?.goal ?? 'Göbek Eritme',
+      }
     };
 
     final success = await ref.read(userProfileProvider.notifier).updateProfile(data);
@@ -145,7 +159,13 @@ class _ProfileEditViewState extends ConsumerState<ProfileEditView> {
   }
   @override
   Widget build(BuildContext context) {
+    ref.listen(userProfileProvider, (previous, next) {
+      if (next.hasValue && next.value != null && previous?.value == null) {
+        _initializeData();
+      }
+    });
     final langCode = ref.watch(localeProvider).languageCode;
+    final user = ref.watch(userProfileProvider).value;
     return Scaffold(
       backgroundColor: Colors.white,
       body: Stack(
@@ -210,13 +230,14 @@ class _ProfileEditViewState extends ConsumerState<ProfileEditView> {
                                 child: ClipOval(
                                   child: _isUploadingImage
                                       ? const CircularProgressIndicator(strokeWidth: 2)
-                                      : (ref.watch(userProfileProvider).value?.photoUrl != null
-                                          ? Image.network(
-                                              ref.watch(userProfileProvider).value!.photoUrl!,
+                                      : (user?.photoUrl != null
+                                          ? CachedNetworkImage(
+                                              imageUrl: user!.photoUrl!,
                                               width: 48.w,
                                               height: 48.h,
                                               fit: BoxFit.cover,
-                                              errorBuilder: (context, error, stackTrace) => Icon(
+                                              placeholder: (context, url) => const CircularProgressIndicator(strokeWidth: 2),
+                                              errorWidget: (context, url, error) => Icon(
                                                 Icons.person_rounded,
                                                 size: 28.sp,
                                                 color: const Color(0xFFADADAD),
@@ -254,7 +275,11 @@ class _ProfileEditViewState extends ConsumerState<ProfileEditView> {
                       ),
                       SizedBox(width: 10.w),
                       Text(
-                        ref.watch(userProfileProvider).value?.name ?? Translations.translate('guest', langCode),
+                        (ref.watch(userProfileProvider).value?.name != null && ref.watch(userProfileProvider).value!.name!.isNotEmpty)
+                            ? ref.watch(userProfileProvider).value!.name!
+                            : (ref.watch(userProfileProvider).value?.email != null && ref.watch(userProfileProvider).value!.email!.isNotEmpty)
+                                ? ref.watch(userProfileProvider).value!.email!.split('@').first
+                                : Translations.translate('guest', langCode),
                         style: GoogleFonts.montserrat(
                           fontSize: 20.sp,
                           fontWeight: FontWeight.w700,
@@ -268,7 +293,13 @@ class _ProfileEditViewState extends ConsumerState<ProfileEditView> {
                 SizedBox(height: 30.h),
                 _buildFormField(
                   label: Translations.translate('name_label', langCode), 
-                  value: _nameController.text.isEmpty ? (ref.watch(userProfileProvider).value?.name ?? Translations.translate('guest', langCode)) : _nameController.text, 
+                  value: _nameController.text.isEmpty 
+                      ? ((ref.watch(userProfileProvider).value?.name != null && ref.watch(userProfileProvider).value!.name!.isNotEmpty)
+                          ? ref.watch(userProfileProvider).value!.name!
+                          : (ref.watch(userProfileProvider).value?.email != null && ref.watch(userProfileProvider).value!.email!.isNotEmpty)
+                              ? ref.watch(userProfileProvider).value!.email!.split('@').first
+                              : Translations.translate('guest', langCode))
+                      : _nameController.text, 
                   onTap: () {
                     setState(() => _activeField = Translations.translate('name_label', langCode));
                     _showNameBottomSheet();
@@ -329,7 +360,7 @@ class _ProfileEditViewState extends ConsumerState<ProfileEditView> {
             bottom: 40.h,
             child: SizedBox(
               width: 342.w,
-              height: 76.h,
+              height: 96.h,
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -365,18 +396,56 @@ class _ProfileEditViewState extends ConsumerState<ProfileEditView> {
                   SizedBox(height: 12.h),
                   GestureDetector(
                     onTap: () {
+                      final langCode = ref.read(localeProvider).languageCode;
+                      showDialog(
+                        context: context,
+                        builder: (context) => AlertDialog(
+                          title: Text(Translations.translate('delete_account_confirm_title', langCode)),
+                          content: Text(Translations.translate('delete_account_confirm_message', langCode)),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.pop(context),
+                              child: Text(Translations.translate('cancel', langCode)),
+                            ),
+                            TextButton(
+                              onPressed: () async {
+                                Navigator.pop(context);
+                                final success = await ref.read(authControllerProvider.notifier).deleteAccount();
+                                if (success) {
+                                  if (context.mounted) {
+                                    Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
+                                  }
+                                } else {
+                                  if (context.mounted) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(content: Text('Hata oluştu. Lütfen tekrar giriş yapıp deneyin.')),
+                                    );
+                                  }
+                                }
+                              },
+                              child: Text(
+                                Translations.translate('delete_account_confirm_button', langCode),
+                                style: const TextStyle(color: Colors.red),
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
                     },
-                    child: SizedBox(
-                      height: 20.h,
+                    child: Container(
+                      width: 342.w,
+                      height: 40.h,
+                      color: Colors.transparent,
                       child: Center(
                         child: Text(
                           Translations.translate('delete_account', langCode),
                           style: GoogleFonts.montserrat(
-                            fontSize: 16.sp,
+                            fontSize: 14.sp,
                             fontWeight: FontWeight.w500,
-                            color: Colors.black,
+                            color: const Color(0xFF9B9B9B),
                             height: 1.25,
                             letterSpacing: -0.176.sp,
+                            decoration: TextDecoration.underline,
                           ),
                         ),
                       ),

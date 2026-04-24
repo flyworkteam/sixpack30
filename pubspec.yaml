@@ -39,10 +39,15 @@ dependencies:
   purchases_flutter: ^8.0.0
   onesignal_flutter: ^5.2.2
   health: ^13.2.0
+  cached_network_image: ^3.3.1
+  purchases_ui_flutter: any
   image_picker: ^1.1.2
   url_launcher: ^6.3.1
-  flutter_facebook_auth: ^7.1.1
+  # flutter_facebook_auth: ^7.1.1
   video_player: ^2.8.1
+  path_provider: ^2.1.5
+
+
 
 dev_dependencies:
   flutter_test:
@@ -76,6 +81,7 @@ flutter:
   # To add assets to your application, add an assets section, like this:
   assets:
     - assets/images/
+    - assets/videos/
   #   - images/a_dot_burr.jpeg
   #   - images/a_dot_ham.jpeg
 

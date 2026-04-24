@@ -14,6 +14,7 @@ import '../HomeView/home_view.dart';
 import '../PaywallView/paywall_view.dart';
 import '../../Riverpod/Controllers/user_provider.dart';
 import '../TrainingDetailView/training_detail_view.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 class WorkoutDay {
   final int day;
@@ -86,8 +87,11 @@ class _TrainingViewState extends ConsumerState<TrainingView> {
               final userAsync = ref.watch(userProfileProvider);
               
               final bool isPremium = premiumAsync.value ?? false;
-              final String rawGender = userAsync.value?.questionnaire?.gender ?? 'man';
-              final String gender = (rawGender == 'female') ? 'woman' : (rawGender == 'male' ? 'man' : rawGender);
+              final String rawGender = (userAsync.value?.questionnaire?.gender ?? '').toLowerCase().trim();
+              final bool isMale = rawGender.contains('male') || 
+                                 rawGender.contains('man') || 
+                                 rawGender.contains('erkek');
+              final String gender = isMale ? 'man' : 'woman';
 
               return workoutsAsync.when(
                 data: (workoutList) {
@@ -174,7 +178,7 @@ class _TrainingViewState extends ConsumerState<TrainingView> {
         color: Colors.black,
         borderRadius: BorderRadius.vertical(bottom: Radius.circular(15.r)),
         image: DecorationImage(
-          image: const NetworkImage('https://sixpack30.b-cdn.net/images/training_banner.jpg'),
+          image: const AssetImage('assets/images/training_banner.jpg'),
           fit: BoxFit.cover,
           alignment: Alignment.topCenter,
           colorFilter: ColorFilter.mode(
@@ -187,7 +191,7 @@ class _TrainingViewState extends ConsumerState<TrainingView> {
         children: [
           Positioned(
             left: 25.w,
-            top: 60.h,
+            top: MediaQuery.of(context).padding.top + 10.h,
             child: GestureDetector(
               onTap: () {
                 if (widget.onBackPressed != null) {
@@ -274,7 +278,7 @@ class _TrainingViewState extends ConsumerState<TrainingView> {
             onTap: () {
               if (isPremiumLocked) {
                 Navigator.of(context).push(
-                  MaterialPageRoute(builder: (context) => const PaywallView()),
+                  MaterialPageRoute(builder: (context) => const RevenueCatPaywallView()),
                 );
                 return;
               }
@@ -323,12 +327,17 @@ class _TrainingViewState extends ConsumerState<TrainingView> {
                         isLocked ? Colors.black.withValues(alpha: 0.3) : Colors.transparent,
                         BlendMode.darken,
                       ),
-                      child: Image.network(
-                        'https://sixpack30.b-cdn.net/images/day_${day.imageIndex}.${day.imageIndex <= 6 ? 'png' : 'jpg'}',
+                      child: CachedNetworkImage(
+                        imageUrl: 'https://sixpack30.b-cdn.net/images/day_${day.imageIndex}.${day.imageIndex <= 6 ? 'png' : 'jpg'}',
                         width: 115.w,
                         height: 80.h,
                         fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) => Container(
+                        placeholder: (context, url) => Container(
+                          width: 115.w,
+                          height: 80.h,
+                          color: const Color(0xFFD9D9D9),
+                        ),
+                        errorWidget: (context, url, error) => Container(
                           width: 115.w,
                           height: 80.h,
                           color: const Color(0xFFD9D9D9),
@@ -383,7 +392,7 @@ class _TrainingViewState extends ConsumerState<TrainingView> {
                       ),
                     ),
                   ),
-                  if (isLocked)
+                  if (isPremiumLocked)
                     Padding(
                       padding: EdgeInsets.only(right: 15.w),
                       child: SvgPicture.asset(
@@ -415,11 +424,18 @@ class _TrainingViewState extends ConsumerState<TrainingView> {
     );
   }
   Widget _buildDot(WorkoutDay day, bool isLocked) {
-    if (day.isCompleted && !isLocked) {
-      return SvgPicture.asset(
-        'assets/images/timeline_check_icon.svg',
+    if (day.isCompleted) {
+      return Container(
         width: 14.w,
         height: 14.w,
+        decoration: BoxDecoration(
+          color: const Color(0xFFD9D9D9).withValues(alpha: 0.23),
+          shape: BoxShape.circle,
+          border: Border.all(color: const Color(0xFF00EF5B)),
+        ),
+        child: Center(
+          child: Icon(Icons.check, size: 10.sp, color: const Color(0xFF00EF5B)),
+        ),
       );
     } else if (day.isCurrent && !isLocked) {
       return Container(
@@ -438,7 +454,7 @@ class _TrainingViewState extends ConsumerState<TrainingView> {
         decoration: BoxDecoration(
           shape: BoxShape.circle,
           color: const Color(0xFFD9D9D9).withValues(alpha: 0.23),
-          border: Border.all(color: isLocked ? const Color(0xFF747272) : const Color(0xFF747272)),
+          border: Border.all(color: const Color(0xFF747272)),
         ),
       );
     }

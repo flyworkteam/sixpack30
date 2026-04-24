@@ -52,27 +52,7 @@
     <string>This app requires access to your health data to track your fitness and activity levels.</string>
     <key>NSHealthUpdateUsageDescription</key>
     <string>This app requires permission to update your health data to record your workout results and progress.</string>
-    <key>UIApplicationSceneManifest</key>
-    <dict>
-        <key>UIApplicationSupportsMultipleScenes</key>
-        <false/>
-        <key>UISceneConfigurations</key>
-        <dict>
-            <key>UIWindowSceneSessionRoleApplication</key>
-            <array>
-                <dict>
-                    <key>UISceneClassName</key>
-                    <string>UIWindowScene</string>
-                    <key>UISceneConfigurationName</key>
-                    <string>flutter</string>
-                    <key>UISceneDelegateClassName</key>
-                    <string>FlutterSceneDelegate</string>
-                    <key>UISceneStoryboardFile</key>
-                    <string>Main</string>
-                </dict>
-            </array>
-        </dict>
-    </dict>
+
     <key>UIApplicationSupportsIndirectInputEvents</key>
     <true/>
     <key>UIBackgroundModes</key>

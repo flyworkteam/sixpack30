@@ -78,7 +78,9 @@ class _QuestionsViewState extends ConsumerState<QuestionsView> {
           'trainingDuration': _selectedDuration,
         };
         await ApiService().updateProfile(token, data);
-        ref.read(userProfileProvider.notifier).fetchProfile();
+        if (mounted) {
+          ref.read(userProfileProvider.notifier).fetchProfile();
+        }
       }
     }
   }
