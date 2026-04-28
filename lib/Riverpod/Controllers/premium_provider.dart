@@ -3,88 +3,131 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:purchases_flutter/purchases_flutter.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:six_pack_30/Riverpod/Controllers/auth_controller.dart';
+import 'package:six_pack_30/Riverpod/Controllers/user_provider.dart';
+import 'package:six_pack_30/Core/Network/api_service.dart';
+import 'package:six_pack_30/Core/Network/api_service_provider.dart';
 
 final premiumProvider = StateNotifierProvider<PremiumNotifier, AsyncValue<bool>>((ref) {
-  return PremiumNotifier();
+  final authState = ref.watch(authControllerProvider);
+  final userProfile = ref.watch(userProfileProvider).value;
+  final apiService = ref.watch(apiServiceProvider);
+  
+  final notifier = PremiumNotifier(apiService);
+  
+  // Listen to auth changes to log in/out of RevenueCat
+  authState.whenData((user) {
+    if (user != null) {
+      notifier.logIn(user.uid);
+    } else {
+      notifier.logOut();
+    }
+  });
+  
+  // If database says user is premium, we prioritize that or combine it.
+  if (userProfile?.isPremium == true) {
+    notifier.setPremiumFromDb(true);
+  } else {
+    // If DB doesn't say premium, we still rely on RevenueCat check which happens inside notifier
+  }
+  
+  return notifier;
 });
 
 class PremiumNotifier extends StateNotifier<AsyncValue<bool>> {
-  PremiumNotifier() : super(const AsyncValue.loading()) {
+  final ApiService _apiService;
+  bool _isPremiumFromDb = false;
+
+  PremiumNotifier(this._apiService) : super(const AsyncValue.loading()) {
     initPlatformState();
+  }
+
+  void setPremiumFromDb(bool value) {
+    _isPremiumFromDb = value;
+    // If DB is premium, immediately update state to true
+    if (value && (state.value != true)) {
+      state = const AsyncValue.data(true);
+    }
   }
 
   Future<void> initPlatformState() async {
     try {
-      state = const AsyncValue.loading();
-      
-      const String appleKey = 'appl_jyrUJntKMMUQGZnCLhPdjFGryqx';
-      const String androidKey = 'goog_nIGerJpZODcxIvudTtLkrTrptev';
-
-      await Purchases.setLogLevel(LogLevel.debug);
-
-      PurchasesConfiguration configuration;
-      if (Platform.isAndroid) {
-        configuration = PurchasesConfiguration(androidKey);
-      } else {
-        configuration = PurchasesConfiguration(appleKey);
+      if (!_isPremiumFromDb) {
+        state = const AsyncValue.loading();
       }
-      
-      final user = FirebaseAuth.instance.currentUser;
-      if (user != null) {
-        configuration.appUserID = user.uid;
-      }
-
-      await Purchases.configure(configuration);
       
       await updatePurchaseStatus();
     } catch (e, st) {
-      state = AsyncValue.error(e, st);
+      if (!_isPremiumFromDb) {
+        state = AsyncValue.error(e, st);
+      }
+    }
+  }
+
+  Future<void> logIn(String uid) async {
+    try {
+      await Purchases.logIn(uid);
+      await updatePurchaseStatus();
+    } catch (e) {
+      if (kDebugMode) print('RevenueCat LogIn Error: $e');
+    }
+  }
+
+  Future<void> logOut() async {
+    try {
+      await Purchases.logOut();
+      _isPremiumFromDb = false;
+      await updatePurchaseStatus();
+    } catch (e) {
+      if (kDebugMode) print('RevenueCat LogOut Error: $e');
     }
   }
 
   Future<void> updatePurchaseStatus() async {
     try {
-      CustomerInfo customerInfo = await Purchases.getCustomerInfo();
-      
-      final bool isPremium = customerInfo.entitlements.active.containsKey('premium');
-      
-      if (kDebugMode) {
-        print('RevenueCat Status:');
-        print('Active Entitlements: ${customerInfo.entitlements.active.keys}');
-        print('Is Premium: $isPremium');
+      if (_isPremiumFromDb) {
+        state = const AsyncValue.data(true);
+        return;
       }
 
-      state = AsyncValue.data(isPremium);
+      CustomerInfo customerInfo = await Purchases.getCustomerInfo();
+      final bool isPremiumRC = customerInfo.entitlements.active.containsKey('premium') || 
+                               customerInfo.entitlements.active.containsKey('Premium');
+      
+      state = AsyncValue.data(isPremiumRC || _isPremiumFromDb);
     } catch (e) {
-      if (kDebugMode) print('RevenueCat Error: $e');
-      state = AsyncValue.data(false);
+      state = AsyncValue.data(_isPremiumFromDb);
     }
   }
 
   Future<List<Package>> getOfferings() async {
     try {
       Offerings offerings = await Purchases.getOfferings();
-      
-      if (offerings.current == null) {
-        return [];
-      }
-
-      if (offerings.current!.availablePackages.isEmpty) {
-        return [];
-      }
-
+      if (offerings.current == null) return [];
       return offerings.current!.availablePackages;
     } catch (e) {
+      return [];
     }
-    return [];
   }
 
   Future<bool> purchasePackage(Package package) async {
     try {
       state = const AsyncValue.loading();
       CustomerInfo customerInfo = await Purchases.purchasePackage(package);
-      final bool isPremium = customerInfo.entitlements.active.containsKey('premium');
-      state = AsyncValue.data(isPremium);
+      final bool isPremium = customerInfo.entitlements.active.containsKey('premium') || 
+                             customerInfo.entitlements.active.containsKey('Premium');
+      
+      if (isPremium) {
+        final user = FirebaseAuth.instance.currentUser;
+        if (user != null) {
+          final token = await user.getIdToken();
+          if (token != null) {
+            await _apiService.updatePremiumStatus(token, true);
+          }
+        }
+      }
+      
+      state = AsyncValue.data(isPremium || _isPremiumFromDb);
       return isPremium;
     } catch (e) {
       await updatePurchaseStatus();
@@ -96,16 +139,22 @@ class PremiumNotifier extends StateNotifier<AsyncValue<bool>> {
     try {
       state = const AsyncValue.loading();
       CustomerInfo customerInfo = await Purchases.restorePurchases();
-      final bool isPremium = customerInfo.entitlements.active.containsKey('premium');
-      state = AsyncValue.data(isPremium);
+      final bool isPremium = customerInfo.entitlements.active.containsKey('premium') || 
+                             customerInfo.entitlements.active.containsKey('Premium');
+      
+      if (isPremium) {
+        final user = FirebaseAuth.instance.currentUser;
+        if (user != null) {
+          final token = await user.getIdToken();
+          if (token != null) {
+            await _apiService.updatePremiumStatus(token, true);
+          }
+        }
+      }
+      
+      state = AsyncValue.data(isPremium || _isPremiumFromDb);
     } catch (e) {
       await updatePurchaseStatus();
     }
-  }
-
-  void debugTogglePremium() {
-    state.whenData((isPremium) {
-      state = AsyncValue.data(!isPremium);
-    });
   }
 }

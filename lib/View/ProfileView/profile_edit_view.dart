@@ -28,14 +28,18 @@ class _ProfileEditViewState extends ConsumerState<ProfileEditView> {
   int _weight = 52;
   bool _isSaving = false;
   bool _isUploadingImage = false;
+  String _selectedGender = 'male';
   late TextEditingController _nameController;
 
   @override
   void initState() {
     super.initState();
     _nameController = TextEditingController();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _initializeData();
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      await ref.read(userProfileProvider.notifier).fetchProfile();
+      if (mounted) {
+        _initializeData();
+      }
     });
   }
 
@@ -50,6 +54,7 @@ class _ProfileEditViewState extends ConsumerState<ProfileEditView> {
       }
       _height = q?.height?.toInt() ?? 165;
       _weight = q?.weight?.toInt() ?? 52;
+      _selectedGender = q?.gender ?? 'male';
       
       final bt = q?.bodyType ?? 2.0;
       if (bt <= 1.5) {
@@ -120,27 +125,16 @@ class _ProfileEditViewState extends ConsumerState<ProfileEditView> {
     else if (_selectedBodyType == 'fat') btValue = 4.0;
     else if (_selectedBodyType == 'very_fat') btValue = 5.0;
 
-    final user = ref.read(userProfileProvider).value;
-    final data = {
+    final Map<String, dynamic> updateData = {
       'name': _nameController.text,
+      'birthYear': DateTime.now().year - _age,
       'height': _height,
       'weight': _weight,
-      'birthYear': DateTime.now().year - _age,
       'bodyType': btValue,
-      'gender': user?.questionnaire?.gender ?? 'man',
-      'goal': user?.questionnaire?.goal ?? 'Göbek Eritme',
-      
-      'questionnaire': {
-        'height': _height,
-        'weight': _weight,
-        'birthYear': DateTime.now().year - _age,
-        'bodyType': btValue,
-        'gender': user?.questionnaire?.gender ?? 'man',
-        'goal': user?.questionnaire?.goal ?? 'Göbek Eritme',
-      }
+      'gender': _selectedGender,
     };
 
-    final success = await ref.read(userProfileProvider.notifier).updateProfile(data);
+    final success = await ref.read(userProfileProvider.notifier).updateProfile(updateData);
 
     if (mounted) {
       final langCode = ref.read(localeProvider).languageCode;
@@ -172,10 +166,10 @@ class _ProfileEditViewState extends ConsumerState<ProfileEditView> {
         children: [
           SingleChildScrollView(
             physics: const ClampingScrollPhysics(),
-            padding: EdgeInsets.only(bottom: 150.h, top: 73.h),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
+                SizedBox(height: MediaQuery.of(context).padding.top + 45.h),
                 Padding(
                   padding: EdgeInsets.symmetric(horizontal: 24.w),
                   child: Row(
@@ -214,7 +208,7 @@ class _ProfileEditViewState extends ConsumerState<ProfileEditView> {
                 ),
                 SizedBox(height: 36.h),
                 Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 48.w),
+                  padding: EdgeInsets.symmetric(horizontal: 24.w),
                   child: Row(
                     children: [
                       GestureDetector(
@@ -351,114 +345,16 @@ class _ProfileEditViewState extends ConsumerState<ProfileEditView> {
                     );
                   },
                 ),
+                SizedBox(height: 40.h),
+                _buildButtons(langCode),
+                SizedBox(height: 40.h),
               ],
-            ),
-          ),
-          Positioned(
-            left: 24.w,
-            right: 24.w,
-            bottom: 40.h,
-            child: SizedBox(
-              width: 342.w,
-              height: 96.h,
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  GestureDetector(
-                    onTap: _isSaving ? null : _saveChanges,
-                    child: Container(
-                      width: 342.w,
-                      height: 44.h,
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF00EF5B),
-                        borderRadius: BorderRadius.circular(10.r),
-                      ),
-                      child: Center(
-                        child: _isSaving 
-                          ? SizedBox(
-                              width: 20.w,
-                              height: 20.w,
-                              child: const CircularProgressIndicator(color: Colors.black, strokeWidth: 2),
-                            )
-                          : Text(
-                              Translations.translate('save_changes', langCode),
-                              style: GoogleFonts.montserrat(
-                                fontSize: 16.sp,
-                                fontWeight: FontWeight.w500,
-                                color: Colors.black,
-                                height: 1.25,
-                                letterSpacing: -0.176.sp,
-                              ),
-                            ),
-                      ),
-                    ),
-                  ),
-                  SizedBox(height: 12.h),
-                  GestureDetector(
-                    onTap: () {
-                      final langCode = ref.read(localeProvider).languageCode;
-                      showDialog(
-                        context: context,
-                        builder: (context) => AlertDialog(
-                          title: Text(Translations.translate('delete_account_confirm_title', langCode)),
-                          content: Text(Translations.translate('delete_account_confirm_message', langCode)),
-                          actions: [
-                            TextButton(
-                              onPressed: () => Navigator.pop(context),
-                              child: Text(Translations.translate('cancel', langCode)),
-                            ),
-                            TextButton(
-                              onPressed: () async {
-                                Navigator.pop(context);
-                                final success = await ref.read(authControllerProvider.notifier).deleteAccount();
-                                if (success) {
-                                  if (context.mounted) {
-                                    Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
-                                  }
-                                } else {
-                                  if (context.mounted) {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(content: Text('Hata oluştu. Lütfen tekrar giriş yapıp deneyin.')),
-                                    );
-                                  }
-                                }
-                              },
-                              child: Text(
-                                Translations.translate('delete_account_confirm_button', langCode),
-                                style: const TextStyle(color: Colors.red),
-                              ),
-                            ),
-                          ],
-                        ),
-                      );
-                    },
-                    child: Container(
-                      width: 342.w,
-                      height: 40.h,
-                      color: Colors.transparent,
-                      child: Center(
-                        child: Text(
-                          Translations.translate('delete_account', langCode),
-                          style: GoogleFonts.montserrat(
-                            fontSize: 14.sp,
-                            fontWeight: FontWeight.w500,
-                            color: const Color(0xFF9B9B9B),
-                            height: 1.25,
-                            letterSpacing: -0.176.sp,
-                            decoration: TextDecoration.underline,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
             ),
           ),
           if (_isDropdownOpen)
             Positioned(
               left: 270.w,
-              top: 360.h,
+              top: 380.h,
               child: _buildDropdownOverlay(langCode),
             ),
         ],
@@ -583,7 +479,7 @@ class _ProfileEditViewState extends ConsumerState<ProfileEditView> {
     final types = ['thin', 'normal', 'fat', 'very_fat'];
     return Container(
       width: 85.w,
-      height: 82.h,
+      height: 100.h,
       decoration: BoxDecoration(
         color: const Color(0xFFECECEC),
         border: Border.all(color: const Color.fromRGBO(235, 235, 235, 0.11)),
@@ -1124,5 +1020,169 @@ class _ProfileEditViewState extends ConsumerState<ProfileEditView> {
         );
       },
     ).whenComplete(() => setState(() => _activeField = ''));
+  }
+  
+  Widget _buildButtons(String langCode) {
+    return Column(
+      children: [
+        GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: _isSaving ? null : _saveChanges,
+          child: Container(
+            width: 342.w,
+            height: 44.h,
+            decoration: BoxDecoration(
+              color: const Color(0xFF00EF5B),
+              borderRadius: BorderRadius.circular(10.r),
+            ),
+            child: Center(
+              child: _isSaving 
+                ? SizedBox(
+                    width: 20.w,
+                    height: 20.w,
+                    child: const CircularProgressIndicator(color: Colors.black, strokeWidth: 2),
+                  )
+                : Text(
+                    Translations.translate('save_changes', langCode),
+                    style: GoogleFonts.montserrat(
+                      fontSize: 16.sp,
+                      fontWeight: FontWeight.w500,
+                      color: Colors.black,
+                      height: 1.25,
+                      letterSpacing: -0.176.sp,
+                    ),
+                  ),
+            ),
+          ),
+        ),
+        SizedBox(height: 12.h),
+        GestureDetector(
+          onTap: () {
+            showDialog(
+              context: context,
+              builder: (context) => AlertDialog(
+                title: Text(Translations.translate('delete_account_confirm_title', langCode)),
+                content: Text(Translations.translate('delete_account_confirm_message', langCode)),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: Text(Translations.translate('cancel', langCode)),
+                  ),
+                  TextButton(
+                    onPressed: () async {
+                      Navigator.pop(context);
+                      final success = await ref.read(authControllerProvider.notifier).deleteAccount();
+                      if (success) {
+                        if (context.mounted) {
+                          Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
+                        }
+                      } else {
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Hata oluştu. Lütfen tekrar giriş yapıp deneyin.')),
+                          );
+                        }
+                      }
+                    },
+                    child: Text(
+                      Translations.translate('delete_account_confirm_button', langCode),
+                      style: const TextStyle(color: Colors.red),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+          child: Container(
+            width: 342.w,
+            height: 40.h,
+            color: Colors.transparent,
+            child: Center(
+              child: Text(
+                Translations.translate('delete_account', langCode),
+                style: GoogleFonts.montserrat(
+                  fontSize: 14.sp,
+                  fontWeight: FontWeight.w500,
+                  color: const Color(0xFF9B9B9B),
+                  height: 1.25,
+                  letterSpacing: -0.176.sp,
+                  decoration: TextDecoration.underline,
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildGenderField(String langCode) {
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: 24.w),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            Translations.translate('gender_label', langCode),
+            style: GoogleFonts.montserrat(
+              fontSize: 12.sp,
+              fontWeight: FontWeight.w500,
+              color: Colors.black,
+              letterSpacing: -0.11.sp,
+            ),
+          ),
+          SizedBox(height: 10.h),
+          Row(
+            children: [
+              _buildGenderOption(
+                label: Translations.translate('male', langCode),
+                value: 'man', // Backend expects 'man' or 'woman'
+                isSelected: _selectedGender == 'man' || _selectedGender == 'male',
+                onTap: () => setState(() => _selectedGender = 'man'),
+              ),
+              SizedBox(width: 15.w),
+              _buildGenderOption(
+                label: Translations.translate('female', langCode),
+                value: 'woman',
+                isSelected: _selectedGender == 'woman' || _selectedGender == 'female',
+                onTap: () => setState(() => _selectedGender = 'woman'),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildGenderOption({
+    required String label,
+    required String value,
+    required bool isSelected,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: 163.w,
+        height: 40.h,
+        decoration: BoxDecoration(
+          color: isSelected ? const Color(0xFF00EF5B) : const Color(0xFFF5F5F5),
+          borderRadius: BorderRadius.circular(6.r),
+          border: Border.all(
+            color: isSelected ? const Color(0xFF00EF5B) : const Color(0xFFEBEBEB),
+          ),
+        ),
+        child: Center(
+          child: Text(
+            label,
+            style: GoogleFonts.montserrat(
+              fontSize: 12.sp,
+              fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+              color: isSelected ? Colors.black : const Color(0xFF525050),
+            ),
+          ),
+        ),
+      ),
+    );
   }
 }

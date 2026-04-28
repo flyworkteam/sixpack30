@@ -17,6 +17,7 @@ class _RateAppViewState extends ConsumerState<RateAppView> {
     return Scaffold(
       backgroundColor: const Color(0xFFFEFEFE),
       appBar: AppBar(
+        toolbarHeight: 80.h,
         backgroundColor: const Color(0xFFFEFEFE),
         elevation: 0,
         centerTitle: true,

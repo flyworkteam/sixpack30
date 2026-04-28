@@ -22,13 +22,12 @@ class UserModel {
   });
 
   factory UserModel.fromJson(Map<String, dynamic> json) {
-    final List? qList = json['questionnaires'];
-    final Map<String, dynamic>? qSingular = json['questionnaire'];
     QuestionnaireModel? q;
-    if (qList != null && qList.isNotEmpty) {
-      q = QuestionnaireModel.fromJson(qList.first);
-    } else if (qSingular != null) {
-      q = QuestionnaireModel.fromJson(qSingular);
+    
+    if (json['questionnaire'] != null) {
+      q = QuestionnaireModel.fromJson(json['questionnaire']);
+    } else if (json['questionnaires'] != null && json['questionnaires'] is List && (json['questionnaires'] as List).isNotEmpty) {
+      q = QuestionnaireModel.fromJson(json['questionnaires'][0]);
     }
 
     return UserModel(
@@ -36,9 +35,9 @@ class UserModel {
       firebaseUid: json['firebaseUid'] ?? '',
       email: json['email'],
       name: json['name'],
-      isPremium: json['isPremium'] ?? false,
-      notificationsEnabled: json['notificationsEnabled'] ?? true,
-      healthConnected: json['healthConnected'] ?? false,
+      isPremium: json['isPremium'] == true || json['isPremium'] == 1,
+      notificationsEnabled: json['notificationsEnabled'] == null ? true : (json['notificationsEnabled'] == true || json['notificationsEnabled'] == 1),
+      healthConnected: json['healthConnected'] == true || json['healthConnected'] == 1,
       photoUrl: json['photoUrl'],
       questionnaire: q,
     );

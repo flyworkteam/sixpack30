@@ -68,102 +68,189 @@ class _TrainingViewState extends ConsumerState<TrainingView> {
   }
   @override
   Widget build(BuildContext context) {
+    final String rawGender = (ref.watch(userProfileProvider).value?.questionnaire?.gender ?? '').toLowerCase().trim();
+    final bool isMale = rawGender.contains('male') || rawGender.contains('man') || rawGender.contains('erkek');
+    final String gender = isMale ? 'man' : 'woman';
+    final topPadding = MediaQuery.of(context).padding.top;
+    final headerHeight = 260.h + topPadding;
+
     return Scaffold(
       backgroundColor: const Color(0xFFFEFEFE),
-      body: CustomScrollView(
-        physics: const ClampingScrollPhysics(),
-        slivers: [
-          SliverToBoxAdapter(
-            child: _buildHeader(),
-          ),
-          SliverToBoxAdapter(
-            child: SizedBox(height: 25.h),
-          ),
-          Consumer(
-            builder: (context, ref, child) {
-              final workoutsAsync = ref.watch(workoutProvider);
-              final statsAsync = ref.watch(statsProvider);
-              final premiumAsync = ref.watch(premiumProvider);
-              final userAsync = ref.watch(userProfileProvider);
+      body: Stack(
+        children: [
+          // The background photo needs to be behind everything if we want things to scroll over it,
+          // OR we use a SliverAppBar which is cleaner. Let's use SliverAppBar.
+          CustomScrollView(
+            physics: const ClampingScrollPhysics(),
+            slivers: [
+              SliverAppBar(
+                expandedHeight: headerHeight,
+                automaticallyImplyLeading: false,
+                backgroundColor: Colors.black,
+                pinned: false, // Set to true if you want a small bar to stay at top
+                flexibleSpace: FlexibleSpaceBar(
+                  background: Stack(
+                    fit: StackFit.expand,
+                    children: [
+                      Image.asset(
+                        'assets/images/training_banner.jpg',
+                        fit: BoxFit.cover,
+                        alignment: Alignment.topCenter,
+                      ),
+                      Container(
+                        color: Colors.black.withValues(alpha: 0.38),
+                      ),
+                      // Text content inside flexible space so it scrolls with it
+                      Positioned(
+                        left: 30.w,
+                        bottom: 25.h,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              Translations.translate('program_days_title', ref.watch(localeProvider).languageCode),
+                              style: GoogleFonts.montserrat(
+                                fontWeight: FontWeight.w700,
+                                fontSize: 16.sp,
+                                color: const Color(0xFF00EF5B),
+                                height: 22 / 16,
+                              ),
+                            ),
+                            SizedBox(height: 3.h),
+                            Text(
+                              Translations.translate('program_subtitle', ref.watch(localeProvider).languageCode),
+                              style: GoogleFonts.montserrat(
+                                fontWeight: FontWeight.w700,
+                                fontSize: 18.sp,
+                                color: const Color(0xFFFFFFFF),
+                                height: 22 / 18,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
               
-              final bool isPremium = premiumAsync.value ?? false;
-              final String rawGender = (userAsync.value?.questionnaire?.gender ?? '').toLowerCase().trim();
-              final bool isMale = rawGender.contains('male') || 
-                                 rawGender.contains('man') || 
-                                 rawGender.contains('erkek');
-              final String gender = isMale ? 'man' : 'woman';
-
-              return workoutsAsync.when(
-                data: (workoutList) {
-                  final stats = statsAsync.value;
-                  final List<int> completedDays = stats?.completedDays ?? [];
+              SliverToBoxAdapter(
+                child: SizedBox(height: 25.h),
+              ),
+              
+              Consumer(
+                builder: (context, ref, child) {
+                  final workoutsAsync = ref.watch(workoutProvider);
+                  final statsAsync = ref.watch(statsProvider);
+                  final premiumAsync = ref.watch(premiumProvider);
                   
-                  int maxCompleted = completedDays.isEmpty ? 0 : completedDays.reduce((a, b) => a > b ? a : b);
-                  int currentActiveDay = maxCompleted + 1;
-
-                  final bool isGuest = workoutList.isEmpty;
+                  final bool isPremium = premiumAsync.value ?? false;
                   final langCode = ref.watch(localeProvider).languageCode;
-                  final List<WorkoutDay> baseList = isGuest 
-                      ? workoutDays.map((d) => WorkoutDay(
+
+                  return workoutsAsync.when(
+                    data: (workoutList) {
+                      final stats = statsAsync.value;
+                      final List<int> completedDays = stats?.completedDays ?? [];
+                      
+                      int maxCompleted = completedDays.isEmpty ? 0 : completedDays.reduce((a, b) => a > b ? a : b);
+                      int currentActiveDay = maxCompleted + 1;
+
+                      final bool useLocalFallback = workoutList == null || workoutList.length < 20; 
+                      
+                      final List<WorkoutDay> baseList = useLocalFallback 
+                          ? workoutDays.map((d) => WorkoutDay(
+                              day: d.day,
+                              title: Translations.translateWorkoutTitle(d.title, langCode),
+                              duration: '10 ${Translations.translate('minutes', langCode)}',
+                              imageIndex: d.imageIndex,
+                            )).toList()
+                          : workoutList.asMap().entries.map((e) {
+                              final index = e.key;
+                              final w = e.value;
+                              return WorkoutDay(
+                                day: index + 1,
+                                title: Translations.translateWorkoutTitle(w.title, langCode),
+                                duration: '${w.durationMinutes} ${Translations.translate('minutes', langCode)}',
+                                imageIndex: (index % 18) + 1,
+                              );
+                            }).toList();
+
+                      final activeList = baseList.map((d) {
+                        return WorkoutDay(
                           day: d.day,
-                          title: Translations.translateWorkoutTitle(d.title, langCode),
-                          duration: '10 ${Translations.translate('minutes', langCode)}',
+                          title: d.title,
+                          duration: d.duration,
+                          isCompleted: completedDays.contains(d.day),
+                          isCurrent: d.day == currentActiveDay,
                           imageIndex: d.imageIndex,
-                        )).toList()
-                      : workoutList.asMap().entries.map((e) {
-                          final index = e.key;
-                          final w = e.value;
-                          return WorkoutDay(
-                            day: index + 1,
-                            title: Translations.translateWorkoutTitle(w.title, langCode),
-                            duration: '${w.durationMinutes} ${Translations.translate('minutes', langCode)}',
-                            imageIndex: (index % 18) + 1,
-                          );
-                        }).toList();
-
-                  final activeList = baseList.map((d) {
-                    return WorkoutDay(
-                      day: d.day,
-                      title: d.title,
-                      duration: d.duration,
-                      isCompleted: completedDays.contains(d.day),
-                      isCurrent: d.day == currentActiveDay,
-                      imageIndex: d.imageIndex,
-                    );
-                  }).toList();
-
-                  return SliverList(
-                    delegate: SliverChildBuilderDelegate(
-                      (context, index) {
-                        final isLast = index == activeList.length - 1;
-                        final dayItem = activeList[index];
-                        
-                        final bool isPremiumLocked = dayItem.day > 3 && !isPremium;
-                        final bool isSequentialLocked = dayItem.day > currentActiveDay;
-
-                        return _buildTimelineItem(
-                          dayItem, 
-                          isLast, 
-                          isPremiumLocked: isPremiumLocked,
-                          isSequentialLocked: isSequentialLocked,
-                          gender: gender,
                         );
-                      },
-                      childCount: activeList.length,
+                      }).toList();
+
+                      return SliverList(
+                        delegate: SliverChildBuilderDelegate(
+                          (context, index) {
+                            final isLast = index == activeList.length - 1;
+                            final dayItem = activeList[index];
+                            
+                            final bool isPremiumLocked = dayItem.day > 3 && !isPremium;
+                            final bool isSequentialLocked = dayItem.day > currentActiveDay;
+
+                            return _buildTimelineItem(
+                              dayItem, 
+                              isLast, 
+                              isPremiumLocked: isPremiumLocked,
+                              isSequentialLocked: isSequentialLocked,
+                              gender: gender,
+                            );
+                          },
+                          childCount: activeList.length,
+                        ),
+                      );
+                    },
+                    loading: () => const SliverToBoxAdapter(
+                      child: Center(child: CircularProgressIndicator()),
+                    ),
+                    error: (err, stack) => SliverToBoxAdapter(
+                      child: Center(child: Text('Hata: $err')),
                     ),
                   );
                 },
-                loading: () => const SliverToBoxAdapter(
-                  child: Center(child: CircularProgressIndicator()),
-                ),
-                error: (err, stack) => SliverToBoxAdapter(
-                  child: Center(child: Text('Hata: $err')),
-                ),
-              );
-            },
+              ),
+              
+              SliverToBoxAdapter(
+                child: SizedBox(height: 100.h),
+              ),
+            ],
           ),
-          SliverToBoxAdapter(
-            child: SizedBox(height: 100.h),
+          
+          // Fixed Back Button on top of everything
+          Positioned(
+            left: 25.w,
+            top: topPadding + 35.h,
+            child: GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: () {
+                if (widget.onBackPressed != null) {
+                  widget.onBackPressed!();
+                } else {
+                  Navigator.pop(context);
+                }
+              },
+              child: Container(
+                width: 24.w,
+                height: 24.w,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFFFFFF).withValues(alpha: 0.85),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  Icons.arrow_back_ios_new_rounded,
+                  size: 14.sp,
+                  color: const Color(0xFF0D0D0D),
+                ),
+              ),
+            ),
           ),
         ],
       ),
@@ -172,8 +259,8 @@ class _TrainingViewState extends ConsumerState<TrainingView> {
   Widget _buildHeader() {
     final langCode = ref.watch(localeProvider).languageCode;
     return Container(
-      width: double.infinity,
-      height: 338.h,
+        width: double.infinity,
+        height: 338.h + MediaQuery.of(context).padding.top,
       decoration: BoxDecoration(
         color: Colors.black,
         borderRadius: BorderRadius.vertical(bottom: Radius.circular(15.r)),
@@ -191,7 +278,7 @@ class _TrainingViewState extends ConsumerState<TrainingView> {
         children: [
           Positioned(
             left: 25.w,
-            top: MediaQuery.of(context).padding.top + 10.h,
+            top: MediaQuery.of(context).padding.top + 35.h,
             child: GestureDetector(
               onTap: () {
                 if (widget.onBackPressed != null) {

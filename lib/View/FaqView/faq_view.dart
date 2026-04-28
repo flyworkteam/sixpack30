@@ -27,6 +27,7 @@ class _FaqViewState extends ConsumerState<FaqView> {
     return Scaffold(
       backgroundColor: const Color(0xFFFEFEFE),
       appBar: AppBar(
+        toolbarHeight: 80.h,
         backgroundColor: const Color(0xFFFEFEFE),
         surfaceTintColor: Colors.transparent,
         elevation: 0,

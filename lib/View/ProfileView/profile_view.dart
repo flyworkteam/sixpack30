@@ -59,7 +59,7 @@ class ProfileView extends ConsumerWidget {
 
     return SingleChildScrollView(
       physics: const ClampingScrollPhysics(),
-      padding: EdgeInsets.only(bottom: 80.h, top: MediaQuery.of(context).padding.top + 10.h),
+      padding: EdgeInsets.only(bottom: 80.h, top: MediaQuery.of(context).padding.top + 45.h),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
@@ -166,7 +166,7 @@ class ProfileView extends ConsumerWidget {
               ],
             ),
           ),
-          SizedBox(height: 48.h),
+          SizedBox(height: 30.h),
           Padding(
             padding: EdgeInsets.symmetric(horizontal: 24.w),
             child: Column(
@@ -215,19 +215,6 @@ class ProfileView extends ConsumerWidget {
                           onToggle: (val) {
                             ref.read(userProfileProvider.notifier).updateProfile({'notificationsEnabled': val});
                           }),
-                      if (!effectiveIsPremium)
-                        _buildSettingsItem(
-                            iconPath: 'assets/images/premium_badge.png',
-                            title: 'Premium',
-                            isLast: true,
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => const RevenueCatPaywallView(),
-                                ),
-                              );
-                            }),
                     ],
                   ),
                 ),

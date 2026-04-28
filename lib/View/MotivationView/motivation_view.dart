@@ -3,8 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:confetti/confetti.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../Core/Localization/translations.dart';
+import '../../Riverpod/Controllers/locale_provider.dart';
 
-class MotivationView extends StatefulWidget {
+class MotivationView extends ConsumerStatefulWidget {
   final String userName;
   final int completedExercises;
   final int activeMinutes;
@@ -17,10 +20,10 @@ class MotivationView extends StatefulWidget {
     this.isFinal = false,
   });
   @override
-  State<MotivationView> createState() => _MotivationViewState();
+  ConsumerState<MotivationView> createState() => _MotivationViewState();
 }
 
-class _MotivationViewState extends State<MotivationView> {
+class _MotivationViewState extends ConsumerState<MotivationView> {
   Timer? _timer;
   late ConfettiController _confettiController;
 
@@ -131,7 +134,7 @@ class _MotivationViewState extends State<MotivationView> {
                   RichText(
                     textAlign: TextAlign.center,
                     text: TextSpan(
-                      text: widget.userName.isEmpty ? 'Çok İyi Gidiyorsun, Kullanıcı' : 'Çok İyi Gidiyorsun, ',
+                      text: Translations.translate('doing_great', ref.watch(localeProvider).languageCode),
                       style: GoogleFonts.manrope(
                         fontWeight: FontWeight.w600,
                         fontSize: 24.sp,
@@ -151,9 +154,8 @@ class _MotivationViewState extends State<MotivationView> {
                   SizedBox(height: 22.h),
                   Text(
                     widget.isFinal 
-                      ? 'Harika İş Çıkardın!\nBugünkü hedefine ulaştın ve\ngüçlendin.'
-                      : 'Yarısını Geçtin!\n'
-                        'Vücudun yorulabilir ama sen\ngüçleniyorsun.',
+                      ? '${Translations.translate('great_job', ref.watch(localeProvider).languageCode)}\n${Translations.translate('goal_reached_desc', ref.watch(localeProvider).languageCode)}'
+                      : '${Translations.translate('half_way_done', ref.watch(localeProvider).languageCode)}\n${Translations.translate('half_way_desc', ref.watch(localeProvider).languageCode)}',
                     textAlign: TextAlign.center,
                     style: GoogleFonts.manrope(
                       fontWeight: FontWeight.w600,
@@ -174,7 +176,7 @@ class _MotivationViewState extends State<MotivationView> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          '🚀 ${widget.completedExercises} Hareket Bitirdin',
+                          '🚀 ${widget.completedExercises} ${Translations.translate('exercises_finished', ref.watch(localeProvider).languageCode)}',
                           style: GoogleFonts.manrope(
                             fontWeight: FontWeight.w600,
                             fontSize: 18.sp,
@@ -184,7 +186,7 @@ class _MotivationViewState extends State<MotivationView> {
                         ),
                         SizedBox(height: 12.h),
                         Text(
-                          '⚡️ ${widget.activeMinutes} Dakika Spor Yaptın',
+                          '⚡️ ${widget.activeMinutes} ${Translations.translate('minutes_done', ref.watch(localeProvider).languageCode)}',
                           style: GoogleFonts.manrope(
                             fontWeight: FontWeight.w600,
                             fontSize: 18.sp,

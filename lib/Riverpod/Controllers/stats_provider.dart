@@ -95,11 +95,9 @@ class StatsNotifier extends StateNotifier<AsyncValue<UserStats?>> {
         
         final localStats = state.value;
         
-        
         Set<int> mergedDaysSet = Set<int>.from(backendStats.completedDays);
         if (localStats != null) {
           mergedDaysSet.addAll(localStats.completedDays);
-          
           
           for (int day in localStats.completedDays) {
             if (!backendStats.completedDays.contains(day)) {
@@ -109,7 +107,6 @@ class StatsNotifier extends StateNotifier<AsyncValue<UserStats?>> {
         }
         List<int> mergedDays = mergedDaysSet.toList()..sort();
 
-        
         final stats = UserStats(
           totalActivity: (localStats?.totalActivity ?? 0) > backendStats.totalActivity ? localStats!.totalActivity : backendStats.totalActivity,
           totalKcal: (localStats?.totalKcal ?? 0.0) > backendStats.totalKcal ? localStats!.totalKcal : backendStats.totalKcal,
@@ -137,7 +134,6 @@ class StatsNotifier extends StateNotifier<AsyncValue<UserStats?>> {
         state = AsyncValue.data(stats);
         await _saveLocalStats(stats);
       } else {
-        
         if (!state.hasValue || state.value == null) {
           final userProfile = _ref.read(userProfileProvider).value;
           final q = userProfile?.questionnaire;
@@ -197,7 +193,7 @@ class StatsNotifier extends StateNotifier<AsyncValue<UserStats?>> {
     }
   }
 
-  Future<void> completeDay(int dayNumber) async {
+  Future<void> completeDay(int dayNumber, {int? duration, int? calories}) async {
     final currentStats = state.value ?? UserStats.initial();
 
     if (currentStats.completedDays.contains(dayNumber)) return;
@@ -224,29 +220,29 @@ class StatsNotifier extends StateNotifier<AsyncValue<UserStats?>> {
     ));
     if (newRecent.length > 5) newRecent.removeLast();
 
-    final double simulatedWeightLoss = 0.15;
-    final double newWeight = currentStats.weight - simulatedWeightLoss;
-    final double newWeightLost = currentStats.initialWeight - newWeight;
-    final double newCompletionRate = (newList.length / 30.0) * 100.0;
-    
-    
     final workoutList = _ref.read(workoutProvider).value;
     final workoutApi = workoutList?.where((w) => w.id == dayNumber).firstOrNull;
     
-    int workoutDuration = 15;
+    int workoutDuration = duration ?? 15;
     int workoutMoves = 20;
-    int workoutKcal = 250;
+    int workoutKcal = calories ?? 250;
 
     if (workoutApi != null) {
-      workoutDuration = workoutApi.durationMinutes;
+      if (duration == null) workoutDuration = workoutApi.durationMinutes;
       workoutMoves = workoutApi.exerciseCount ?? 20;
-      workoutKcal = workoutApi.calories ?? 250;
-    } else {
+      if (calories == null) workoutKcal = workoutApi.calories ?? 250;
+    } else if (duration == null || calories == null) {
       final staticWorkout = StaticWorkoutData.getWorkoutForDay(dayNumber);
-      workoutDuration = 10;
+      workoutDuration = duration ?? 10;
       workoutMoves = staticWorkout.exercises.length > 0 ? staticWorkout.exercises.length : 15;
-      workoutKcal = workoutMoves * 12;
+      workoutKcal = calories ?? (workoutMoves * 12);
     }
+
+    // Use a more visible simulation for progress (at least 0.1kg loss)
+    final double simulatedWeightLoss = (workoutKcal / 7700.0).clamp(0.1, 1.0);
+    final double newWeight = currentStats.weight - simulatedWeightLoss;
+    final double newWeightLost = currentStats.initialWeight - newWeight;
+    final double newCompletionRate = (newList.length / 30.0) * 100.0;
 
     final updatedStats = UserStats(
       totalActivity: currentStats.totalActivity + 1,
@@ -280,7 +276,10 @@ class StatsNotifier extends StateNotifier<AsyncValue<UserStats?>> {
       if (user != null) {
         final token = await user.getIdToken();
         if (token != null) {
-          await _apiService.completeDay(token, dayNumber);
+          await _apiService.completeDay(token, dayNumber, 
+            duration: workoutDuration, 
+            calories: workoutKcal
+          );
         }
       }
     } catch (e) {

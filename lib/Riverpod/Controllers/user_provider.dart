@@ -6,16 +6,18 @@ import 'package:six_pack_30/Core/Network/api_service_provider.dart';
 import 'package:six_pack_30/Core/Network/api_service.dart';
 import 'package:onesignal_flutter/onesignal_flutter.dart';
 import 'package:six_pack_30/Core/Services/health_service.dart';
+import 'package:six_pack_30/Riverpod/Controllers/stats_provider.dart';
 
 final userProfileProvider = StateNotifierProvider<UserProfileNotifier, AsyncValue<UserModel?>>((ref) {
-  return UserProfileNotifier(ref.watch(apiServiceProvider));
+  return UserProfileNotifier(ref.watch(apiServiceProvider), ref);
 });
 
 class UserProfileNotifier extends StateNotifier<AsyncValue<UserModel?>> {
   final ApiService _apiService;
+  final Ref _ref;
   final HealthService _healthService = HealthService();
 
-  UserProfileNotifier(this._apiService) : super(const AsyncValue.loading()) {
+  UserProfileNotifier(this._apiService, this._ref) : super(const AsyncValue.loading()) {
     fetchProfile();
   }
 
@@ -36,22 +38,18 @@ class UserProfileNotifier extends StateNotifier<AsyncValue<UserModel?>> {
         return;
       }
 
-      final profileData = await _apiService.getProfile(token);
-      debugPrint('Profile data from API: $profileData');
-      
-      if (profileData != null) {
-        final userModel = UserModel.fromJson(profileData);
+      final data = await _apiService.getProfile(token);
+      debugPrint('>>> FETCH PROFILE RAW DATA: $data');
+      if (data != null) {
+        final userModel = UserModel.fromJson(data);
         state = AsyncValue.data(userModel);
-      } else {
         
-        state = AsyncValue.data(UserModel(
-          id: 0,
-          firebaseUid: user.uid,
-          email: user.email,
-          name: user.displayName ?? 'Kullanıcı',
-          healthConnected: false,
-          notificationsEnabled: true,
-        ));
+        if (userModel.id != 0) {
+          OneSignal.login(userModel.id.toString());
+          if (userModel.name != null) OneSignal.User.addTags({"name": userModel.name!});
+        }
+      } else {
+        state = const AsyncValue.data(null);
       }
     } catch (e, st) {
       state = AsyncValue.error(e, st);
@@ -75,17 +73,11 @@ class UserProfileNotifier extends StateNotifier<AsyncValue<UserModel?>> {
           state = AsyncValue.data(updatedUser);
           debugPrint('Provider State Updated - Notifications: ${updatedUser.notificationsEnabled}');
         }
-        
-        if (enabled) {
-          OneSignal.User.pushSubscription.optIn();
-        } else {
-          OneSignal.User.pushSubscription.optOut();
-        }
       }
 
       if (data.containsKey('healthConnected')) {
         final bool enabled = data['healthConnected'];
-        debugPrint('Health toggle clicked: $enabled');
+        debugPrint('Health connection toggle clicked: $enabled');
         
         if (state.value != null) {
           final updatedUser = state.value!.copyWith(healthConnected: enabled);
@@ -98,6 +90,9 @@ class UserProfileNotifier extends StateNotifier<AsyncValue<UserModel?>> {
             debugPrint('Health permission status: $granted');
             if (granted) {
               _healthService.syncHealthData();
+            } else {
+              // İzin verilmediyse durumu tekrar false'a çek ve sunucuyu güncelle
+              updateProfile({'healthConnected': false});
             }
           });
         }
@@ -115,9 +110,12 @@ class UserProfileNotifier extends StateNotifier<AsyncValue<UserModel?>> {
         await user.reload();
       }
 
+      debugPrint('>>> UPDATING PROFILE WITH DATA: $data');
       final success = await _apiService.updateProfile(token, data);
       if (success) {
         await fetchProfile();
+        // Profil güncellendiğinde istatistikleri (kilo, boy vb.) de yenile
+        _ref.read(statsProvider.notifier).fetchStats();
         return true;
       }
       return false;

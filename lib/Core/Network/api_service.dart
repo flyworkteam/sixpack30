@@ -10,8 +10,8 @@ class ApiService {
     _dio = Dio(
       BaseOptions(
         baseUrl: Platform.isAndroid
-            ? 'https://sixpack30.fly-work.com/api'
-            : 'https://sixpack30.fly-work.com/api',
+            ? 'http://10.0.2.2:3000/api'
+            : 'http://localhost:3000/api',
         connectTimeout: const Duration(seconds: 10),
         receiveTimeout: const Duration(seconds: 10),
         responseType: ResponseType.json,
@@ -65,7 +65,9 @@ class ApiService {
           },
         ),
       );
-      return response.statusCode != null && response.statusCode! >= 200 && response.statusCode! < 300;
+      return response.statusCode != null &&
+          response.statusCode! >= 200 &&
+          response.statusCode! < 300;
     } catch (e) {
       if (e is DioException) {}
       return false;
@@ -84,7 +86,11 @@ class ApiService {
       }
       return null;
     } catch (e) {
-      if (e is DioException) {}
+      if (e is DioException) {
+        print('>>> GET PROFILE ERROR: ${e.response?.statusCode} - ${e.response?.data}');
+      } else {
+        print('>>> GET PROFILE UNKNOWN ERROR: $e');
+      }
       return null;
     }
   }
@@ -187,11 +193,15 @@ class ApiService {
     }
   }
 
-  Future<bool> completeDay(String firebaseIdToken, int dayNumber) async {
+  Future<bool> completeDay(String firebaseIdToken, int dayNumber, {int? duration, num? calories}) async {
     try {
       final response = await _dio.post(
         '/training/complete-day',
-        data: {'dayNumber': dayNumber},
+        data: {
+          'dayNumber': dayNumber,
+          'duration': duration,
+          'calories': calories,
+        },
         options: Options(
           headers: {
             'Authorization': 'Bearer $firebaseIdToken',
@@ -212,7 +222,27 @@ class ApiService {
         '/user/profile',
         options: Options(headers: {'Authorization': 'Bearer $firebaseIdToken'}),
       );
-      return response.statusCode != null && response.statusCode! >= 200 && response.statusCode! < 300;
+      return response.statusCode != null &&
+          response.statusCode! >= 200 &&
+          response.statusCode! < 300;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  Future<bool> updatePremiumStatus(String firebaseIdToken, bool isPremium) async {
+    try {
+      final response = await _dio.post(
+        '/user/premium',
+        data: {'isPremium': isPremium},
+        options: Options(
+          headers: {
+            'Authorization': 'Bearer $firebaseIdToken',
+            'Content-Type': 'application/json',
+          },
+        ),
+      );
+      return response.statusCode == 200;
     } catch (e) {
       return false;
     }

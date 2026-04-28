@@ -70,7 +70,10 @@ class _ProgressViewState extends ConsumerState<ProgressView> {
         children: [
           SingleChildScrollView(
             physics: const ClampingScrollPhysics(),
-            padding: EdgeInsets.only(bottom: 80.h, top: MediaQuery.of(context).padding.top + 10.h),
+            padding: EdgeInsets.only(
+              top: MediaQuery.of(context).padding.top + 45.h,
+              bottom: 120.h,
+            ),
             child: statsAsync.when(
               loading: () => SizedBox(
                 height: 1.sh,
@@ -89,8 +92,6 @@ class _ProgressViewState extends ConsumerState<ProgressView> {
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    SizedBox(height: 10.h),
-                    SizedBox(height: 20.h),
                     _buildHeader(langCode),
                     SizedBox(height: 30.h),
                     _buildSectionTitle(Translations.translate('daily_workout', langCode)),
@@ -1122,13 +1123,15 @@ class _ProgressViewState extends ConsumerState<ProgressView> {
             Positioned(
               left: 0,
               right: 0,
-              top: 40.h,
+              top: 58.h, // Pushed down to avoid overlap with 'bpm'
               bottom: 0,
               child: Opacity(
                 opacity: 0.8,
                 child: chartAsset.endsWith('.svg')
-                    ? SvgPicture.asset(chartAsset, fit: BoxFit.cover)
-                    : Image.asset(chartAsset, fit: BoxFit.cover),
+                    ? SvgPicture.asset(chartAsset,
+                        fit: BoxFit.fitWidth, alignment: Alignment.bottomCenter)
+                    : Image.asset(chartAsset,
+                        fit: BoxFit.fitWidth, alignment: Alignment.bottomCenter),
               ),
             ),
           if (iconAsset != null)

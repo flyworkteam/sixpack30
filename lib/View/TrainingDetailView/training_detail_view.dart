@@ -49,7 +49,7 @@ class _TrainingDetailViewState extends ConsumerState<TrainingDetailView> {
             top: 0,
             left: 0,
             right: 0,
-            height: 280.h,
+            height: 280.h + MediaQuery.of(context).padding.top,
             child: Container(
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.only(
@@ -102,7 +102,7 @@ class _TrainingDetailViewState extends ConsumerState<TrainingDetailView> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          SizedBox(height: 24.h),
+                          SizedBox(height: 35.h),
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             crossAxisAlignment: CrossAxisAlignment.center,
@@ -152,7 +152,7 @@ class _TrainingDetailViewState extends ConsumerState<TrainingDetailView> {
                           ),
                           SizedBox(height: 14.h),
                           Text(
-                            'Program',
+                            Translations.translate('training', langCode),
                             style: GoogleFonts.montserrat(
                               fontWeight: FontWeight.w600,
                               fontSize: 20.sp,
@@ -180,9 +180,9 @@ class _TrainingDetailViewState extends ConsumerState<TrainingDetailView> {
                                     );
                                   },
                                   child: _buildExerciseCard(
-                                    title: ex.name,
-                                    sets: ex.sets,
-                                    rest: '${Translations.translate('rest', langCode)}: ${ex.rest}',
+                                    title: Translations.translateExerciseName(ex.name, langCode),
+                                    sets: Translations.translateSets(ex.sets, langCode),
+                                    rest: '${Translations.translate('rest', langCode)}: ${Translations.translateSets(ex.rest, langCode)}',
                                     imagePath: ex.getImagePath(gender),
                                   ),
                                 ),
@@ -284,7 +284,7 @@ class _TrainingDetailViewState extends ConsumerState<TrainingDetailView> {
             ),
           ),
           Positioned(
-            top: MediaQuery.of(context).padding.top + 10.h,
+            top: MediaQuery.of(context).padding.top + 35.h,
             left: 25.w,
             child: GestureDetector(
               onTap: () => Navigator.of(context).pop(),

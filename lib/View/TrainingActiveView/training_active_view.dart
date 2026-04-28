@@ -5,7 +5,10 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/services.dart';
 import '../../Core/Data/workout_data.dart';
+import 'package:six_pack_30/Core/Localization/translations.dart';
+import '../../Riverpod/Controllers/locale_provider.dart';
 import '../../Riverpod/Controllers/stats_provider.dart';
 import '../../Riverpod/Controllers/user_provider.dart';
 import './video_player_widget.dart';
@@ -41,14 +44,23 @@ class _TrainingActiveViewState extends ConsumerState<TrainingActiveView> {
   late int currentIndex;
   int currentSetIndex = 0;
   late List<ExerciseInfo> exercises;
+  bool _isNavigating = false;
   
   Timer? _timer;
   int _totalSeconds = 0;
   int _remainingSeconds = 0;
+  late DateTime _workoutStartTime;
+  int _totalActualSeconds = 0;
 
   @override
   void initState() {
     super.initState();
+    SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
+      statusBarColor: Colors.transparent,
+      statusBarIconBrightness: Brightness.dark,
+      statusBarBrightness: Brightness.light,
+    ));
+    _workoutStartTime = DateTime.now();
     currentIndex = widget.initialIndex;
     currentSetIndex = widget.initialSetIndex;
     exercises = widget.exercises;
@@ -134,70 +146,45 @@ class _TrainingActiveViewState extends ConsumerState<TrainingActiveView> {
   }
 
   void _nextExercise() async {
-    final currentExercise = exercises[currentIndex];
-    final totalSets = _extractSets(currentExercise.sets);
+    if (_isNavigating) return;
+    _isNavigating = true;
+    
+    try {
+      final currentExercise = exercises[currentIndex];
+      final totalSets = _extractSets(currentExercise.sets);
 
-    if (currentSetIndex < totalSets - 1) {
-      _timer?.cancel();
-      bool wasPlaying = isPlaying;
-      
-      final restSeconds = _extractRestSeconds(currentExercise.rest);
-      
-      
-      ref.read(workoutProgressProvider.notifier).saveProgress(WorkoutProgress(
-        dayNumber: widget.dayNumber,
-        exerciseIndex: currentIndex,
-        setIndex: currentSetIndex + 1,
-        title: widget.title,
-        timestamp: DateTime.now(),
-      ));
-      
-      await Navigator.of(context).push(
-        MaterialPageRoute(
-          builder: (context) => BreakView(durationInSeconds: restSeconds),
-        ),
-      );
-      
-      if (mounted) {
-        setState(() {
-          currentSetIndex++;
-          isPlaying = wasPlaying;
-          _initializeTimer();
-        });
-      }
-    } else if (currentIndex < exercises.length - 1) {
-      _timer?.cancel();
-      bool wasPlaying = isPlaying;
-      
-      int halfWayMark = (exercises.length ~/ 2) - 1;
-      if (currentIndex == halfWayMark) {
-        final user = ref.read(userProfileProvider).value;
-        final firebaseUser = FirebaseAuth.instance.currentUser;
-        final String firebaseDisplayName = firebaseUser?.displayName ?? '';
-        final String firebaseEmailPart = firebaseUser?.email != null 
-            ? (firebaseUser!.email!.contains('privaterelay.appleid.com') ? '' : firebaseUser!.email!.split('@').first) 
-            : '';
-        final String backendName = (user?.name != null && user!.name!.trim().isNotEmpty) ? user!.name!.trim() : '';
-        final String userName = backendName.isNotEmpty 
-            ? backendName 
-            : (firebaseDisplayName.isNotEmpty 
-                ? firebaseDisplayName 
-                : (firebaseEmailPart.isNotEmpty 
-                    ? firebaseEmailPart 
-                    : 'Kullanıcı'));
-
-        await Navigator.of(context).push(
-          MaterialPageRoute(
-            builder: (context) => MotivationView(
-              userName: userName,
-              completedExercises: currentIndex + 1,
-              activeMinutes: (currentIndex + 1) * 2,
-            ),
-          ),
-        );
-      } else {
+      if (currentSetIndex < totalSets - 1) {
+        _timer?.cancel();
+        bool wasPlaying = isPlaying;
+        
         final restSeconds = _extractRestSeconds(currentExercise.rest);
         
+        ref.read(workoutProgressProvider.notifier).saveProgress(WorkoutProgress(
+          dayNumber: widget.dayNumber,
+          exerciseIndex: currentIndex,
+          setIndex: currentSetIndex + 1,
+          title: widget.title,
+          timestamp: DateTime.now(),
+        ));
+        
+        await Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (context) => BreakView(durationInSeconds: restSeconds),
+          ),
+        );
+        
+        if (mounted) {
+          setState(() {
+            currentSetIndex++;
+            isPlaying = wasPlaying;
+            _initializeTimer();
+          });
+        }
+      } else if (currentIndex < exercises.length - 1) {
+        _timer?.cancel();
+        bool wasPlaying = isPlaying;
+        
+        int restSeconds = _extractRestSeconds(currentExercise.rest);
         
         ref.read(workoutProgressProvider.notifier).saveProgress(WorkoutProgress(
           dayNumber: widget.dayNumber,
@@ -212,31 +199,39 @@ class _TrainingActiveViewState extends ConsumerState<TrainingActiveView> {
             builder: (context) => BreakView(durationInSeconds: restSeconds),
           ),
         );
+        
+        if (mounted) {
+          setState(() {
+            currentIndex++;
+            currentSetIndex = 0;
+            isPlaying = wasPlaying;
+            _initializeTimer();
+          });
+        }
+      } else {
+        _finishWorkout();
       }
-      
-      if (mounted) {
-        setState(() {
-          currentIndex++;
-          currentSetIndex = 0;
-          isPlaying = wasPlaying;
-          _initializeTimer();
-        });
-      }
-    } else {
-      _finishWorkout();
+    } finally {
+      _isNavigating = false;
     }
   }
 
   void _finishWorkout() async {
-    try {
-      
-      await ref.read(statsProvider.notifier).completeDay(widget.dayNumber);
-    } catch (e) {
-      debugPrint("Error completing workout: $e");
-    }
-    
-    final user = ref.read(userProfileProvider).value;
     final firebaseUser = FirebaseAuth.instance.currentUser;
+    final idToken = await firebaseUser?.getIdToken();
+
+    if (firebaseUser != null) {
+      try {
+        print('>>> COMPLETING DAY VIA PROVIDER: ${widget.dayNumber}');
+        await ref.read(statsProvider.notifier).completeDay(widget.dayNumber);
+        print('>>> COMPLETE DAY SUCCESS VIA PROVIDER');
+      } catch (e) {
+        print('>>> ERROR COMPLETING WORKOUT VIA PROVIDER: $e');
+        debugPrint("Error completing workout via provider: $e");
+      }
+    }
+
+    final user = ref.read(userProfileProvider).value;
     final String firebaseDisplayName = firebaseUser?.displayName ?? '';
     final String firebaseEmailPart = firebaseUser?.email != null 
         ? (firebaseUser!.email!.contains('privaterelay.appleid.com') ? '' : firebaseUser!.email!.split('@').first) 
@@ -250,19 +245,29 @@ class _TrainingActiveViewState extends ConsumerState<TrainingActiveView> {
                 ? firebaseEmailPart 
                 : 'Kullanıcı'));
     
+    int totalSets = 0;
+    for (var ex in exercises) {
+      totalSets += _extractSets(ex.sets);
+    }
+    
+    final actualDuration = DateTime.now().difference(_workoutStartTime);
+    int calculatedMinutes = actualDuration.inMinutes;
+    if (calculatedMinutes == 0 && actualDuration.inSeconds > 0) {
+      calculatedMinutes = 1; 
+    }
+    int totalMoves = totalSets; 
+
     if (mounted) {
-      
       await Navigator.of(context).push(
         MaterialPageRoute(
           builder: (context) => MotivationView(
             userName: userName,
-            completedExercises: exercises.length,
-            activeMinutes: exercises.length * 2,
+            completedExercises: totalMoves,
+            activeMinutes: calculatedMinutes,
             isFinal: true,
           ),
         ),
       );
-      
       
       await ref.read(workoutProgressProvider.notifier).clearProgress();
       
@@ -272,6 +277,7 @@ class _TrainingActiveViewState extends ConsumerState<TrainingActiveView> {
       }
     }
   }
+  
   void _prevExercise() {
     if (currentSetIndex > 0) {
       setState(() {
@@ -286,8 +292,10 @@ class _TrainingActiveViewState extends ConsumerState<TrainingActiveView> {
       });
     }
   }
+  
   @override
   Widget build(BuildContext context) {
+    final langCode = ref.watch(localeProvider).languageCode;
     return Scaffold(
       backgroundColor: const Color(0xFFFFFFFF),
       body: SizedBox(
@@ -298,8 +306,8 @@ class _TrainingActiveViewState extends ConsumerState<TrainingActiveView> {
             Positioned(
               left: 0,
               right: 0,
-              top: 0,
-              height: 573.h,
+              top: -MediaQuery.of(context).padding.top,
+              height: 573.h + MediaQuery.of(context).padding.top,
               child: Container(
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.only(
@@ -307,33 +315,15 @@ class _TrainingActiveViewState extends ConsumerState<TrainingActiveView> {
                     bottomRight: Radius.circular(6.r),
                   ),
                 ),
+                padding: EdgeInsets.zero,
                 clipBehavior: Clip.hardEdge,
-                child: ExerciseVideoPlayer(
-                  videoUrl: exercises[currentIndex].getVideoPath(widget.gender),
-                  placeholderUrl: exercises[currentIndex].getImagePath(widget.gender),
-                  isPlaying: isPlaying,
-                ),
-              ),
-            ),
-            Positioned(
-              left: 24.w,
-              top: MediaQuery.of(context).padding.top + 10.h,
-              child: GestureDetector(
-                onTap: () => Navigator.of(context).pop(),
-                child: Container(
-                  width: 24.w,
-                  height: 24.w,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFC2C2C2).withValues(alpha: 0.85),
-                    shape: BoxShape.circle,
-                  ),
-                  alignment: Alignment.center,
-                  child: Padding(
-                    padding: EdgeInsets.only(right: 2.w),
-                    child: Icon(
-                      Icons.arrow_back_ios_new_rounded,
-                      size: 12.sp,
-                      color: const Color(0xFF0D0D0D),
+                child: Transform.scale(
+                  scale: 1.15, // Zoom effect
+                  child: IgnorePointer(
+                    child: ExerciseVideoPlayer(
+                      videoUrl: exercises[currentIndex].getVideoPath(widget.gender),
+                      placeholderUrl: exercises[currentIndex].getImagePath(widget.gender),
+                      isPlaying: isPlaying,
                     ),
                   ),
                 ),
@@ -354,15 +344,18 @@ class _TrainingActiveViewState extends ConsumerState<TrainingActiveView> {
                       Color(0xFFFFFFFF),
                     ],
                   ),
-                  borderRadius: BorderRadius.circular(15.r),
+                  borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(30.r),
+                    topRight: Radius.circular(30.r),
+                  ),
                 ),
-                child: Stack(
+                padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 24.h),
+                child: Column(
                   children: [
-                    Positioned(
-                      left: 25.w,
-                      top: 23.h,
+                    Align(
+                      alignment: Alignment.centerLeft,
                       child: Text(
-                        exercises[currentIndex].name,
+                        Translations.translateExerciseName(exercises[currentIndex].name, langCode),
                         style: GoogleFonts.montserrat(
                           fontWeight: FontWeight.w700,
                           fontSize: 22.sp,
@@ -370,131 +363,54 @@ class _TrainingActiveViewState extends ConsumerState<TrainingActiveView> {
                         ),
                       ),
                     ),
-                    Positioned(
-                      left: 0,
-                      right: 0,
-                      top: 75.h,
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          _buildProgressBar(),
-                          SizedBox(height: 15.h),
-                          _buildTimerRow(),
-                          SizedBox(height: 8.h),
-                          Text(
-                            'REPS SET ${currentSetIndex + 1} OF ${_extractSets(exercises[currentIndex].sets)}',
-                            style: GoogleFonts.montserrat(
-                              fontSize: 16.sp,
-                              fontWeight: FontWeight.w400,
-                              color: const Color(0xFF7E8896),
-                              height: 20 / 16,
-                            ),
-                          ),
-                          SizedBox(height: 20.h),
-                          _buildControlsRow(),
-                        ],
+                    SizedBox(height: 25.h),
+                    _buildProgressBar(),
+                    const Spacer(),
+                    _buildTimerRow(),
+                    SizedBox(height: 8.h),
+                    Text(
+                      Translations.translate('reps_sets_progress', langCode)
+                          .replaceAll('{current}', (currentSetIndex + 1).toString())
+                          .replaceAll('{total}', _extractSets(exercises[currentIndex].sets).toString()),
+                      style: GoogleFonts.montserrat(
+                        fontSize: 16.sp,
+                        fontWeight: FontWeight.w400,
+                        color: const Color(0xFF7E8896),
+                        height: 20 / 16,
                       ),
                     ),
+                    const Spacer(),
+                    _buildControlsRow(),
+                    const Spacer(flex: 2),
+                    _buildBottomStatusRow(langCode),
+                    SizedBox(height: 10.h),
                   ],
                 ),
               ),
             ),
             Positioned(
               left: 24.w,
-              right: 24.w,
-              bottom: 35.h,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  RichText(
-                    text: TextSpan(
-                      text: '${currentIndex + 1}',
-                      style: GoogleFonts.montserrat(
-                        fontWeight: FontWeight.w600,
-                        fontSize: 16.sp,
-                        color: const Color(0xFF000000),
-                        height: 22 / 16,
-                      ),
-                      children: [
-                        TextSpan(
-                          text: '/${exercises.length}',
-                          style: GoogleFonts.montserrat(
-                            fontWeight: FontWeight.w400,
-                            fontSize: 12.sp,
-                            color: const Color(0xFF000000),
-                          ),
-                        ),
-                      ],
+              top: MediaQuery.of(context).padding.top + 35.h,
+              child: GestureDetector(
+                onTap: () => Navigator.of(context).pop(),
+                behavior: HitTestBehavior.opaque,
+                child: Container(
+                  width: 24.w,
+                  height: 24.w,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFC2C2C2).withValues(alpha: 0.85),
+                    shape: BoxShape.circle,
+                  ),
+                  alignment: Alignment.center,
+                  child: Padding(
+                    padding: EdgeInsets.only(right: 2.w),
+                    child: Icon(
+                      Icons.arrow_back_ios_new_rounded,
+                      size: 12.sp,
+                      color: const Color(0xFF0D0D0D),
                     ),
                   ),
-                          if (currentIndex < exercises.length - 1) ...[
-                            Flexible(
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Flexible(
-                                    child: Text(
-                                      'Sıradaki Hareket',
-                                      style: GoogleFonts.montserrat(
-                                        fontWeight: FontWeight.w500,
-                                        fontSize: 12.sp,
-                                        color: const Color(0xFF000000),
-                                        height: 15 / 12,
-                                      ),
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                  ),
-                                  SizedBox(width: 8.w),
-                                  Container(
-                                    padding: EdgeInsets.symmetric(horizontal: 4.w, vertical: 2.h),
-                                    decoration: BoxDecoration(
-                                      color: const Color(0xFFFFFFFF),
-                                      border: Border.all(color: const Color(0xFFEBEBEB)),
-                                      borderRadius: BorderRadius.circular(6.r),
-                                    ),
-                                    child: Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        ClipRRect(
-                                          borderRadius: BorderRadius.circular(3.r),
-                                          child: exercises[currentIndex + 1].getImagePath(widget.gender).startsWith('http')
-                                              ? Image.network(
-                                                  exercises[currentIndex + 1].getImagePath(widget.gender),
-                                                  width: 38.w,
-                                                  height: 28.h,
-                                                  fit: BoxFit.cover,
-                                                  errorBuilder: (_,__,___) => Container(width: 38.w, height: 28.h, color: Colors.grey[300]),
-                                                )
-                                              : Image.asset(
-                                                  exercises[currentIndex + 1].getImagePath(widget.gender),
-                                                  width: 38.w,
-                                                  height: 28.h,
-                                                  fit: BoxFit.cover,
-                                                  errorBuilder: (_,__,___) => Container(width: 38.w, height: 28.h, color: Colors.grey[300]),
-                                                ),
-                                        ),
-                                        SizedBox(width: 4.w),
-                                        Flexible(
-                                          child: Text(
-                                            exercises[currentIndex + 1].name,
-                                            style: GoogleFonts.montserrat(
-                                              fontWeight: FontWeight.w500,
-                                              fontSize: 10.sp,
-                                              color: const Color(0xFF100F0F),
-                                              height: 12 / 10,
-                                            ),
-                                            overflow: TextOverflow.ellipsis,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                ],
+                ),
               ),
             ),
           ],
@@ -502,6 +418,7 @@ class _TrainingActiveViewState extends ConsumerState<TrainingActiveView> {
       ),
     );
   }
+
   Widget _buildProgressBar() {
     return SizedBox(
       height: 18.h,
@@ -549,10 +466,6 @@ class _TrainingActiveViewState extends ConsumerState<TrainingActiveView> {
     final int minutes = _remainingSeconds ~/ 60;
     final int seconds = _remainingSeconds % 60;
     
-    final int totalRemainingSeconds = _remainingSeconds + (exercises.length - currentIndex - 1) * 30;
-    final int totalMins = totalRemainingSeconds ~/ 60;
-    final int totalSecs = totalRemainingSeconds % 60;
-
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
@@ -575,6 +488,7 @@ class _TrainingActiveViewState extends ConsumerState<TrainingActiveView> {
       children: [
         GestureDetector(
           onTap: _prevExercise,
+          behavior: HitTestBehavior.opaque,
           child: Container(
             width: 45.w,
             height: 45.w,
@@ -589,6 +503,7 @@ class _TrainingActiveViewState extends ConsumerState<TrainingActiveView> {
         SizedBox(width: 34.w),
         GestureDetector(
           onTap: _togglePlayPause,
+          behavior: HitTestBehavior.opaque,
           child: Container(
             width: 56.w,
             height: 56.w,
@@ -607,6 +522,7 @@ class _TrainingActiveViewState extends ConsumerState<TrainingActiveView> {
         SizedBox(width: 34.w),
         GestureDetector(
           onTap: _nextExercise,
+          behavior: HitTestBehavior.opaque,
           child: Container(
             width: 45.w,
             height: 45.w,
@@ -622,6 +538,108 @@ class _TrainingActiveViewState extends ConsumerState<TrainingActiveView> {
             ),
           ),
         ),
+      ],
+    );
+  }
+
+  Widget _buildBottomStatusRow(String langCode) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        RichText(
+          text: TextSpan(
+            text: '${currentIndex + 1}',
+            style: GoogleFonts.montserrat(
+              fontWeight: FontWeight.w600,
+              fontSize: 16.sp,
+              color: const Color(0xFF000000),
+              height: 22 / 16,
+            ),
+            children: [
+              TextSpan(
+                text: '/${exercises.length}',
+                style: GoogleFonts.montserrat(
+                  fontWeight: FontWeight.w400,
+                  fontSize: 12.sp,
+                  color: const Color(0xFF000000),
+                ),
+              ),
+            ],
+          ),
+        ),
+        Text(
+          Translations.translate('next_exercise', langCode),
+          style: GoogleFonts.montserrat(
+            fontWeight: FontWeight.w500,
+            fontSize: 12.sp,
+            color: const Color(0xFF000000),
+            height: 15 / 12,
+          ),
+        ),
+        if (currentIndex < exercises.length - 1) ...[
+          Flexible(
+            child: GestureDetector(
+              onTap: _nextExercise,
+              behavior: HitTestBehavior.opaque,
+              child: Container(
+                padding: EdgeInsets.symmetric(horizontal: 4.w, vertical: 2.h),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFFFFFF),
+                  border: Border.all(color: const Color(0xFFEBEBEB)),
+                  borderRadius: BorderRadius.circular(6.r),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(3.r),
+                      child: exercises[currentIndex + 1]
+                              .getImagePath(widget.gender)
+                              .startsWith('http')
+                          ? Image.network(
+                              exercises[currentIndex + 1]
+                                  .getImagePath(widget.gender),
+                              width: 38.w,
+                              height: 28.h,
+                              fit: BoxFit.cover,
+                              errorBuilder: (_, __, ___) => Container(
+                                  width: 38.w,
+                                  height: 28.h,
+                                  color: Colors.grey[300]),
+                            )
+                          : Image.asset(
+                              exercises[currentIndex + 1]
+                                  .getImagePath(widget.gender),
+                              width: 38.w,
+                              height: 28.h,
+                              fit: BoxFit.cover,
+                              errorBuilder: (_, __, ___) => Container(
+                                  width: 38.w,
+                                  height: 28.h,
+                                  color: Colors.grey[300]),
+                            ),
+                    ),
+                    SizedBox(width: 4.w),
+                    Flexible(
+                      child: Text(
+                        Translations.translateExerciseName(
+                            exercises[currentIndex + 1].name, langCode),
+                        style: GoogleFonts.montserrat(
+                          fontWeight: FontWeight.w500,
+                          fontSize: 10.sp,
+                          color: const Color(0xFF100F0F),
+                          height: 12 / 10,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
       ],
     );
   }

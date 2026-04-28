@@ -3,16 +3,21 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-class BreakView extends StatefulWidget {
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../Core/Localization/translations.dart';
+import '../../Riverpod/Controllers/locale_provider.dart';
+
+class BreakView extends ConsumerStatefulWidget {
   final int durationInSeconds;
   const BreakView({
     super.key,
     this.durationInSeconds = 30,
   });
   @override
-  State<BreakView> createState() => _BreakViewState();
+  ConsumerState<BreakView> createState() => _BreakViewState();
 }
-class _BreakViewState extends State<BreakView> with SingleTickerProviderStateMixin {
+
+class _BreakViewState extends ConsumerState<BreakView> with SingleTickerProviderStateMixin {
   late int remainingSeconds;
   Timer? _timer;
   late AnimationController _pulseController;
@@ -71,7 +76,7 @@ class _BreakViewState extends State<BreakView> with SingleTickerProviderStateMix
                   RichText(
                     textAlign: TextAlign.center,
                     text: TextSpan(
-                      text: 'Kaslarını\n',
+                      text: Translations.translate('rest_muscles_title', ref.watch(localeProvider).languageCode).split(' ')[0] + '\n',
                       style: GoogleFonts.montserrat(
                         fontWeight: FontWeight.w600,
                         fontSize: 24.69.sp,
@@ -80,16 +85,10 @@ class _BreakViewState extends State<BreakView> with SingleTickerProviderStateMix
                       ),
                       children: [
                         TextSpan(
-                          text: 'Dinlendirme',
+                          text: Translations.translate('rest_muscles_title', ref.watch(localeProvider).languageCode).split(' ').sublist(1).join(' '),
                           style: GoogleFonts.montserrat(
                             fontWeight: FontWeight.w700,
                             color: const Color(0xFF06C44F),
-                          ),
-                        ),
-                        TextSpan(
-                          text: ' Zamanı',
-                          style: GoogleFonts.montserrat(
-                            fontWeight: FontWeight.w600,
                           ),
                         ),
                       ],
@@ -140,7 +139,7 @@ class _BreakViewState extends State<BreakView> with SingleTickerProviderStateMix
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
                                 Text(
-                                  '${remainingSeconds - 1} sn',
+                                  '${remainingSeconds - 1} ${Translations.translate('seconds', ref.watch(localeProvider).languageCode)}',
                                   style: GoogleFonts.montserrat(
                                     fontWeight: FontWeight.w300,
                                     fontSize: 10.sp,
@@ -150,7 +149,7 @@ class _BreakViewState extends State<BreakView> with SingleTickerProviderStateMix
                                 ),
                                 SizedBox(height: 2.h),
                                 Text(
-                                  '$remainingSeconds sn',
+                                  '$remainingSeconds ${Translations.translate('seconds', ref.watch(localeProvider).languageCode)}',
                                   style: GoogleFonts.montserrat(
                                     fontWeight: FontWeight.w600,
                                     fontSize: 14.sp,
@@ -177,7 +176,7 @@ class _BreakViewState extends State<BreakView> with SingleTickerProviderStateMix
                         borderRadius: BorderRadius.circular(15.r),
                       ),
                       child: Text(
-                        '30 saniye dinlen, gücünü topla. Sıradaki set daha güçlü gelecek. 🚀',
+                        Translations.translate('rest_muscles_desc', ref.watch(localeProvider).languageCode),
                         textAlign: TextAlign.center,
                         style: GoogleFonts.montserrat(
                           fontWeight: FontWeight.w500,
@@ -210,7 +209,7 @@ class _BreakViewState extends State<BreakView> with SingleTickerProviderStateMix
                   ),
                   alignment: Alignment.center,
                   child: Text(
-                    'Atla',
+                    Translations.translate('skip', ref.watch(localeProvider).languageCode),
                     style: GoogleFonts.montserrat(
                       fontWeight: FontWeight.w600,
                       fontSize: 16.sp,

@@ -42,54 +42,28 @@ class WorkoutData {
 class StaticWorkoutData {
   static List<ExerciseInfo> _generateCdnExercises(List<Map<String, String>> data) {
     return data.map((ex) {
-      final String cleanName = ex['name']!.split('(')[0].trim();
-      final String encodedName = Uri.encodeComponent(cleanName);
+      final String name = ex['name']!;
+      final String cleanName = name.split('(')[0].trim();
+      final String normalizedName = cleanName.toLowerCase().replaceAll('-', ' ').replaceAll('  ', ' ').trim();
       
+      // Decide naming convention for CDN
+      // Unified naming convention: replace all spaces and dashes with underscores and lowercase
+      String cdnBaseName = cleanName.toLowerCase().replaceAll(' ', '_').replaceAll('-', '_').replaceAll('__', '_').trim();
+      
+      // For videos, we use the unified name and decide the extension
       final mp4List = [
-        'Plank Hip Dip', 'Sit-Up', 'Pulse Crunch', 'Russian Twist', 
-        'Scissor Kicks', 'Seated Twist', 'Standing Oblique Crunch', 
-        'Standing Side Crunch', 'Mountain Climber', 'Leg Raise'
+        'plank hip dip', 'sit up', 'pulse crunch', 'russian twist', 
+        'scissor kicks', 'seated twist', 'standing oblique crunch', 
+        'standing side crunch', 'mountain climber', 'leg raise', 'v up'
       ];
-      final String ext = mp4List.contains(cleanName) ? 'mp4' : 'mov';
-      
-      final localExercisesLower = [
-        'v-up', 'double crunch', 'flutter kicks', 'scissor kicks', 
-        'russian twist', 'oblique v-up', 'side plank', 'high knees',
-        'crunch', 'heel touch', 'plank', 'leg raise', 'sit-up',
-        'bent knee leg raise', 'bicycle crunch', 'cross crunch', 'dead bug',
-        'forearm plank', 'high plank knee drive', 'jackknife', 'lying knee raise',
-        'lying leg hold', 'mountain climber', 'plank hip dip', 'plank shoulder tap',
-        'pulse crunch', 'reach up crunch', 'reverse crunch', 'seated twist',
-        'side crunch', 'side plank reach', 'standing oblique crunch',
-        'standing side crunch', 'toe touch crunch'
-      ];
-
-      if (localExercisesLower.contains(cleanName.toLowerCase())) {
-        String assetName = cleanName;
-        
-        if (cleanName.toLowerCase() == 'dead bug') assetName = 'Dead Bug';
-        if (cleanName.toLowerCase() == 'v-up') assetName = 'V_Up';
-        
-        
-        String videoAssetName = assetName.replaceAll(' ', '_');
-        if (cleanName.toLowerCase() == 'dead bug') videoAssetName = 'Dead_bug';
-        if (cleanName.toLowerCase() == 'v-up') videoAssetName = 'V_Up';
-
-        return ExerciseInfo(
-          name: ex['name']!,
-          sets: ex['sets']!,
-          rest: ex['rest']!,
-          imagePath: 'assets/images/$assetName {gender}.png',
-          videoPath: 'assets/videos/$videoAssetName.$ext',
-        );
-      }
+      final String ext = mp4List.contains(normalizedName) ? 'mp4' : 'mov';
 
       return ExerciseInfo(
-        name: ex['name']!,
+        name: name,
         sets: ex['sets']!,
         rest: ex['rest']!,
-        imagePath: 'https://sixpack30.b-cdn.net/images/$encodedName%20{gender}.png',
-        videoPath: 'https://sixpack30.b-cdn.net/videos/$encodedName%20{gender}.mp4',
+        imagePath: 'https://sixpack30.b-cdn.net/images/${cdnBaseName}_{gender}.png',
+        videoPath: 'https://sixpack30.b-cdn.net/videos/$cdnBaseName.$ext',
       );
     }).toList();
   }

@@ -88,7 +88,7 @@ class _HomeViewState extends ConsumerState<HomeView> {
                 : SingleChildScrollView(
                     key: const ValueKey('HomeTab'),
                     physics: const ClampingScrollPhysics(),
-                    padding: EdgeInsets.only(bottom: 80.h, top: MediaQuery.of(context).padding.top + 10.h),
+                    padding: EdgeInsets.only(bottom: 80.h, top: MediaQuery.of(context).padding.top + 45.h),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -881,7 +881,7 @@ class _HomeViewState extends ConsumerState<HomeView> {
                       children: [
                         Expanded(
                           child: Text(
-                            '${progress.dayNumber}. ${Translations.translate('workout_day', langCode)}: ${currentExercise.name}',
+                            '${progress.dayNumber}. ${Translations.translate('workout_day', langCode)}: ${Translations.translateExerciseName(currentExercise.name, langCode)}',
                             style: GoogleFonts.montserrat(
                               fontSize: 16.sp,
                               fontWeight: FontWeight.w600,
@@ -1436,7 +1436,6 @@ class _HomeViewState extends ConsumerState<HomeView> {
                               final double kiloProgress = (stats == null || stats.initialWeight == stats.targetWeight) 
                                   ? 0.0 
                                   : (stats.weightLost / (stats.initialWeight - stats.targetWeight)).clamp(0.0, 1.0);
-                              final String kiloValue = stats == null ? '0.0' : (stats.weightLost == 0 ? '0.0' : '-${stats.weightLost.toStringAsFixed(1)}');
 
                                   return SizedBox(
                                     width: 71.2.w,
@@ -1462,7 +1461,7 @@ class _HomeViewState extends ConsumerState<HomeView> {
                                           ),
                                         ),
                                         Text(
-                                          kiloValue,
+                                          '${stats?.weightLost.toStringAsFixed(1) ?? "0.0"}',
                                           style: GoogleFonts.montserrat(
                                             fontSize: 15.sp,
                                             fontWeight: FontWeight.w600,
@@ -1672,9 +1671,9 @@ class _HomeViewState extends ConsumerState<HomeView> {
               final double currentW = userStats?.weight ?? 0;
               double weightDiff = initialW - currentW;
               if (weightDiff < 0) weightDiff = 0;
-              final String weightLostStr = userStats == null ? '0 Kg' : '${weightDiff.toStringAsFixed(1)} Kg';
               
               final String streakStr = userStats == null ? '0 ${Translations.translate('days', langCode)}' : '${userStats.streak} ${Translations.translate('days', langCode)}';
+              final String weightLostStr = userStats == null ? '0.0 ${Translations.translate('weight_unit', langCode)}' : '${weightDiff.toStringAsFixed(1)} ${Translations.translate('weight_unit', langCode)}';
               
               final int successVal = userStats == null ? 0 : ((completedCount / 30) * 100).toInt();
               final String successPercent = '%$successVal';
