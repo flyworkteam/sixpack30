@@ -1,24 +1,26 @@
 import 'dart:io';
-import 'package:flutter/foundation.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_sign_in/google_sign_in.dart';
-import 'package:sign_in_with_apple/sign_in_with_apple.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-
 import 'package:onesignal_flutter/onesignal_flutter.dart';
-import 'package:six_pack_30/Core/Network/api_service_provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 import 'package:six_pack_30/Core/Network/api_service.dart';
+import 'package:six_pack_30/Core/Network/api_service_provider.dart';
 
-final authControllerProvider = StateNotifierProvider<AuthController, AsyncValue<User?>>((ref) {
-  return AuthController(ref.watch(apiServiceProvider));
-});
+final authControllerProvider =
+    StateNotifierProvider<AuthController, AsyncValue<User?>>((ref) {
+      return AuthController(ref.watch(apiServiceProvider));
+    });
 
 class AuthController extends StateNotifier<AsyncValue<User?>> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final ApiService _apiService;
   final GoogleSignIn _googleSignIn = GoogleSignIn(
-    clientId: Platform.isIOS ? '653562759267-cmoum4066rfseegvvnccjjonm11vdsfq.apps.googleusercontent.com' : null,
+    clientId: Platform.isIOS
+        ? '653562759267-cmoum4066rfseegvvnccjjonm11vdsfq.apps.googleusercontent.com'
+        : null,
   );
 
   AuthController(this._apiService) : super(const AsyncValue.data(null));
@@ -33,13 +35,16 @@ class AuthController extends StateNotifier<AsyncValue<User?>> {
         return null;
       }
 
-      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+      final GoogleSignInAuthentication googleAuth =
+          await googleUser.authentication;
       final OAuthCredential credential = GoogleAuthProvider.credential(
         accessToken: googleAuth.accessToken,
         idToken: googleAuth.idToken,
       );
 
-      final UserCredential userCredential = await _auth.signInWithCredential(credential);
+      final UserCredential userCredential = await _auth.signInWithCredential(
+        credential,
+      );
       final User? user = userCredential.user;
       bool hasCompletedSurvey = false;
 
@@ -47,7 +52,7 @@ class AuthController extends StateNotifier<AsyncValue<User?>> {
         final idToken = await user.getIdToken();
         if (idToken != null) {
           final result = await _apiService.syncUserWithBackend(idToken);
-          
+
           if (user.displayName != null || user.photoURL != null) {
             await _apiService.updateProfile(idToken, {
               if (user.displayName != null) 'name': user.displayName,
@@ -66,7 +71,7 @@ class AuthController extends StateNotifier<AsyncValue<User?>> {
             return hasCompletedSurvey;
           } else {
             state = AsyncValue.data(user);
-            return null; 
+            return null;
           }
         }
       }
@@ -82,20 +87,23 @@ class AuthController extends StateNotifier<AsyncValue<User?>> {
   Future<bool?> signInWithApple() async {
     try {
       state = const AsyncValue.loading();
-      
-      final AuthorizationCredentialAppleID appleCredential = await SignInWithApple.getAppleIDCredential(
-        scopes: [
-          AppleIDAuthorizationScopes.email,
-          AppleIDAuthorizationScopes.fullName,
-        ],
-      );
+
+      final AuthorizationCredentialAppleID appleCredential =
+          await SignInWithApple.getAppleIDCredential(
+            scopes: [
+              AppleIDAuthorizationScopes.email,
+              AppleIDAuthorizationScopes.fullName,
+            ],
+          );
 
       final OAuthCredential credential = OAuthProvider('apple.com').credential(
         idToken: appleCredential.identityToken,
         accessToken: appleCredential.authorizationCode,
       );
 
-      final UserCredential userCredential = await _auth.signInWithCredential(credential);
+      final UserCredential userCredential = await _auth.signInWithCredential(
+        credential,
+      );
       User? user = userCredential.user;
       bool hasCompletedSurvey = false;
 
@@ -104,7 +112,8 @@ class AuthController extends StateNotifier<AsyncValue<User?>> {
         final String familyName = appleCredential.familyName ?? '';
         final String appleName = '$givenName $familyName'.trim();
 
-        if (appleName.isNotEmpty && (user.displayName == null || user.displayName!.isEmpty)) {
+        if (appleName.isNotEmpty &&
+            (user.displayName == null || user.displayName!.isEmpty)) {
           await user.updateDisplayName(appleName);
           await user.reload();
           user = _auth.currentUser;
@@ -113,7 +122,7 @@ class AuthController extends StateNotifier<AsyncValue<User?>> {
         final idToken = await user!.getIdToken(true);
         if (idToken != null) {
           final result = await _apiService.syncUserWithBackend(idToken);
-          
+
           if (appleName.isNotEmpty) {
             await _apiService.updateProfile(idToken, {'name': appleName});
           }
@@ -129,7 +138,7 @@ class AuthController extends StateNotifier<AsyncValue<User?>> {
             return hasCompletedSurvey;
           } else {
             state = AsyncValue.data(user);
-            return null; 
+            return null;
           }
         }
       }
@@ -193,7 +202,7 @@ class AuthController extends StateNotifier<AsyncValue<User?>> {
         state = AsyncValue.data(user);
         return {'isLoggedIn': true, 'hasCompletedSurvey': null};
       }
-      
+
       final bool hasCompletedSurvey = result['hasCompletedSurvey'] ?? false;
 
       state = AsyncValue.data(user);
@@ -209,8 +218,7 @@ class AuthController extends StateNotifier<AsyncValue<User?>> {
       await _googleSignIn.signOut();
       OneSignal.logout();
       state = const AsyncValue.data(null);
-    } catch (e) {
-    }
+    } catch (e) {}
   }
 
   Future<bool> deleteAccount() async {
@@ -225,8 +233,7 @@ class AuthController extends StateNotifier<AsyncValue<User?>> {
       if (success) {
         try {
           await user.delete();
-        } catch (e) {
-        }
+        } catch (e) {}
         await _googleSignIn.signOut();
         OneSignal.logout();
         state = const AsyncValue.data(null);

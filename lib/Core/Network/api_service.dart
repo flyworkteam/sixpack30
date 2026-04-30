@@ -10,8 +10,8 @@ class ApiService {
     _dio = Dio(
       BaseOptions(
         baseUrl: Platform.isAndroid
-            ? 'http://10.0.2.2:3000/api'
-            : 'http://localhost:3000/api',
+            ? 'https://sixpack30.fly-work.com/api'
+            : 'https://sixpack30.fly-work.com/api',
         connectTimeout: const Duration(seconds: 10),
         receiveTimeout: const Duration(seconds: 10),
         responseType: ResponseType.json,
