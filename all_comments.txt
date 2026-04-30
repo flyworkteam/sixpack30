@@ -1,0 +1,190 @@
+lib/Core/Network/api_service.dart:            ? 'https://sixpack30.fly-work.com/api'
+lib/Core/Network/api_service.dart:            : 'https://sixpack30.fly-work.com/api',
+lib/Core/Models/workout_model.dart:      finalPath = 'https://sixpack30.b-cdn.net/images/${rawPath.split('/').last}';
+lib/Core/Data/workout_data.dart:      // Yerel klasörde olduğu kesinleşen tüm hareketler (küçük harfe çevirerek karşılaştıracağız)
+lib/Core/Data/workout_data.dart:        // Görsel diskte 'Dead Bug' (Büyük B) ve 'V_Up' (Alt tireli) olarak var
+lib/Core/Data/workout_data.dart:        // Video isimlendirmesi (alt tireli ve case-sensitive)
+lib/Core/Data/workout_data.dart:        imagePath: 'https://sixpack30.b-cdn.net/images/$encodedName%20{gender}.png',
+lib/Core/Data/workout_data.dart:        videoPath: 'https://sixpack30.b-cdn.net/videos/$encodedName%20{gender}.mp4',
+lib/Core/Services/health_service.dart:  // İstediğimiz veri tipleri
+lib/Core/Services/health_service.dart:      // Verileri çek
+lib/Core/Services/health_service.dart:      // Verileri işle
+lib/Core/Services/health_service.dart:      // Backend'e gönder
+lib/Core/Services/workout_progress_service.dart:      // Expire after 24 hours
+lib/Riverpod/Controllers/stats_provider.dart:        // ÖNEMLİ: State'in en güncel halini alıyoruz (az önce yüklenen yerel veri dahil)
+lib/Riverpod/Controllers/stats_provider.dart:        // Günleri birleştiriyoruz
+lib/Riverpod/Controllers/stats_provider.dart:          // Eğer yerelde olup sunucuda olmayan gün varsa sunucuya da gönderiyoruz
+lib/Riverpod/Controllers/stats_provider.dart:        // Diğer istatistikleri de "en yüksek olanı tut" mantığıyla birleştiriyoruz
+lib/Riverpod/Controllers/stats_provider.dart:        // If API fails, try to keep current state if it has data
+lib/Riverpod/Controllers/stats_provider.dart:    // Remove if already exists to move to top
+lib/Riverpod/Controllers/stats_provider.dart:    // Get workout details for stats calculation (API first, then fallback to Static)
+lib/Riverpod/Controllers/stats_provider.dart:      workoutDuration = 10; // Default estimate
+lib/Riverpod/Controllers/stats_provider.dart:      workoutKcal = workoutMoves * 12; // Estimate
+lib/Riverpod/Controllers/user_provider.dart:        // Sunucuda profil yoksa veya hata oluştuysa, boş bir state yerine temel bir model verelim
+lib/Riverpod/Controllers/user_provider.dart:        // fetchProfile() çağrısını kaldırıyoruz çünkü yerel state'i zaten güncelledik.
+lib/Riverpod/Controllers/user_provider.dart:        // Sunucudan tekrar çekmek, sunucu yavaşsa düğmenin geri atmasına neden olur.
+lib/Riverpod/Controllers/auth_controller.dart:// import 'package:flutter_facebook_auth/flutter_facebook_auth.dart';
+lib/Riverpod/Controllers/auth_controller.dart:          // If delete fails (requires re-auth), we still logged out
+lib/Riverpod/Controllers/premium_provider.dart:      // RevenueCat dashboard'da tanımlanan entitlement id 'premium' olmalı
+lib/View/TrainingView/training_view.dart:                        imageUrl: 'https://sixpack30.b-cdn.net/images/day_${day.imageIndex}.${day.imageIndex <= 6 ? 'png' : 'jpg'}',
+lib/View/ShareAppView/share_app_view.dart:    const String link = 'https://sixpack30.com';
+lib/View/TrainingDetailView/training_detail_view.dart:    // Check if progress belongs to this day
+lib/View/ProfileView/profile_edit_view.dart:      // Backend nested yapı bekliyorsa diye questionnaire olarak da ekliyoruz
+lib/View/ProfileView/profile_edit_view.dart:                                Navigator.pop(context); // Close dialog
+lib/View/ProfileView/profile_edit_view.dart:                    child: Container( // Hit area'yı büyütmek için Container ve padding ekledik
+lib/View/ProfileView/profile_edit_view.dart:                            color: const Color(0xFF9B9B9B), // Rengi biraz daha soluk yapalım
+lib/View/ProfileView/profile_edit_view.dart:                            decoration: TextDecoration.underline, // Altı çizili yaparak buton olduğunu belli edelim
+lib/View/ProfileView/profile_view.dart:    // İsim önceliği: Firebase DisplayName > Firebase Email > Backend Name (Filtreli) > Kullanıcı
+lib/View/ProfileView/profile_view.dart:                                Uri.parse('https://fly-work.com/sixpack30/privacy-policy/'),
+lib/View/ProfileView/profile_view.dart:                                Uri.parse('https://fly-work.com/sixpack30/terms/'),
+lib/View/ProfileView/profile_view.dart:                                Uri.parse('https://fly-work.com/sixpack30/cookies/'),
+lib/View/ProfileView/profile_view.dart:                                Uri.parse('https://fly-work.com/sixpack30/csae/'),
+lib/View/TrainingActiveView/training_active_view.dart:    // Save progress
+lib/View/TrainingActiveView/training_active_view.dart:      // Save progress BEFORE rest
+lib/View/TrainingActiveView/training_active_view.dart:        // Save progress BEFORE rest
+lib/View/TrainingActiveView/training_active_view.dart:      // API call to complete workout
+lib/View/TrainingActiveView/training_active_view.dart:      // Show motivation screen first
+lib/View/TrainingActiveView/training_active_view.dart:      // Clear progress and refresh stats
+lib/View/TrainingActiveView/video_player_widget.dart:      // 1. CDN: Boşluklu + Cinsiyetli + .mp4
+lib/View/TrainingActiveView/video_player_widget.dart:      'https://sixpack30.b-cdn.net/videos/${Uri.encodeComponent(baseName)}%20$gender.mp4',
+lib/View/TrainingActiveView/video_player_widget.dart:      // 2. CDN: Boşluklu + Cinsiyetsiz + .mp4
+lib/View/TrainingActiveView/video_player_widget.dart:      'https://sixpack30.b-cdn.net/videos/${Uri.encodeComponent(baseName)}.mp4',
+lib/View/TrainingActiveView/video_player_widget.dart:      // 3. CDN: Alt Tireli + Cinsiyetsiz + .mp4
+lib/View/TrainingActiveView/video_player_widget.dart:      'https://sixpack30.b-cdn.net/videos/${baseName.replaceAll(' ', '_')}.mp4',
+lib/View/TrainingActiveView/video_player_widget.dart:      // 4. CDN: Tireli + Cinsiyetsiz + .mp4
+lib/View/TrainingActiveView/video_player_widget.dart:      'https://sixpack30.b-cdn.net/videos/${baseName.replaceAll(' ', '-')}.mp4',
+lib/View/HomeView/home_view.dart:    // İsim önceliği: Firebase DisplayName > Firebase Email > Backend Name (Filtreli) > Kullanıcı
+lib/View/HomeView/home_view.dart:                          width: 186.w, // 88 + 10 (gap) + 88 = 186
+lib/View/HomeView/home_view.dart:          // Sol Resim
+lib/View/HomeView/home_view.dart:          // Sağ İçerik
+lib/View/HomeView/home_view.dart:      // Özel Dinlenme Günü Kartı
+lib/View/HomeView/home_view.dart:    // Daha hassas ilerleme hesaplama (Hareket + Set bazlı)
+lib/View/HomeView/home_view.dart:    // Mevcut hareketin set sayısını ayıkla
+lib/View/HomeView/home_view.dart:              // Sol Resim
+lib/View/HomeView/home_view.dart:              // Sağ İçerik
+lib/View/HomeView/home_view.dart:                    // Frame 7065 (Title + Play)
+lib/View/HomeView/home_view.dart:                    SizedBox(height: 13.h), // Optimized gap
+lib/View/HomeView/home_view.dart:                    // Frame 7062 (Chip + Percentage)
+lib/View/HomeView/home_view.dart:                    SizedBox(height: 6.h), // Tighter gap for progress bar
+lib/View/HomeView/home_view.dart:        // Current exercise sets calculation
+lib/View/HomeView/home_view_banner.dart://   import 'package:flutter/material.dart';
+lib/View/HomeView/home_view_banner.dart:// import 'package:six_pack_30/View/PaywallView/paywall_view.dart';
+lib/View/HomeView/home_view_banner.dart:// Widget _buildPremiumBanner() {
+lib/View/HomeView/home_view_banner.dart://     return Padding(
+lib/View/HomeView/home_view_banner.dart://       padding: EdgeInsets.symmetric(horizontal: 24.w),
+lib/View/HomeView/home_view_banner.dart://       child: GestureDetector(
+lib/View/HomeView/home_view_banner.dart://         onTap: () {
+lib/View/HomeView/home_view_banner.dart://           Navigator.push(
+lib/View/HomeView/home_view_banner.dart://             context,
+lib/View/HomeView/home_view_banner.dart://             MaterialPageRoute(builder: (context) => const PaywallView()),
+lib/View/HomeView/home_view_banner.dart://           );
+lib/View/HomeView/home_view_banner.dart://         },
+lib/View/HomeView/home_view_banner.dart://         child: Container(
+lib/View/HomeView/home_view_banner.dart://           width: 342.w,
+lib/View/HomeView/home_view_banner.dart://           height: 124.h,
+lib/View/HomeView/home_view_banner.dart://           decoration: BoxDecoration(
+lib/View/HomeView/home_view_banner.dart://             borderRadius: BorderRadius.circular(15.r),
+lib/View/HomeView/home_view_banner.dart://             gradient: const LinearGradient(
+lib/View/HomeView/home_view_banner.dart://               begin: Alignment(0.0, -1.0),
+lib/View/HomeView/home_view_banner.dart://               end: Alignment(0.0, 1.0),
+lib/View/HomeView/home_view_banner.dart://               colors: [Color(0xFF20C729), Color(0xFF063527)],
+lib/View/HomeView/home_view_banner.dart://               stops: [-0.0645, 1.1124],
+lib/View/HomeView/home_view_banner.dart://             ),
+lib/View/HomeView/home_view_banner.dart://           ),
+lib/View/HomeView/home_view_banner.dart://           child: Padding(
+lib/View/HomeView/home_view_banner.dart://             padding: EdgeInsets.symmetric(horizontal: 18.w),
+lib/View/HomeView/home_view_banner.dart://             child: Row(
+lib/View/HomeView/home_view_banner.dart://               crossAxisAlignment: CrossAxisAlignment.center,
+lib/View/HomeView/home_view_banner.dart://               children: [
+lib/View/HomeView/home_view_banner.dart://                 Expanded(
+lib/View/HomeView/home_view_banner.dart://                   child: Column(
+lib/View/HomeView/home_view_banner.dart://                     mainAxisAlignment: MainAxisAlignment.center,
+lib/View/HomeView/home_view_banner.dart://                     crossAxisAlignment: CrossAxisAlignment.start,
+lib/View/HomeView/home_view_banner.dart://                     children: [
+lib/View/HomeView/home_view_banner.dart://                       Row(
+lib/View/HomeView/home_view_banner.dart://                         children: [
+lib/View/HomeView/home_view_banner.dart://                           Padding(
+lib/View/HomeView/home_view_banner.dart://                             padding: EdgeInsets.only(top: 4.h),
+lib/View/HomeView/home_view_banner.dart://                             child: SvgPicture.asset(
+lib/View/HomeView/home_view_banner.dart://                               'assets/images/Premium_Upgrade_Icon.svg',
+lib/View/HomeView/home_view_banner.dart://                               width: 32.w,
+lib/View/HomeView/home_view_banner.dart://                               height: 32.h,
+lib/View/HomeView/home_view_banner.dart://                               fit: BoxFit.contain,
+lib/View/HomeView/home_view_banner.dart://                             ),
+lib/View/HomeView/home_view_banner.dart://                           ),
+lib/View/HomeView/home_view_banner.dart://                           SizedBox(width: 8.w),
+lib/View/HomeView/home_view_banner.dart://                           Text(
+lib/View/HomeView/home_view_banner.dart://                             'Premium’ a Geç',
+lib/View/HomeView/home_view_banner.dart://                             style: GoogleFonts.montserrat(
+lib/View/HomeView/home_view_banner.dart://                               fontSize: 16.67.sp,
+lib/View/HomeView/home_view_banner.dart://                               fontWeight: FontWeight.w600,
+lib/View/HomeView/home_view_banner.dart://                               color: Colors.white,
+lib/View/HomeView/home_view_banner.dart://                               letterSpacing: -0.11.sp,
+lib/View/HomeView/home_view_banner.dart://                               height: 1.2,
+lib/View/HomeView/home_view_banner.dart://                             ),
+lib/View/HomeView/home_view_banner.dart://                           ),
+lib/View/HomeView/home_view_banner.dart://                         ],
+lib/View/HomeView/home_view_banner.dart://                       ),
+lib/View/HomeView/home_view_banner.dart://                       SizedBox(height: 5.h),
+lib/View/HomeView/home_view_banner.dart://                       Padding(
+lib/View/HomeView/home_view_banner.dart://                         padding: EdgeInsets.only(left: 40.w),
+lib/View/HomeView/home_view_banner.dart://                         child: Text(
+lib/View/HomeView/home_view_banner.dart://                           'Tüm gelişmiş özelliklerin kilidini aç.',
+lib/View/HomeView/home_view_banner.dart://                           style: GoogleFonts.montserrat(
+lib/View/HomeView/home_view_banner.dart://                             fontSize: 12.sp,
+lib/View/HomeView/home_view_banner.dart://                             fontWeight: FontWeight.w500,
+lib/View/HomeView/home_view_banner.dart://                             color: Colors.white,
+lib/View/HomeView/home_view_banner.dart://                             letterSpacing: -0.11.sp,
+lib/View/HomeView/home_view_banner.dart://                             height: 1.25,
+lib/View/HomeView/home_view_banner.dart://                           ),
+lib/View/HomeView/home_view_banner.dart://                         ),
+lib/View/HomeView/home_view_banner.dart://                       ),
+lib/View/HomeView/home_view_banner.dart://                       SizedBox(height: 13.h),
+lib/View/HomeView/home_view_banner.dart://                       Padding(
+lib/View/HomeView/home_view_banner.dart://                         padding: EdgeInsets.only(left: 40.w),
+lib/View/HomeView/home_view_banner.dart://                         child: Container(
+lib/View/HomeView/home_view_banner.dart://                           width: 217.w,
+lib/View/HomeView/home_view_banner.dart://                           height: 44.h,
+lib/View/HomeView/home_view_banner.dart://                           alignment: Alignment.center,
+lib/View/HomeView/home_view_banner.dart://                           decoration: BoxDecoration(
+lib/View/HomeView/home_view_banner.dart://                             color: Colors.white,
+lib/View/HomeView/home_view_banner.dart://                             borderRadius: BorderRadius.circular(10.r),
+lib/View/HomeView/home_view_banner.dart://                           ),
+lib/View/HomeView/home_view_banner.dart://                           child: ShaderMask(
+lib/View/HomeView/home_view_banner.dart://                             shaderCallback: (bounds) => const LinearGradient(
+lib/View/HomeView/home_view_banner.dart://                               begin: Alignment.topCenter,
+lib/View/HomeView/home_view_banner.dart://                               end: Alignment.bottomCenter,
+lib/View/HomeView/home_view_banner.dart://                               colors: [Color(0xFF20C729), Color(0xFF063527)],
+lib/View/HomeView/home_view_banner.dart://                             ).createShader(bounds),
+lib/View/HomeView/home_view_banner.dart://                             blendMode: BlendMode.srcIn,
+lib/View/HomeView/home_view_banner.dart://                             child: Text(
+lib/View/HomeView/home_view_banner.dart://                               'Planı Yükselt',
+lib/View/HomeView/home_view_banner.dart://                               style: GoogleFonts.montserrat(
+lib/View/HomeView/home_view_banner.dart://                                 fontSize: 16.sp,
+lib/View/HomeView/home_view_banner.dart://                                 fontWeight: FontWeight.w600,
+lib/View/HomeView/home_view_banner.dart://                                 letterSpacing: -0.11.sp,
+lib/View/HomeView/home_view_banner.dart://                               ),
+lib/View/HomeView/home_view_banner.dart://                             ),
+lib/View/HomeView/home_view_banner.dart://                           ),
+lib/View/HomeView/home_view_banner.dart://                         ),
+lib/View/HomeView/home_view_banner.dart://                       ),
+lib/View/HomeView/home_view_banner.dart://                     ],
+lib/View/HomeView/home_view_banner.dart://                   ),
+lib/View/HomeView/home_view_banner.dart://                 ),
+lib/View/HomeView/home_view_banner.dart://               ],
+lib/View/HomeView/home_view_banner.dart://             ),
+lib/View/HomeView/home_view_banner.dart://           ),
+lib/View/HomeView/home_view_banner.dart://         ),
+lib/View/HomeView/home_view_banner.dart://       ),
+lib/View/HomeView/home_view_banner.dart://     );
+lib/View/HomeView/home_view_banner.dart://   }
+lib/View/PaywallView/paywall_view.dart:          // Transparent click area over RevenueCat's close button
+lib/View/LoginView/login_view.dart:                              Uri.parse('https://fly-work.com/sixpack30/terms/'),
+lib/View/LoginView/login_view.dart:                              Uri.parse('https://fly-work.com/sixpack30/privacy-policy/'),
+lib/View/LoginView/login_view.dart:                              Uri.parse('https://fly-work.com/sixpack30/cookies/'),
+lib/View/LoginView/login_view.dart:                              Uri.parse('https://fly-work.com/sixpack30/csae/'),
+lib/View/ProgressView/progress_view.dart:              offset: const Offset(0, -95), // Adjusted for 4 items
+lib/View/ProgressView/progress_view.dart:                  height: 76.h, // 4 items * 19.h
+lib/View/ProgressView/progress_view.dart:            letterSpacing: -0.11, // Match CSS letter-spacing: -0.011em
+lib/View/ProgressView/progress_view.dart:          final double barWidth = cardWidth - 20.w; // More room for thumb
+lib/View/ProgressView/progress_view.dart:                left: 10.w, // More room to prevent clipping

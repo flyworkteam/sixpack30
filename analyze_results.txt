@@ -1,0 +1,149 @@
+Analyzing sixpack30-main...                                     
+
+   info • Don't invoke 'print' in production code • lib/Core/Network/api_service.dart:37:9 • avoid_print
+   info • Don't invoke 'print' in production code • lib/Core/Network/api_service.dart:39:9 • avoid_print
+   info • Don't invoke 'print' in production code • lib/Core/Network/api_service.dart:62:9 • avoid_print
+   info • Don't invoke 'print' in production code • lib/Core/Network/api_service.dart:86:9 • avoid_print
+warning • Unused import: 'dart:io' • lib/Riverpod/Controllers/auth_controller.dart:1:8 • unused_import
+   info • Don't invoke 'print' in production code • lib/Riverpod/Controllers/auth_controller.dart:49:11 • avoid_print
+   info • Don't invoke 'print' in production code • lib/Riverpod/Controllers/auth_controller.dart:56:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/Riverpod/Controllers/auth_controller.dart:125:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/Riverpod/Controllers/auth_controller.dart:138:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/Riverpod/Controllers/notification_provider.dart:47:7 • avoid_print
+warning • The value of the local variable 'user' isn't used • lib/View/HomeView/home_view.dart:51:11 • unused_local_variable
+warning • The value of the local variable 'stats' isn't used • lib/View/HomeView/home_view.dart:133:11 • unused_local_variable
+warning • The value of the local variable 'isMan' isn't used • lib/View/HomeView/home_view.dart:142:16 • unused_local_variable
+  error • Undefined class 'Widget' • lib/View/HomeView/home_view_banner.dart:1:3 • undefined_class
+warning • The declaration '_buildPremiumBanner' isn't referenced • lib/View/HomeView/home_view_banner.dart:1:10 • unused_element
+  error • The function 'Padding' isn't defined • lib/View/HomeView/home_view_banner.dart:2:12 • undefined_function
+  error • Undefined name 'EdgeInsets' • lib/View/HomeView/home_view_banner.dart:3:16 • undefined_identifier
+  error • The getter 'w' isn't defined for the type 'int' • lib/View/HomeView/home_view_banner.dart:3:52 • undefined_getter
+  error • The function 'GestureDetector' isn't defined • lib/View/HomeView/home_view_banner.dart:4:14 • undefined_function
+  error • Undefined name 'Navigator' • lib/View/HomeView/home_view_banner.dart:6:11 • undefined_identifier
+  error • Undefined name 'context' • lib/View/HomeView/home_view_banner.dart:7:13 • undefined_identifier
+  error • The function 'MaterialPageRoute' isn't defined • lib/View/HomeView/home_view_banner.dart:8:13 • undefined_function
+  error • The name 'PaywallView' isn't a class • lib/View/HomeView/home_view_banner.dart:8:59 • creation_with_non_type
+  error • The function 'Container' isn't defined • lib/View/HomeView/home_view_banner.dart:11:16 • undefined_function
+  error • The getter 'w' isn't defined for the type 'int' • lib/View/HomeView/home_view_banner.dart:12:22 • undefined_getter
+  error • The getter 'h' isn't defined for the type 'int' • lib/View/HomeView/home_view_banner.dart:13:23 • undefined_getter
+  error • The function 'BoxDecoration' isn't defined • lib/View/HomeView/home_view_banner.dart:14:23 • undefined_function
+  error • Undefined name 'BorderRadius' • lib/View/HomeView/home_view_banner.dart:15:27 • undefined_identifier
+  error • The getter 'r' isn't defined for the type 'int' • lib/View/HomeView/home_view_banner.dart:15:52 • undefined_getter
+  error • The name 'LinearGradient' isn't a class • lib/View/HomeView/home_view_banner.dart:16:29 • creation_with_non_type
+  error • The function 'Alignment' isn't defined • lib/View/HomeView/home_view_banner.dart:17:22 • undefined_function
+  error • The function 'Alignment' isn't defined • lib/View/HomeView/home_view_banner.dart:18:20 • undefined_function
+  error • The function 'Color' isn't defined • lib/View/HomeView/home_view_banner.dart:19:24 • undefined_function
+  error • The function 'Color' isn't defined • lib/View/HomeView/home_view_banner.dart:19:43 • undefined_function
+  error • The function 'Padding' isn't defined • lib/View/HomeView/home_view_banner.dart:23:18 • undefined_function
+  error • Undefined name 'EdgeInsets' • lib/View/HomeView/home_view_banner.dart:24:22 • undefined_identifier
+  error • The getter 'w' isn't defined for the type 'int' • lib/View/HomeView/home_view_banner.dart:24:58 • undefined_getter
+  error • The function 'Row' isn't defined • lib/View/HomeView/home_view_banner.dart:25:20 • undefined_function
+  error • Undefined name 'CrossAxisAlignment' • lib/View/HomeView/home_view_banner.dart:26:35 • undefined_identifier
+  error • The function 'Expanded' isn't defined • lib/View/HomeView/home_view_banner.dart:28:17 • undefined_function
+  error • The function 'Column' isn't defined • lib/View/HomeView/home_view_banner.dart:29:26 • undefined_function
+  error • Undefined name 'MainAxisAlignment' • lib/View/HomeView/home_view_banner.dart:30:40 • undefined_identifier
+  error • Undefined name 'CrossAxisAlignment' • lib/View/HomeView/home_view_banner.dart:31:41 • undefined_identifier
+  error • The function 'Row' isn't defined • lib/View/HomeView/home_view_banner.dart:33:23 • undefined_function
+  error • The function 'Padding' isn't defined • lib/View/HomeView/home_view_banner.dart:35:27 • undefined_function
+  error • Undefined name 'EdgeInsets' • lib/View/HomeView/home_view_banner.dart:36:38 • undefined_identifier
+  error • The getter 'h' isn't defined for the type 'int' • lib/View/HomeView/home_view_banner.dart:36:61 • undefined_getter
+  error • Undefined name 'SvgPicture' • lib/View/HomeView/home_view_banner.dart:37:36 • undefined_identifier
+  error • The getter 'w' isn't defined for the type 'int' • lib/View/HomeView/home_view_banner.dart:39:41 • undefined_getter
+  error • The getter 'h' isn't defined for the type 'int' • lib/View/HomeView/home_view_banner.dart:40:42 • undefined_getter
+  error • Undefined name 'BoxFit' • lib/View/HomeView/home_view_banner.dart:41:36 • undefined_identifier
+  error • The function 'SizedBox' isn't defined • lib/View/HomeView/home_view_banner.dart:44:27 • undefined_function
+  error • The getter 'w' isn't defined for the type 'int' • lib/View/HomeView/home_view_banner.dart:44:45 • undefined_getter
+  error • The function 'Text' isn't defined • lib/View/HomeView/home_view_banner.dart:45:27 • undefined_function
+  error • Undefined name 'GoogleFonts' • lib/View/HomeView/home_view_banner.dart:47:36 • undefined_identifier
+  error • The getter 'sp' isn't defined for the type 'double' • lib/View/HomeView/home_view_banner.dart:48:47 • undefined_getter
+  error • Undefined name 'FontWeight' • lib/View/HomeView/home_view_banner.dart:49:43 • undefined_identifier
+  error • Undefined name 'Colors' • lib/View/HomeView/home_view_banner.dart:50:38 • undefined_identifier
+  error • The getter 'sp' isn't defined for the type 'double' • lib/View/HomeView/home_view_banner.dart:51:52 • undefined_getter
+  error • The function 'SizedBox' isn't defined • lib/View/HomeView/home_view_banner.dart:57:23 • undefined_function
+  error • The getter 'h' isn't defined for the type 'int' • lib/View/HomeView/home_view_banner.dart:57:42 • undefined_getter
+  error • The function 'Padding' isn't defined • lib/View/HomeView/home_view_banner.dart:58:23 • undefined_function
+  error • Undefined name 'EdgeInsets' • lib/View/HomeView/home_view_banner.dart:59:34 • undefined_identifier
+  error • The getter 'w' isn't defined for the type 'int' • lib/View/HomeView/home_view_banner.dart:59:59 • undefined_getter
+  error • The function 'Text' isn't defined • lib/View/HomeView/home_view_banner.dart:60:32 • undefined_function
+  error • Undefined name 'GoogleFonts' • lib/View/HomeView/home_view_banner.dart:62:34 • undefined_identifier
+  error • The getter 'sp' isn't defined for the type 'int' • lib/View/HomeView/home_view_banner.dart:63:42 • undefined_getter
+  error • Undefined name 'FontWeight' • lib/View/HomeView/home_view_banner.dart:64:41 • undefined_identifier
+  error • Undefined name 'Colors' • lib/View/HomeView/home_view_banner.dart:65:36 • undefined_identifier
+  error • The getter 'sp' isn't defined for the type 'double' • lib/View/HomeView/home_view_banner.dart:66:50 • undefined_getter
+  error • The function 'SizedBox' isn't defined • lib/View/HomeView/home_view_banner.dart:71:23 • undefined_function
+  error • The getter 'h' isn't defined for the type 'int' • lib/View/HomeView/home_view_banner.dart:71:43 • undefined_getter
+  error • The function 'Padding' isn't defined • lib/View/HomeView/home_view_banner.dart:72:23 • undefined_function
+  error • Undefined name 'EdgeInsets' • lib/View/HomeView/home_view_banner.dart:73:34 • undefined_identifier
+  error • The getter 'w' isn't defined for the type 'int' • lib/View/HomeView/home_view_banner.dart:73:59 • undefined_getter
+  error • The function 'Container' isn't defined • lib/View/HomeView/home_view_banner.dart:74:32 • undefined_function
+  error • The getter 'w' isn't defined for the type 'int' • lib/View/HomeView/home_view_banner.dart:75:38 • undefined_getter
+  error • The getter 'h' isn't defined for the type 'int' • lib/View/HomeView/home_view_banner.dart:76:38 • undefined_getter
+  error • Undefined name 'Alignment' • lib/View/HomeView/home_view_banner.dart:77:38 • undefined_identifier
+  error • The function 'BoxDecoration' isn't defined • lib/View/HomeView/home_view_banner.dart:78:39 • undefined_function
+  error • Undefined name 'Colors' • lib/View/HomeView/home_view_banner.dart:79:36 • undefined_identifier
+  error • Undefined name 'BorderRadius' • lib/View/HomeView/home_view_banner.dart:80:43 • undefined_identifier
+  error • The getter 'r' isn't defined for the type 'int' • lib/View/HomeView/home_view_banner.dart:80:68 • undefined_getter
+  error • The function 'ShaderMask' isn't defined • lib/View/HomeView/home_view_banner.dart:82:34 • undefined_function
+  error • The name 'LinearGradient' isn't a class • lib/View/HomeView/home_view_banner.dart:83:63 • creation_with_non_type
+  error • Undefined name 'Alignment' • lib/View/HomeView/home_view_banner.dart:84:38 • undefined_identifier
+  error • Undefined name 'Alignment' • lib/View/HomeView/home_view_banner.dart:85:36 • undefined_identifier
+  error • The function 'Color' isn't defined • lib/View/HomeView/home_view_banner.dart:86:40 • undefined_function
+  error • The function 'Color' isn't defined • lib/View/HomeView/home_view_banner.dart:86:59 • undefined_function
+  error • Undefined name 'BlendMode' • lib/View/HomeView/home_view_banner.dart:88:40 • undefined_identifier
+  error • The function 'Text' isn't defined • lib/View/HomeView/home_view_banner.dart:89:36 • undefined_function
+  error • Undefined name 'GoogleFonts' • lib/View/HomeView/home_view_banner.dart:91:38 • undefined_identifier
+  error • The getter 'sp' isn't defined for the type 'int' • lib/View/HomeView/home_view_banner.dart:92:46 • undefined_getter
+  error • Undefined name 'FontWeight' • lib/View/HomeView/home_view_banner.dart:93:45 • undefined_identifier
+  error • The getter 'sp' isn't defined for the type 'double' • lib/View/HomeView/home_view_banner.dart:94:54 • undefined_getter
+   info • Don't use 'BuildContext's across async gaps • lib/View/InitialView/initial_view.dart:47:42 • use_build_context_synchronously
+   info • Don't use 'BuildContext's across async gaps • lib/View/InitialView/initial_view.dart:50:42 • use_build_context_synchronously
+   info • Don't use 'BuildContext's across async gaps • lib/View/LoginView/login_view.dart:93:45 • use_build_context_synchronously
+   info • Don't use 'BuildContext's across async gaps • lib/View/LoginView/login_view.dart:95:45 • use_build_context_synchronously
+   info • Don't use 'BuildContext's across async gaps • lib/View/LoginView/login_view.dart:151:51 • use_build_context_synchronously
+   info • Don't use 'BuildContext's across async gaps • lib/View/LoginView/login_view.dart:153:51 • use_build_context_synchronously
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/View/OnboardView/onboard_view.dart:260:33 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/View/OnboardView/onboard_view.dart:268:30 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/View/OnboardView/onboard_view.dart:292:23 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/View/ProfileView/profile_edit_view.dart:366:33 • deprecated_member_use
+warning • Unused import: 'package:six_pack_30/Riverpod/Controllers/premium_provider.dart' • lib/View/ProfileView/profile_view.dart:8:8 • unused_import
+warning • Unused import: 'package:six_pack_30/Core/Routes/app_routes.dart' • lib/View/ProfileView/profile_view.dart:9:8 • unused_import
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/View/ProfileView/profile_view.dart:158:45 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/View/ProfileView/profile_view.dart:223:45 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/View/ProfileView/profile_view.dart:368:50 • deprecated_member_use
+   info • The private field _waterIntake could be 'final' • lib/View/ProgressView/progress_view.dart:17:10 • prefer_final_fields
+warning • The value of the field '_waterIntake' isn't used • lib/View/ProgressView/progress_view.dart:17:10 • unused_field
+warning • The value of the field '_selectedStepGoal' isn't used • lib/View/ProgressView/progress_view.dart:18:10 • unused_field
+warning • The value of the field '_stepGoals' isn't used • lib/View/ProgressView/progress_view.dart:36:22 • unused_field
+warning • The declaration '_openStepGoalDropdown' isn't referenced • lib/View/ProgressView/progress_view.dart:49:8 • unused_element
+warning • The value of the local variable 'stats' isn't used • lib/View/ProgressView/progress_view.dart:138:11 • unused_local_variable
+  error • The method '_buildAntrenmanOzeti' isn't defined for the type '_ProgressViewState' • lib/View/ProgressView/progress_view.dart:181:21 • undefined_method
+  error • Undefined class 'WorkoutModel' • lib/View/ProgressView/progress_view.dart:268:75 • undefined_class
+  error • Function expressions can't be named • lib/View/ProgressView/progress_view.dart:537:12 • named_function_expression
+  error • The element type 'Padding Function(InvalidType)' can't be assigned to the list type 'Widget' • lib/View/ProgressView/progress_view.dart:537:32 • list_element_type_not_assignable
+  error • Undefined class 'UserStats' • lib/View/ProgressView/progress_view.dart:537:33 • undefined_class
+  error • Expected to find '}' • lib/View/ProgressView/progress_view.dart:597:9 • expected_token
+  error • Undefined class 'UserStats' • lib/View/ProgressView/progress_view.dart:748:35 • undefined_class
+  error • Undefined class 'UserStats' • lib/View/ProgressView/progress_view.dart:828:28 • undefined_class
+warning • The declaration '_buildStatsFooter' isn't referenced • lib/View/ProgressView/progress_view.dart:1129:10 • unused_element
+  error • The name '_buildStatsFooter' is already defined • lib/View/ProgressView/progress_view.dart:1129:10 • duplicate_definition
+  error • The name 'RecentExercise' isn't a type, so it can't be used as a type argument • lib/View/ProgressView/progress_view.dart:1297:33 • non_type_as_type_argument
+  error • The method '_buildContinueCard' isn't defined for the type '_ProgressViewState' • lib/View/ProgressView/progress_view.dart:1342:28 • undefined_method
+  error • The property 'title' can't be unconditionally accessed because the receiver can be 'null' • lib/View/ProgressView/progress_view.dart:1343:33 • unchecked_use_of_nullable_value
+  error • The property 'category' can't be unconditionally accessed because the receiver can be 'null' • lib/View/ProgressView/progress_view.dart:1344:36 • unchecked_use_of_nullable_value
+  error • The property 'progressText' can't be unconditionally accessed because the receiver can be 'null' • lib/View/ProgressView/progress_view.dart:1345:40 • unchecked_use_of_nullable_value
+  error • Expected to find ';' • lib/View/ProgressView/progress_view.dart:1345:52 • expected_token
+  error • Expected to find ')' • lib/View/ProgressView/progress_view.dart:1346:17 • expected_token
+   info • Statements in an if should be enclosed in a block • lib/View/QuestionsView/questions_view.dart:207:34 • curly_braces_in_flow_control_structures
+   info • Statements in an if should be enclosed in a block • lib/View/QuestionsView/questions_view.dart:208:16 • curly_braces_in_flow_control_structures
+   info • Statements in an if should be enclosed in a block • lib/View/QuestionsView/questions_view.dart:814:7 • curly_braces_in_flow_control_structures
+   info • Use the null-aware operator '?.' rather than an explicit 'null' comparison • lib/View/QuestionsView/questions_view.dart:1080:40 • prefer_null_aware_operators
+   info • Use the null-aware operator '?.' rather than an explicit 'null' comparison • lib/View/QuestionsView/questions_view.dart:1081:41 • prefer_null_aware_operators
+   info • Use the null-aware operator '?.' rather than an explicit 'null' comparison • lib/View/QuestionsView/questions_view.dart:1088:40 • prefer_null_aware_operators
+   info • Use the null-aware operator '?.' rather than an explicit 'null' comparison • lib/View/QuestionsView/questions_view.dart:1089:41 • prefer_null_aware_operators
+   info • Statements in an if should be enclosed in a block • lib/View/QuestionsView/questions_view.dart:1265:9 • curly_braces_in_flow_control_structures
+   info • Statements in an if should be enclosed in a block • lib/View/QuestionsView/questions_view.dart:1267:9 • curly_braces_in_flow_control_structures
+   info • Statements in an if should be enclosed in a block • lib/View/QuestionsView/questions_view.dart:1269:9 • curly_braces_in_flow_control_structures
+warning • The declaration '_tryAlternativeImage' isn't referenced • lib/View/TrainingActiveView/training_active_view.dart:461:10 • unused_element
+warning • The declaration '_tryAlternativeImageFixedSize' isn't referenced • lib/View/TrainingActiveView/training_active_view.dart:475:10 • unused_element
+
+145 issues found. (ran in 2.2s)
