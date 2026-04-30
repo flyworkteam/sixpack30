@@ -1,0 +1,54 @@
+{
+  "project_info": {
+    "project_number": "653562759267",
+    "project_id": "sixpack30-f3484",
+    "storage_bucket": "sixpack30-f3484.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:653562759267:android:4fd58f89b7ead54f979056",
+        "android_client_info": {
+          "package_name": "com.flywork.sixpack30app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "653562759267-d31aq4juctqc3j2s5gi4j938h21rib0l.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.flywork.sixpack30app",
+            "certificate_hash": "3d8430d82a202a48c7c09fc94f36647b8e5b94c8"
+          }
+        },
+        {
+          "client_id": "653562759267-eefijp3se1qr0n7pmshoec74lpj3buem.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAkWMH_9xid3sJXPnzTe4Uo6QkAjUqnOaY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "653562759267-eefijp3se1qr0n7pmshoec74lpj3buem.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "653562759267-cmoum4066rfseegvvnccjjonm11vdsfq.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.flywork.sixpack30app"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

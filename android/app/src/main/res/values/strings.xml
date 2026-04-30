@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- ⚠️ FACEBOOK LOGIN KURULUMU
+         Şirketten aşağıdaki bilgiler gelince bu dosyayı güncelle:
+         1. facebook_app_id   → developers.facebook.com > Uygulamanız > App ID
+         2. facebook_client_token → developers.facebook.com > Uygulamanız > Settings > Advanced > Client Token
+    -->
+    <string name="facebook_app_id">BURAYA_FACEBOOK_APP_ID_YAZILACAK</string>
+    <string name="facebook_client_token">BURAYA_FACEBOOK_CLIENT_TOKEN_YAZILACAK</string>
+</resources>
