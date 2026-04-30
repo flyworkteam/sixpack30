@@ -83,7 +83,6 @@ class LoginView extends ConsumerWidget {
                   }
                   
                   final userState = ref.read(authControllerProvider);
-                  
                   if (userState.hasValue && userState.value != null && context.mounted) {
                       await ref.read(userProfileProvider.notifier).fetchProfile();
                       
@@ -177,7 +176,30 @@ class LoginView extends ConsumerWidget {
               ),
               SizedBox(height: 15.h),
               GestureDetector(
-                onTap: () => Navigator.pushReplacementNamed(context, '/home'),
+                onTap: () async {
+                  final bool? hasCompletedSurvey = await ref.read(authControllerProvider.notifier).signInAnonymously();
+                  if (context.mounted) {
+                    final userState = ref.read(authControllerProvider);
+                    if (userState.hasValue && userState.value != null) {
+                      await ref.read(userProfileProvider.notifier).fetchProfile();
+                      
+                      if (hasCompletedSurvey == true) {
+                        Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
+                      } else if (hasCompletedSurvey == false) {
+                        Navigator.pushNamed(context, AppRoutes.questions);
+                      } else {
+                        Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
+                      }
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Giriş yapılamadı. Lütfen internet bağlantınızı kontrol edin.'),
+                          backgroundColor: Colors.redAccent,
+                        ),
+                      );
+                    }
+                  }
+                },
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   mainAxisSize: MainAxisSize.min,

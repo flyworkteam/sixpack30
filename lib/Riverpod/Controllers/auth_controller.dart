@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
@@ -43,12 +44,21 @@ class AuthController extends StateNotifier<AsyncValue<User?>> {
       bool hasCompletedSurvey = false;
 
       if (user != null) {
-        OneSignal.login(user.uid);
-        
         final idToken = await user.getIdToken();
         if (idToken != null) {
           final result = await _apiService.syncUserWithBackend(idToken);
+          
+          if (user.displayName != null || user.photoURL != null) {
+            await _apiService.updateProfile(idToken, {
+              if (user.displayName != null) 'name': user.displayName,
+              if (user.photoURL != null) 'photoUrl': user.photoURL,
+            });
+          }
+
           if (result != null) {
+            final mysqlId = result['user']['id'];
+            if (mysqlId != null) OneSignal.login(mysqlId.toString());
+
             final prefs = await SharedPreferences.getInstance();
             await prefs.setBool('seen_onboard', true);
             hasCompletedSurvey = result['hasCompletedSurvey'] ?? false;
@@ -100,9 +110,7 @@ class AuthController extends StateNotifier<AsyncValue<User?>> {
           user = _auth.currentUser;
         }
 
-        OneSignal.login(user!.uid);
-        
-        final idToken = await user.getIdToken(true);
+        final idToken = await user!.getIdToken(true);
         if (idToken != null) {
           final result = await _apiService.syncUserWithBackend(idToken);
           
@@ -111,6 +119,9 @@ class AuthController extends StateNotifier<AsyncValue<User?>> {
           }
 
           if (result != null) {
+            final mysqlId = result['user']['id'];
+            if (mysqlId != null) OneSignal.login(mysqlId.toString());
+
             final prefs = await SharedPreferences.getInstance();
             await prefs.setBool('seen_onboard', true);
             hasCompletedSurvey = result['hasCompletedSurvey'] ?? false;
@@ -131,6 +142,37 @@ class AuthController extends StateNotifier<AsyncValue<User?>> {
     }
   }
 
+  Future<bool?> signInAnonymously() async {
+    try {
+      state = const AsyncValue.loading();
+      final UserCredential userCredential = await _auth.signInAnonymously();
+      final User? user = userCredential.user;
+      bool hasCompletedSurvey = false;
+
+      if (user != null) {
+        final idToken = await user.getIdToken();
+        if (idToken != null) {
+          final result = await _apiService.syncUserWithBackend(idToken);
+          if (result != null) {
+            final mysqlId = result['user']['id'];
+            if (mysqlId != null) OneSignal.login(mysqlId.toString());
+
+            final prefs = await SharedPreferences.getInstance();
+            await prefs.setBool('seen_onboard', true);
+            hasCompletedSurvey = result['hasCompletedSurvey'] ?? false;
+            state = AsyncValue.data(user);
+            return hasCompletedSurvey;
+          }
+        }
+      }
+
+      state = AsyncValue.data(user);
+      return hasCompletedSurvey;
+    } catch (e, st) {
+      state = AsyncValue.error(e, st);
+      return null;
+    }
+  }
 
   Future<Map<String, dynamic>> checkInitialStatus() async {
     try {

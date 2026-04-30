@@ -34,12 +34,46 @@ class ProfileView extends ConsumerWidget {
     final user = userProfile.value;
     final langCode = ref.watch(localeProvider).languageCode;
     
-    debugPrint('[PROFILE] Build triggered. Health: ${user?.healthConnected}, Notifications: ${user?.notificationsEnabled}');
-    
     final bool isLoading = userProfile.isLoading && user == null;
     final bool isGuest = user == null && !userProfile.isLoading;
-    
     final firebaseUser = FirebaseAuth.instance.currentUser;
+    final bool hasNoSession = isGuest && firebaseUser == null;
+
+    if (hasNoSession) {
+      return SafeArea(
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.person_off_outlined, size: 64.sp, color: Colors.grey),
+              SizedBox(height: 16.h),
+              Text(
+                'Profili görüntülemek için giriş yapın',
+                style: GoogleFonts.montserrat(fontSize: 16.sp, fontWeight: FontWeight.w600),
+                textAlign: TextAlign.center,
+              ),
+              SizedBox(height: 24.h),
+              GestureDetector(
+                onTap: () {
+                  navigatorKey.currentState?.pushNamedAndRemoveUntil(AppRoutes.login, (route) => false);
+                },
+                child: Container(
+                  padding: EdgeInsets.symmetric(horizontal: 32.w, vertical: 12.h),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF00EF5B),
+                    borderRadius: BorderRadius.circular(12.r),
+                  ),
+                  child: Text(
+                    'Giriş Yap',
+                    style: GoogleFonts.montserrat(fontSize: 14.sp, fontWeight: FontWeight.w700, color: Colors.black),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
     
     final String firebaseDisplayName = firebaseUser?.displayName ?? '';
     final String firebaseEmailPart = firebaseUser?.email != null 

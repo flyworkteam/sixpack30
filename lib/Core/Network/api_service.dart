@@ -45,7 +45,8 @@ class ApiService {
       return null;
     } catch (e) {
       if (e is DioException) {
-      } else {}
+        print('>>> SYNC USER AUTH ERROR: ${e.response?.statusCode} - ${e.response?.data}');
+      }
       return null;
     }
   }
@@ -65,11 +66,17 @@ class ApiService {
           },
         ),
       );
+      print('>>> UPDATE PROFILE RESPONSE: ${response.statusCode} - ${response.data}');
       return response.statusCode != null &&
           response.statusCode! >= 200 &&
           response.statusCode! < 300;
     } catch (e) {
-      if (e is DioException) {}
+      if (e is DioException) {
+        print('>>> UPDATE PROFILE DIO ERROR: ${e.response?.statusCode} - ${e.response?.data}');
+        print('>>> ERROR MESSAGE: ${e.message}');
+      } else {
+        print('>>> UPDATE PROFILE UNKNOWN ERROR: $e');
+      }
       return false;
     }
   }
