@@ -7,6 +7,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:six_pack_30/Core/Network/api_service.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:six_pack_30/Riverpod/Controllers/user_provider.dart';
+import 'package:six_pack_30/Core/Localization/translations.dart';
+import 'package:six_pack_30/Riverpod/Controllers/locale_provider.dart';
 
 class QuestionsView extends ConsumerStatefulWidget {
   const QuestionsView({super.key});
@@ -17,6 +19,7 @@ class QuestionsView extends ConsumerStatefulWidget {
 enum QuestionFlow { hedefOdak, vucut, vucudunuzuBilin }
 
 class _QuestionsViewState extends ConsumerState<QuestionsView> {
+  String get langCode => ref.watch(localeProvider).languageCode;
   int _currentStep = 1;
   bool _isLoading = false;
   bool _isFinalLoading = false;
@@ -247,8 +250,8 @@ class _QuestionsViewState extends ConsumerState<QuestionsView> {
               });
             },
             itemBuilder: (context) => [
-              const PopupMenuItem(value: true, child: Text(Translations.translate('unit_kg', langCode))),
-              const PopupMenuItem(value: false, child: Text(Translations.translate('unit_lbs', langCode))),
+              PopupMenuItem(value: true, child: Text(Translations.translate('unit_kg', langCode))),
+              PopupMenuItem(value: false, child: Text(Translations.translate('unit_lbs', langCode))),
             ],
             child: Container(
               width: 90.w,
@@ -489,8 +492,8 @@ class _QuestionsViewState extends ConsumerState<QuestionsView> {
             });
           },
           itemBuilder: (context) => [
-            const PopupMenuItem(value: true, child: Text(Translations.translate('unit_cm', langCode))),
-            const PopupMenuItem(value: false, child: Text(Translations.translate('unit_ft', langCode))),
+            PopupMenuItem(value: true, child: Text(Translations.translate('unit_cm', langCode))),
+            PopupMenuItem(value: false, child: Text(Translations.translate('unit_ft', langCode))),
           ],
           child: Container(
             width: 90.w,
@@ -672,8 +675,8 @@ class _QuestionsViewState extends ConsumerState<QuestionsView> {
               });
             },
             itemBuilder: (context) => [
-              const PopupMenuItem(value: true, child: Text(Translations.translate('unit_kg', langCode))),
-              const PopupMenuItem(value: false, child: Text(Translations.translate('unit_lbs', langCode))),
+              PopupMenuItem(value: true, child: Text(Translations.translate('unit_kg', langCode))),
+              PopupMenuItem(value: false, child: Text(Translations.translate('unit_lbs', langCode))),
             ],
             child: Container(
               width: 90.w,

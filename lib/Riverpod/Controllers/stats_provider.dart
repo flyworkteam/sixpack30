@@ -115,7 +115,6 @@ class StatsNotifier extends StateNotifier<AsyncValue<UserStats?>> {
           bpm: backendStats.bpm,
           steps: backendStats.steps,
           waterIntake: (localStats?.waterIntake ?? 0.0) > backendStats.waterIntake ? localStats!.waterIntake : backendStats.waterIntake,
-<<<<<<< HEAD
           fatRate: (localStats != null && localStats.fatRate < backendStats.fatRate) ? localStats.fatRate : backendStats.fatRate,
           initialFatRate: backendStats.initialFatRate,
           initialMuscleMass: backendStats.initialMuscleMass,
@@ -124,16 +123,6 @@ class StatsNotifier extends StateNotifier<AsyncValue<UserStats?>> {
           totalMoves: (localStats?.totalMoves ?? 0) > backendStats.totalMoves ? localStats!.totalMoves : backendStats.totalMoves,
           completionRate: (localStats?.completionRate ?? 0) > backendStats.completionRate ? localStats!.completionRate : backendStats.completionRate,
           weight: (localStats != null && localStats.weightLost > backendStats.weightLost) ? localStats.weight : backendStats.weight,
-=======
-          fatRate: backendStats.fatRate,
-          initialFatRate: backendStats.initialFatRate,
-          initialMuscleMass: backendStats.initialMuscleMass,
-          muscleMass: backendStats.muscleMass,
-          totalDuration: (localStats?.totalDuration ?? 0) > backendStats.totalDuration ? localStats!.totalDuration : backendStats.totalDuration,
-          totalMoves: (localStats?.totalMoves ?? 0) > backendStats.totalMoves ? localStats!.totalMoves : backendStats.totalMoves,
-          completionRate: (localStats?.completionRate ?? 0) > backendStats.completionRate ? localStats!.completionRate : backendStats.completionRate,
-          weight: backendStats.weight,
->>>>>>> d5f7518ac4c379ce62ddfcd109a71d76d3c9ac97
           initialWeight: backendStats.initialWeight,
           targetWeight: backendStats.targetWeight,
           sleepDuration: backendStats.sleepDuration,

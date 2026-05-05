@@ -217,14 +217,11 @@ class AuthController extends StateNotifier<AsyncValue<User?>> {
       await _auth.signOut();
       await _googleSignIn.signOut();
       OneSignal.logout();
-<<<<<<< HEAD
 
       final prefs = await SharedPreferences.getInstance();
       await prefs.remove('user_stats_local');
       await prefs.remove('workout_progress');
 
-=======
->>>>>>> d5f7518ac4c379ce62ddfcd109a71d76d3c9ac97
       state = const AsyncValue.data(null);
     } catch (e) {}
   }
@@ -244,14 +241,11 @@ class AuthController extends StateNotifier<AsyncValue<User?>> {
         } catch (e) {}
         await _googleSignIn.signOut();
         OneSignal.logout();
-<<<<<<< HEAD
 
         final prefs = await SharedPreferences.getInstance();
         await prefs.remove('user_stats_local');
         await prefs.remove('workout_progress');
 
-=======
->>>>>>> d5f7518ac4c379ce62ddfcd109a71d76d3c9ac97
         state = const AsyncValue.data(null);
         return true;
       }

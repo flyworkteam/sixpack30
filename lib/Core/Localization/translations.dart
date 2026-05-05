@@ -230,7 +230,6 @@ class Translations {
       'fat_status_low': 'Az',
       'fat_status_normal': 'Normal',
       'fat_status_high': 'Fazla',
-      'data_load_error': 'Veri yüklenemedi: ',
 
 
 
@@ -435,7 +434,7 @@ class Translations {
       'error_prefix': 'Error: ',
       'data_load_error': 'Data failed to load: ',
       'weight_gained': 'Weight Gained',
-      'plan_ready': 'Your Plan is Ready!\nWe Can't Wait\nTo Start',
+      'plan_ready': "Your Plan is Ready!\nWe Can't Wait\nTo Start",
       'preparing_content': 'Tailored Content\nBased on Your Goal\nis Being Prepared',
       'preparing': 'Preparing...',
       'become_best_version': 'To Become the Best\nVersion of Yourself',
@@ -465,7 +464,7 @@ class Translations {
       'fat_status_low': 'Low',
       'fat_status_normal': 'Normal',
       'fat_status_high': 'High',
-      'data_load_error': 'Data load error: ',
+
 
 
 
@@ -700,7 +699,6 @@ class Translations {
       'fat_status_low': 'Bajo',
       'fat_status_normal': 'Normal',
       'fat_status_high': 'Alto',
-      'data_load_error': 'Error de carga de datos: ',
 
 
 
@@ -935,7 +933,6 @@ class Translations {
       'fat_status_low': 'Baixo',
       'fat_status_normal': 'Normal',
       'fat_status_high': 'Alto',
-      'data_load_error': 'Erro no carregamento de dados: ',
 
 
 
@@ -1149,8 +1146,8 @@ class Translations {
       'know_your_body': 'Connaissez votre\ncorps',
       'how_fast_goal': 'À quelle vitesse voulez-vous atteindre votre objectif ?',
       'last_muscle_experience': 'Quelle a été votre dernière expérience de musculation ?',
-      'preferred_workout_type': 'Quel est votre type d'entraînement préféré ?',
-      'activity_level': 'Quel est votre niveau d'activité ?',
+      'preferred_workout_type': "Quel est votre type d'entraînement préféré ?",
+      'activity_level': "Quel est votre niveau d'activité ?",
       'sedentary': 'Sédentaire',
       'active': 'Actif',
       'workout_duration_question': 'Quelle est la durée de votre entraînement ?',
@@ -1170,7 +1167,6 @@ class Translations {
       'fat_status_low': 'Bas',
       'fat_status_normal': 'Normal',
       'fat_status_high': 'Élevé',
-      'data_load_error': 'Erreur de chargement des données: ',
 
 
 
@@ -1375,7 +1371,7 @@ class Translations {
       'error_prefix': 'Errore: ',
       'data_load_error': 'Impossibile caricare i dati: ',
       'weight_gained': 'Peso Acquisito',
-      'plan_ready': 'Il tuo piano è pronto!\nNon vediamo l'ora\ndi iniziare',
+      'plan_ready': "Il tuo piano è pronto!\nNon vediamo l'ora\ndi iniziare",
       'preparing_content': 'Contenuti su misura\nper il tuo obiettivo\nin preparazione',
       'preparing': 'Preparazione...',
       'become_best_version': 'Per diventare la migliore\nversione di te stesso',
@@ -1405,7 +1401,7 @@ class Translations {
       'fat_status_low': 'Basso',
       'fat_status_normal': 'Normale',
       'fat_status_high': 'Alto',
-      'data_load_error': 'Errore di caricamento dati: ',
+
 
 
 
@@ -1587,7 +1583,6 @@ class Translations {
       'next_exercise': 'Nächste Übung',
       'reps_sets_progress': 'SATZ {current} VON {total}',
     },
-,
     'ru': {
       'app_title': 'Six Pack 30',
       'welcome_back': 'Добро пожаловать',
@@ -1787,30 +1782,6 @@ class Translations {
       'error_prefix': 'Fehler: ',
       'data_load_error': 'Daten konnten nicht geladen werden: ',
       'weight_gained': 'Gewicht Zugelegt',
-      'gender_woman': 'Женщина',
-      'gender_man': 'Мужчина',
-      'goal_lose_belly': 'Убрать Живот',
-      'goal_build_muscle': 'Накачать Пресс',
-      'time_right_now': 'Прямо Сейчас',
-      'time_very_fast': 'Очень Быстро',
-      'time_fast_balanced': 'Быстро и Сбалансированно',
-      'time_long_term': 'Долгосрочно',
-      'exp_never_tried': 'Никогда не пробовал(а)',
-      'exp_tried_failed': 'Пробовал(а), но не вышло',
-      'exp_succeeded_regained': 'Получилось, но набрал(а) снова',
-      'exp_still_trying': 'Всё ещё пытаюсь',
-      'exp_succeeded_want_better': 'Получилось, но хочу лучше',
-      'intensity_easy_start': 'Легко Начать',
-      'intensity_sweaty': 'Потно',
-      'intensity_hardcore': 'Жестко',
-      'unit_kg': 'кг',
-      'unit_lbs': 'фунты',
-      'unit_cm': 'см',
-      'unit_ft': 'футы',
-      'login_error_internet': 'Ошибка входа. Пожалуйста, проверьте подключение к Интернету и повторите попытку.',
-      'error_prefix': 'Ошибка: ',
-      'data_load_error': 'Не удалось загрузить данные: ',
-      'weight_gained': 'Набранный Вес',
       'plan_ready': 'Dein Plan ist fertig!\nWir können es kaum erwarten\nzu beginnen',
       'preparing_content': 'Maßgeschneiderte Inhalte\nbasierend auf deinem Ziel\nwerden vorbereitet',
       'preparing': 'Vorbereitung...',
@@ -1833,46 +1804,14 @@ class Translations {
       'saturday': 'Samstag',
       'sunday': 'Sonntag',
       'which_days_workout': 'An welchen Wochentagen trainierst du?',
-      'plan_ready': 'Ваш план готов!\nНам не терпится\nначать',
-      'preparing_content': 'Индивидуальный контент\nна основе вашей цели\nподготавливается',
-      'preparing': 'Подготовка...',
-      'become_best_version': 'Чтобы стать лучшей\nверсией себя',
-      'are_you_ready': 'Вы готовы?',
-      'yes_i_am_ready': 'Да, я готов',
-      'know_your_body': 'Познай свое\nтело',
-      'how_fast_goal': 'Как быстро вы хотите достичь своей цели?',
-      'last_muscle_experience': 'Каким был ваш последний опыт наращивания мышц?',
-      'preferred_workout_type': 'Какой тип тренировки вы предпочитаете?',
-      'activity_level': 'Какой у вас уровень активности?',
-      'sedentary': 'Сидячий',
-      'active': 'Активный',
-      'workout_duration_question': 'Какова продолжительность вашей тренировки?',
-      'monday': 'Понедельник',
-      'tuesday': 'Вторник',
-      'wednesday': 'Среда',
-      'thursday': 'Четверг',
-      'friday': 'Пятница',
-      'saturday': 'Суббота',
-      'sunday': 'Воскресенье',
-      'which_days_workout': 'В какие дни недели вы тренируетесь?',
       'total_lbl': 'gesamt',
       'right_left_lbl': 'rechts + links',
       'both_sides_lbl': 'beide Seiten',
-      'total_lbl': 'всего',
-      'right_left_lbl': 'правая + левая',
-      'both_sides_lbl': 'обе стороны',
       'hour': 'Stunde',
       'hours': 'Stunden',
       'fat_status_low': 'Niedrig',
       'fat_status_normal': 'Normal',
       'fat_status_high': 'Hoch',
-      'data_load_error': 'Datenladefehler: ',
-      'hour': 'Час',
-      'hours': 'Часа',
-      'fat_status_low': 'Низкий',
-      'fat_status_normal': 'Нормальный',
-      'fat_status_high': 'Высокий',
-      'data_load_error': 'Ошибка загрузки данных: ',
 
 
 
@@ -2111,7 +2050,6 @@ class Translations {
       'fat_status_low': '低い',
       'fat_status_normal': '正常',
       'fat_status_high': '高い',
-      'data_load_error': 'データの読み込みエラー: ',
 
 
 
@@ -2346,7 +2284,6 @@ class Translations {
       'fat_status_low': '낮음',
       'fat_status_normal': '보통',
       'fat_status_high': '높음',
-      'data_load_error': '데이터 로드 오류: ',
 
 
 
@@ -2581,7 +2518,6 @@ class Translations {
       'fat_status_low': 'कम',
       'fat_status_normal': 'सामान्य',
       'fat_status_high': 'उच्च',
-      'data_load_error': 'डेटा लोड त्रुटि: ',
 
 
 

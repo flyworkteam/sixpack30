@@ -33,13 +33,9 @@ class HealthService {
 
   Future<void> syncHealthData() async {
     try {
-<<<<<<< HEAD
       // iOS returns null for hasPermissions because it doesn't allow checking read permissions.
       // Therefore we must default to true if it returns null.
       final bool hasPermission = await _health.hasPermissions(types) ?? true;
-=======
-      final bool hasPermission = await _health.hasPermissions(types) ?? false;
->>>>>>> d5f7518ac4c379ce62ddfcd109a71d76d3c9ac97
       if (!hasPermission) return;
 
       final now = DateTime.now();
@@ -58,12 +54,8 @@ class HealthService {
         if (point.type == HealthDataType.HEART_RATE) {
           final val = double.tryParse(point.value.toString()) ?? 0;
           if (val > 0) heartRate = val;
-<<<<<<< HEAD
         } else if (point.type == HealthDataType.SLEEP_ASLEEP) {
           // Sadece SLEEP_ASLEEP toplanmalı, IN_BED ile toplanırsa çifte sayım olur
-=======
-        } else if (point.type == HealthDataType.SLEEP_IN_BED || point.type == HealthDataType.SLEEP_ASLEEP) {
->>>>>>> d5f7518ac4c379ce62ddfcd109a71d76d3c9ac97
           sleepMinutes += double.tryParse(point.value.toString()) ?? 0;
         } else if (point.type == HealthDataType.STEPS) {
           steps += int.tryParse(point.value.toString()) ?? 0;
