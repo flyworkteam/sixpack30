@@ -58,6 +58,9 @@ class _HomeViewState extends ConsumerState<HomeView> {
     final userProfileValue = ref.watch(userProfileProvider);
     final statsValue = ref.watch(statsProvider);
     final langCode = ref.watch(localeProvider).languageCode;
+    final isPremiumUser = ref.watch(premiumProvider).value ?? false;
+    isPremium = isPremiumUser;
+    
     final user = userProfileValue.value;
     final stats = statsValue.value;
     final inProgressWorkout = ref.watch(workoutProgressProvider);
