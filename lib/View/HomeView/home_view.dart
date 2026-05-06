@@ -230,10 +230,6 @@ class _HomeViewState extends ConsumerState<HomeView> {
                       letterSpacing: -0.22.sp,
                     ),
                   ),
-                  if (isPremiumUser) ...[
-                    SizedBox(width: 8.w),
-                    _buildPremiumBadge(langCode),
-                  ],
                 ],
               ),
             ],
@@ -263,6 +259,38 @@ class _HomeViewState extends ConsumerState<HomeView> {
               ),
             ),
           ),
+          if (isPremium) ...[
+            SizedBox(width: 8.w),
+            Container(
+              width: 110.w,
+              height: 32.h,
+              decoration: BoxDecoration(
+                color: const Color(0xFFEFCE37),
+                borderRadius: BorderRadius.circular(6.r),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  SvgPicture.asset(
+                    'assets/images/Crown_Premium.svg',
+                    width: 24.sp,
+                    height: 24.sp,
+                    colorFilter: const ColorFilter.mode(Color(0xFFFDFDFD), BlendMode.srcIn),
+                  ),
+                  SizedBox(width: 4.w),
+                  Text(
+                    Translations.translate('premium', langCode),
+                    style: GoogleFonts.montserrat(
+                      fontSize: 14.sp,
+                      fontWeight: FontWeight.w600,
+                      color: const Color(0xFFFDFDFD),
+                      height: 1.0,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
         ],
       ),
     );
