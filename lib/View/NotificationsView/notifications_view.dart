@@ -32,7 +32,11 @@ class _NotificationsViewState extends ConsumerState<NotificationsView> {
         centerTitle: true,
         leading: UnconstrainedBox(
           child: GestureDetector(
-            onTap: () => Navigator.pop(context),
+            onTap: () {
+              if (Navigator.canPop(context)) {
+                Navigator.pop(context);
+              }
+            },
             child: Container(
               margin: EdgeInsets.only(left: 24.w),
               width: 24.w,

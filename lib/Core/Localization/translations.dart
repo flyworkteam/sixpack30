@@ -234,6 +234,7 @@ class Translations {
       'fat_status_low': 'Az',
       'fat_status_normal': 'Normal',
       'fat_status_high': 'Fazla',
+      'apple_health_ios_only': 'Apple Sağlık yalnızca iOS cihazlarda kullanılabilir.',
 
 
 
@@ -472,6 +473,7 @@ class Translations {
       'fat_status_low': 'Low',
       'fat_status_normal': 'Normal',
       'fat_status_high': 'High',
+      'apple_health_ios_only': 'Apple Health is only available on iOS devices.',
 
 
 

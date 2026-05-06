@@ -159,7 +159,11 @@ class _ProgressViewState extends ConsumerState<ProgressView> {
       child: Row(
         children: [
           GestureDetector(
-            onTap: widget.onBackPressed ?? () => Navigator.maybePop(context),
+            onTap: widget.onBackPressed ?? () {
+              if (Navigator.canPop(context)) {
+                Navigator.pop(context);
+              }
+            },
             child: Container(
               width: 24.w,
               height: 24.h,
@@ -266,14 +270,14 @@ class _ProgressViewState extends ConsumerState<ProgressView> {
                                     workout != null
                                         ? '${workout.exerciseCount ?? 8} ${Translations.translate('exercises_count', langCode)}'
                                         : '8 ${Translations.translate('exercises_count', langCode)}',
-                                    'assets/images/Exercise_Body_Icon.svg',
+                                    'https://sixpack30.b-cdn.net/images/Exercise_Body_Icon.svg',
                                   ),
                                 ),
                                 Padding(
                                   padding: EdgeInsets.only(left: 10.w, bottom: 10.h),
                                   child: _buildWorkoutBadge(
                                     '${Translations.translate('focus_area', langCode)}:${Translations.translate('abs', langCode)}',
-                                    'assets/images/Abs_Zone_Icon.svg',
+                                    'https://sixpack30.b-cdn.net/images/Abs_Zone_Icon.svg',
                                   ),
                                 ),
                               ],
@@ -284,7 +288,7 @@ class _ProgressViewState extends ConsumerState<ProgressView> {
                                   workout != null
                                       ? '${(workout.duration / 60).toInt()} ${Translations.translate('minutes', langCode)}'
                                       : '30 ${Translations.translate('minutes', langCode)}',
-                                  'assets/images/Duration_Badge_Icon.svg',
+                                  'https://sixpack30.b-cdn.net/images/Duration_Badge_Icon.svg',
                                 ),
                                 Padding(
                                   padding: EdgeInsets.only(left: 10.w),
@@ -292,7 +296,7 @@ class _ProgressViewState extends ConsumerState<ProgressView> {
                                     workout != null
                                         ? '${workout.calories ?? 200} ${Translations.translate('kcal', langCode)}'
                                         : '250 ${Translations.translate('kcal', langCode)}',
-                                    'assets/images/Calorie_Badge_Icon.svg',
+                                    'https://sixpack30.b-cdn.net/images/Calorie_Badge_Icon.svg',
                                   ),
                                 ),
                               ],
@@ -338,7 +342,7 @@ class _ProgressViewState extends ConsumerState<ProgressView> {
         children: [
           if (assetPath.endsWith('.svg'))
             SvgPicture.network(
-              assetPath.startsWith('assets/') ? assetPath.replaceFirst('assets/', 'https://sixpack30.b-cdn.net/') : assetPath,
+              assetPath,
               width: 12.sp,
               height: 12.sp,
               fit: BoxFit.contain,
@@ -346,7 +350,7 @@ class _ProgressViewState extends ConsumerState<ProgressView> {
             )
           else
             CachedNetworkImage(
-              imageUrl: assetPath.startsWith('assets/') ? assetPath.replaceFirst('assets/', 'https://sixpack30.b-cdn.net/') : assetPath,
+              imageUrl: assetPath,
               width: 12.sp,
               height: 12.sp,
               fit: BoxFit.contain,
@@ -871,22 +875,22 @@ class _ProgressViewState extends ConsumerState<ProgressView> {
             _buildSmallCard(
               title: Translations.translate('heart_rate', langCode),
               value: displayBpm > 0 ? '$bpm bpm' : '0',
-              iconAsset: 'assets/images/Heart_Plus_Icon.svg',
-              chartAsset: 'assets/images/Heart_Rhythm_Chart.svg',
+              iconAsset: 'https://sixpack30.b-cdn.net/images/Heart_Plus_Icon.svg',
+              chartAsset: 'https://sixpack30.b-cdn.net/images/Heart_Rhythm_Chart.svg',
             ),
             SizedBox(width: 14.w),
             _buildSmallCard(
               title: Translations.translate('current_weight', langCode),
               value: weight,
               subValue: weightChange,
-              iconAsset: 'assets/images/Current_Weight_Icon_16.svg',
+              iconAsset: 'https://sixpack30.b-cdn.net/images/Current_Weight_Icon_16.svg',
             ),
             SizedBox(width: 14.w),
             _buildSmallCard(
               title: Translations.translate('fat_rate', langCode),
               value: fatRate,
               subValue: fatStatus,
-              iconAsset: 'assets/images/Body_Fat_Icon.svg',
+              iconAsset: 'https://sixpack30.b-cdn.net/images/Body_Fat_Icon.svg',
               iconInContainer: false,
             ),
           ],
@@ -966,7 +970,7 @@ class _ProgressViewState extends ConsumerState<ProgressView> {
                 progressColor: const Color(0xFF06C44F),
                 progressValue: weightLossProgress,
                 iconAsset:
-                    'assets/images/iconstack.io - (Scale Light Line) (1).png',
+                    'https://sixpack30.b-cdn.net/images/iconstack.io - (Scale Light Line) (1).png',
                 iconColor: const Color(0xFF06C44F),
               ),
               _buildStatColumn(
@@ -975,7 +979,7 @@ class _ProgressViewState extends ConsumerState<ProgressView> {
                 valuePart1Color: const Color(0xFF55C5FC),
                 progressColor: const Color(0xFF55C5FC),
                 progressValue: waterProgress,
-                iconAsset: 'assets/images/iconstack.io - (Water Drop 1).png',
+                iconAsset: 'https://sixpack30.b-cdn.net/images/iconstack.io - (Water Drop 1).png',
                 iconColor: const Color(0xFF55C5FC),
               ),
               _buildStatColumn(
@@ -985,7 +989,7 @@ class _ProgressViewState extends ConsumerState<ProgressView> {
                 progressColor: const Color(0xFFFBCF33),
                 progressValue: muscleProgress,
                 iconAsset:
-                    'assets/images/iconstack.io - (Body Part Six Pack) (1).png',
+                    'https://sixpack30.b-cdn.net/images/iconstack.io - (Body Part Six Pack) (1).png',
                 iconColor: const Color(0xFFFBCF33),
                 showArrow: true,
               ),
@@ -1131,9 +1135,9 @@ class _ProgressViewState extends ConsumerState<ProgressView> {
               child: Opacity(
                 opacity: 0.8,
                 child: chartAsset.endsWith('.svg')
-                    ? SvgPicture.network(chartAsset.startsWith('assets/') ? chartAsset.replaceFirst('assets/', 'https://sixpack30.b-cdn.net/') : chartAsset,
+                    ? SvgPicture.network(chartAsset,
                         fit: BoxFit.fitWidth, alignment: Alignment.bottomCenter)
-                    : CachedNetworkImage(imageUrl: chartAsset.startsWith('assets/') ? chartAsset.replaceFirst('assets/', 'https://sixpack30.b-cdn.net/') : chartAsset,
+                    : CachedNetworkImage(imageUrl: chartAsset,
                         fit: BoxFit.fitWidth, alignment: Alignment.bottomCenter),
               ),
             ),
@@ -1152,13 +1156,13 @@ class _ProgressViewState extends ConsumerState<ProgressView> {
                       ),
                       child: iconAsset.endsWith('.svg')
                           ? SvgPicture.network(
-                              iconAsset.startsWith('assets/') ? iconAsset.replaceFirst('assets/', 'https://sixpack30.b-cdn.net/') : iconAsset,
+                              iconAsset,
                               width: 16.w,
                               height: 16.h,
                               fit: BoxFit.contain,
                             )
                           : CachedNetworkImage(imageUrl: 
-                              iconAsset.startsWith('assets/') ? iconAsset.replaceFirst('assets/', 'https://sixpack30.b-cdn.net/') : iconAsset,
+                              iconAsset,
                               width: 16.w,
                               height: 16.h,
                               fit: BoxFit.contain,
@@ -1166,13 +1170,13 @@ class _ProgressViewState extends ConsumerState<ProgressView> {
                     )
                   : (iconAsset.endsWith('.svg')
                         ? SvgPicture.network(
-                            iconAsset.startsWith('assets/') ? iconAsset.replaceFirst('assets/', 'https://sixpack30.b-cdn.net/') : iconAsset,
+                            iconAsset,
                             width: 20.w,
                             height: 20.h,
                             fit: BoxFit.contain,
                           )
                         : CachedNetworkImage(imageUrl: 
-                            iconAsset.startsWith('assets/') ? iconAsset.replaceFirst('assets/', 'https://sixpack30.b-cdn.net/') : iconAsset,
+                            iconAsset,
                             width: 20.w,
                             height: 20.h,
                             fit: BoxFit.contain,
@@ -1259,7 +1263,7 @@ class _ProgressViewState extends ConsumerState<ProgressView> {
                   ),
                 ),
                 CachedNetworkImage(
-                  imageUrl: iconAsset.startsWith('assets/') ? iconAsset.replaceFirst('assets/', 'https://sixpack30.b-cdn.net/') : iconAsset,
+                  imageUrl: iconAsset,
                   width: 20.w,
                   height: 20.h,
                   color: iconColor,

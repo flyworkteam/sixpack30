@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'dart:io';
+import 'package:flutter/services.dart';
 import 'package:purchases_flutter/purchases_flutter.dart';
 import 'package:onesignal_flutter/onesignal_flutter.dart';
 import 'package:six_pack_30/Core/Config/app_config.dart';
@@ -41,6 +42,11 @@ void main() async {
   } catch (e) {
     debugPrint('RevenueCat Initialization Error: $e');
   }
+  
+  await SystemChrome.setPreferredOrientations([
+    DeviceOrientation.portraitUp,
+    DeviceOrientation.portraitDown,
+  ]);
 
   runApp(const ProviderScope(child: MyApp()));
 }

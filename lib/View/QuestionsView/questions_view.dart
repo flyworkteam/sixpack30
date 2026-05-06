@@ -102,7 +102,25 @@ class _QuestionsViewState extends ConsumerState<QuestionsView> {
     if (_isLoading) {
       return Scaffold(body: _buildLoadingScreen());
     }
-    return Scaffold(
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) return;
+        if (_currentStep > 1) {
+          setState(() => _currentStep--);
+        } else if (_currentFlow == QuestionFlow.vucudunuzuBilin) {
+          setState(() {
+            _currentFlow = QuestionFlow.vucut;
+            _currentStep = 4;
+          });
+        } else if (_currentFlow == QuestionFlow.vucut) {
+          setState(() {
+            _currentFlow = QuestionFlow.hedefOdak;
+            _currentStep = 4;
+          });
+        }
+      },
+      child: Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
         child: Column(
@@ -136,7 +154,7 @@ class _QuestionsViewState extends ConsumerState<QuestionsView> {
           ],
         ),
       ),
-    );
+    ),);
   }
 
   Widget _buildHedefOdakContent() {
@@ -202,7 +220,7 @@ class _QuestionsViewState extends ConsumerState<QuestionsView> {
         }
       }
 
-      String resPath = 'assets/images/$prefix$imgNum.svg';
+      String resPath = 'https://sixpack30.b-cdn.net/images/$prefix$imgNum.svg';
 
       return _buildBodyTypeStep(
         title: currentTitle,
@@ -840,7 +858,9 @@ class _QuestionsViewState extends ConsumerState<QuestionsView> {
                     _currentStep = 4;
                   });
                 } else {
-                  Navigator.pop(context);
+                  if (Navigator.canPop(context)) {
+                    Navigator.pop(context);
+                  }
                 }
               },
               child: Container(
@@ -938,7 +958,7 @@ class _QuestionsViewState extends ConsumerState<QuestionsView> {
                 _targetBodyTypeIndex = 0.0;
               }),
               child: _buildGenderCard(
-                imagePath: 'assets/images/genderWOMAN.png',
+                imagePath: 'https://sixpack30.b-cdn.net/images/genderWOMAN.png',
                 label: 'Kadın',
                 isSelected: _selectedGender == 0,
               ),
@@ -951,7 +971,7 @@ class _QuestionsViewState extends ConsumerState<QuestionsView> {
                 _targetBodyTypeIndex = 0.0;
               }),
               child: _buildGenderCard(
-                imagePath: 'assets/images/genderMAN.png',
+                imagePath: 'https://sixpack30.b-cdn.net/images/genderMAN.png',
                 label: Translations.translate('gender_man', langCode),
                 isSelected: _selectedGender == 1,
               ),
@@ -1014,14 +1034,14 @@ class _QuestionsViewState extends ConsumerState<QuestionsView> {
         ),
         SizedBox(height: 20.h),
         _buildGoalCard(
-          imagePath: 'assets/images/gobekeritme.png',
+          imagePath: 'https://sixpack30.b-cdn.net/images/gobekeritme.png',
           label: 'Göbek Eritme',
           isSelected: _selectedGoal == 0,
           onTap: () => setState(() => _selectedGoal = 0),
         ),
         SizedBox(height: 20.h),
         _buildGoalCard(
-          imagePath: 'assets/images/karinkasi.png',
+          imagePath: 'https://sixpack30.b-cdn.net/images/karinkasi.png',
           label: 'Karın Kası Yapma',
           isSelected: _selectedGoal == 1,
           onTap: () => setState(() => _selectedGoal = 1),
@@ -1079,7 +1099,7 @@ class _QuestionsViewState extends ConsumerState<QuestionsView> {
                         offset: Offset(offsetX, offsetY),
                         child: imagePath.endsWith('.svg')
                             ? SvgPicture.network(
-                                imagePath.startsWith('assets/') ? imagePath.replaceFirst('assets/', 'https://sixpack30.b-cdn.net/') : imagePath,
+                                imagePath,
                                 width: imageWidth != null ? imageWidth.w : null,
                                 height: imageHeight != null
                                     ? imageHeight.h
@@ -1087,7 +1107,7 @@ class _QuestionsViewState extends ConsumerState<QuestionsView> {
                                 fit: BoxFit.contain,
                               )
                             : CachedNetworkImage(
-                                imageUrl: imagePath.startsWith('assets/') ? imagePath.replaceFirst('assets/', 'https://sixpack30.b-cdn.net/') : imagePath,
+                                imageUrl: imagePath,
                                 width: imageWidth != null ? imageWidth.w : null,
                                 height: imageHeight != null
                                     ? imageHeight.h
@@ -1239,7 +1259,7 @@ class _QuestionsViewState extends ConsumerState<QuestionsView> {
                 bottomLeft: Radius.circular(10.r),
               ),
               child: CachedNetworkImage(
-                imageUrl: imagePath.startsWith('assets/') ? imagePath.replaceFirst('assets/', 'https://sixpack30.b-cdn.net/') : imagePath,
+                imageUrl: imagePath,
                 width: 104.w,
                 height: 85.h,
                 fit: BoxFit.cover,
@@ -1488,10 +1508,10 @@ class _QuestionsViewState extends ConsumerState<QuestionsView> {
             controller: _bgPageController,
             itemBuilder: (context, index) {
               final String asset = (index % 2 == 0)
-                  ? 'assets/images/loading_bg.png'
-                  : 'assets/images/loading_complete_bg.png';
-              return Image.asset(
-                asset,
+                  ? 'https://sixpack30.b-cdn.net/images/loading_bg.png'
+                  : 'https://sixpack30.b-cdn.net/images/loading_complete_bg.png';
+              return CachedNetworkImage(
+                imageUrl: asset,
                 fit: BoxFit.cover,
                 alignment: asset.contains('complete')
                     ? const Alignment(0.1, 0.0)
@@ -1834,7 +1854,7 @@ class _QuestionsViewState extends ConsumerState<QuestionsView> {
         _buildSelectionTile(
           index: 0,
           label: 'Hemen Şimdi',
-          iconPath: 'assets/images/iconstack.io - (Fast Arrow Up).svg',
+          iconPath: 'https://sixpack30.b-cdn.net/images/iconstack.io - (Fast Arrow Up).svg',
           isSelected: _selectedSpeed == 0,
           onTap: () => setState(() => _selectedSpeed = 0),
         ),
@@ -1842,7 +1862,7 @@ class _QuestionsViewState extends ConsumerState<QuestionsView> {
         _buildSelectionTile(
           index: 1,
           label: 'Çok Hızlı',
-          iconPath: 'assets/images/Forecast Lightning.svg',
+          iconPath: 'https://sixpack30.b-cdn.net/images/Forecast Lightning.svg',
           isSelected: _selectedSpeed == 1,
           onTap: () => setState(() => _selectedSpeed = 1),
         ),
@@ -1850,7 +1870,7 @@ class _QuestionsViewState extends ConsumerState<QuestionsView> {
         _buildSelectionTile(
           index: 2,
           label: 'Hızlı & Dengeli',
-          iconPath: 'assets/images/iconstack.io - (Clock Fast).svg',
+          iconPath: 'https://sixpack30.b-cdn.net/images/iconstack.io - (Clock Fast).svg',
           isSelected: _selectedSpeed == 2,
           onTap: () => setState(() => _selectedSpeed = 2),
         ),
@@ -1858,7 +1878,7 @@ class _QuestionsViewState extends ConsumerState<QuestionsView> {
         _buildSelectionTile(
           index: 3,
           label: Translations.translate('time_long_term', langCode),
-          iconPath: 'assets/images/iconstack.io - (Health Shield).svg',
+          iconPath: 'https://sixpack30.b-cdn.net/images/iconstack.io - (Health Shield).svg',
           isSelected: _selectedSpeed == 3,
           onTap: () => setState(() => _selectedSpeed = 3),
         ),
@@ -1883,7 +1903,7 @@ class _QuestionsViewState extends ConsumerState<QuestionsView> {
         _buildSelectionTile(
           index: 0,
           label: 'Hiç denemedim',
-          iconPath: 'assets/images/Experience_Never.svg',
+          iconPath: 'https://sixpack30.b-cdn.net/images/Experience_Never.svg',
           isSelected: _selectedExperience == 0,
           onTap: () => setState(() => _selectedExperience = 0),
         ),
@@ -1891,7 +1911,7 @@ class _QuestionsViewState extends ConsumerState<QuestionsView> {
         _buildSelectionTile(
           index: 1,
           label: 'Denedim ama olmadı',
-          iconPath: 'assets/images/Experience_Failed.svg',
+          iconPath: 'https://sixpack30.b-cdn.net/images/Experience_Failed.svg',
           isSelected: _selectedExperience == 1,
           onTap: () => setState(() => _selectedExperience = 1),
         ),
@@ -1899,7 +1919,7 @@ class _QuestionsViewState extends ConsumerState<QuestionsView> {
         _buildSelectionTile(
           index: 2,
           label: 'Başardım ama tekrar aldım',
-          iconPath: 'assets/images/Experience_Regained.svg',
+          iconPath: 'https://sixpack30.b-cdn.net/images/Experience_Regained.svg',
           isSelected: _selectedExperience == 2,
           onTap: () => setState(() => _selectedExperience = 2),
         ),
@@ -1907,7 +1927,7 @@ class _QuestionsViewState extends ConsumerState<QuestionsView> {
         _buildSelectionTile(
           index: 3,
           label: Translations.translate('exp_still_trying', langCode),
-          iconPath: 'assets/images/Experience_Trying.svg',
+          iconPath: 'https://sixpack30.b-cdn.net/images/Experience_Trying.svg',
           isSelected: _selectedExperience == 3,
           onTap: () => setState(() => _selectedExperience = 3),
         ),
@@ -1915,7 +1935,7 @@ class _QuestionsViewState extends ConsumerState<QuestionsView> {
         _buildSelectionTile(
           index: 4,
           label: 'Başardım ve daha iyisini istiyorum',
-          iconPath: 'assets/images/Experience_Success.svg',
+          iconPath: 'https://sixpack30.b-cdn.net/images/Experience_Success.svg',
           isSelected: _selectedExperience == 4,
           onTap: () => setState(() => _selectedExperience = 4),
         ),
@@ -1940,7 +1960,7 @@ class _QuestionsViewState extends ConsumerState<QuestionsView> {
         _buildSelectionTile(
           index: 0,
           label: 'Başlaması Kolay',
-          iconPath: 'assets/images/Training_Easy.svg',
+          iconPath: 'https://sixpack30.b-cdn.net/images/Training_Easy.svg',
           isSelected: _selectedTrainingType == 0,
           onTap: () => setState(() => _selectedTrainingType = 0),
         ),
@@ -1948,7 +1968,7 @@ class _QuestionsViewState extends ConsumerState<QuestionsView> {
         _buildSelectionTile(
           index: 1,
           label: Translations.translate('intensity_sweaty', langCode),
-          iconPath: 'assets/images/Training_Sweaty.svg',
+          iconPath: 'https://sixpack30.b-cdn.net/images/Training_Sweaty.svg',
           isSelected: _selectedTrainingType == 1,
           onTap: () => setState(() => _selectedTrainingType = 1),
         ),
@@ -1956,7 +1976,7 @@ class _QuestionsViewState extends ConsumerState<QuestionsView> {
         _buildSelectionTile(
           index: 2,
           label: Translations.translate('intensity_hardcore', langCode),
-          iconPath: 'assets/images/Training_Tough.svg',
+          iconPath: 'https://sixpack30.b-cdn.net/images/Training_Tough.svg',
           isSelected: _selectedTrainingType == 2,
           onTap: () => setState(() => _selectedTrainingType = 2),
         ),
@@ -2019,31 +2039,31 @@ class _QuestionsViewState extends ConsumerState<QuestionsView> {
     final days = [
       {
         'label': Translations.translate('monday', langCode),
-        'icon': 'assets/images/Day_Mon.svg',
+        'icon': 'https://sixpack30.b-cdn.net/images/Day_Mon.svg',
       },
       {
         'label': 'Salı',
-        'icon': 'assets/images/Day_Tue.svg',
+        'icon': 'https://sixpack30.b-cdn.net/images/Day_Tue.svg',
       },
       {
         'label': 'Çarşamba',
-        'icon': 'assets/images/Day_Wed.svg',
+        'icon': 'https://sixpack30.b-cdn.net/images/Day_Wed.svg',
       },
       {
         'label': 'Perşembe',
-        'icon': 'assets/images/Day_Thu.svg',
+        'icon': 'https://sixpack30.b-cdn.net/images/Day_Thu.svg',
       },
       {
         'label': Translations.translate('friday', langCode),
-        'icon': 'assets/images/Day_Fri.svg',
+        'icon': 'https://sixpack30.b-cdn.net/images/Day_Fri.svg',
       },
       {
         'label': Translations.translate('saturday', langCode),
-        'icon': 'assets/images/Day_Sat_Final.svg',
+        'icon': 'https://sixpack30.b-cdn.net/images/Day_Sat_Final.svg',
       },
       {
         'label': Translations.translate('sunday', langCode),
-        'icon': 'assets/images/Day_Sun.svg',
+        'icon': 'https://sixpack30.b-cdn.net/images/Day_Sun.svg',
       },
     ];
     return Column(
@@ -2091,7 +2111,7 @@ class _QuestionsViewState extends ConsumerState<QuestionsView> {
                   child: Row(
                     children: [
                       if (days[index]['icon']!.endsWith('.svg'))
-                        SvgPicture.asset(
+                        SvgPicture.network(
                           days[index]['icon']!,
                           width: 24.w,
                           height: 24.h,
@@ -2101,8 +2121,8 @@ class _QuestionsViewState extends ConsumerState<QuestionsView> {
                               : null,
                         )
                       else
-                        Image.asset(
-                          days[index]['icon']!,
+                        CachedNetworkImage(
+                          imageUrl: days[index]['icon']!,
                           width: 24.w,
                           height: 24.h,
                           color: isSelected ? const Color(0xFF06C44F) : null,
@@ -2167,7 +2187,7 @@ class _QuestionsViewState extends ConsumerState<QuestionsView> {
         _buildSelectionTile(
           index: 0,
           label: '10 - 20 ',
-          iconPath: 'assets/images/Duration_1_Final.svg',
+          iconPath: 'https://sixpack30.b-cdn.net/images/Duration_1_Final.svg',
           isSelected: _selectedDuration == 0,
           onTap: () => setState(() => _selectedDuration = 0),
         ),
@@ -2175,7 +2195,7 @@ class _QuestionsViewState extends ConsumerState<QuestionsView> {
         _buildSelectionTile(
           index: 1,
           label: '25 - 30 ',
-          iconPath: 'assets/images/Duration_2.svg',
+          iconPath: 'https://sixpack30.b-cdn.net/images/Duration_2.svg',
           isSelected: _selectedDuration == 1,
           onTap: () => setState(() => _selectedDuration = 1),
         ),
@@ -2183,7 +2203,7 @@ class _QuestionsViewState extends ConsumerState<QuestionsView> {
         _buildSelectionTile(
           index: 2,
           label: '40 - 45 ',
-          iconPath: 'assets/images/Duration_3.svg',
+          iconPath: 'https://sixpack30.b-cdn.net/images/Duration_3.svg',
           isSelected: _selectedDuration == 2,
           onTap: () => setState(() => _selectedDuration = 2),
         ),
@@ -2191,7 +2211,7 @@ class _QuestionsViewState extends ConsumerState<QuestionsView> {
         _buildSelectionTile(
           index: 3,
           label: '60+ ',
-          iconPath: 'assets/images/Duration_4.svg',
+          iconPath: 'https://sixpack30.b-cdn.net/images/Duration_4.svg',
           isSelected: _selectedDuration == 3,
           onTap: () => setState(() => _selectedDuration = 3),
         ),
@@ -2324,7 +2344,7 @@ class _QuestionsViewState extends ConsumerState<QuestionsView> {
             children: [
               if (iconPath.endsWith('.svg'))
                 SvgPicture.network(
-                  iconPath.startsWith('assets/') ? iconPath.replaceFirst('assets/', 'https://sixpack30.b-cdn.net/') : iconPath,
+                  iconPath,
                   width: 24.w,
                   height: 24.h,
                   colorFilter: isSelected
@@ -2333,7 +2353,7 @@ class _QuestionsViewState extends ConsumerState<QuestionsView> {
                 )
               else
                 CachedNetworkImage(
-                  imageUrl: iconPath.startsWith('assets/') ? iconPath.replaceFirst('assets/', 'https://sixpack30.b-cdn.net/') : iconPath,
+                  imageUrl: iconPath,
                   width: 24.w,
                   height: 24.h,
                   color: isSelected ? const Color(0xFF06C44F) : null,
@@ -2381,7 +2401,7 @@ class _QuestionsViewState extends ConsumerState<QuestionsView> {
                     ? Offset(3.5.w, 38.h)
                     : Offset.zero,
                 child: CachedNetworkImage(
-                  imageUrl: imagePath.startsWith('assets/') ? imagePath.replaceFirst('assets/', 'https://sixpack30.b-cdn.net/') : imagePath,
+                  imageUrl: imagePath,
                   fit: BoxFit.cover,
                   width: 165.w,
                   height: 195.h,

@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -232,7 +233,7 @@ class ProfileView extends ConsumerWidget {
                   child: Column(
                     children: [
                       _buildSettingsItem(
-                          iconPath: 'assets/images/Edit_Profile_Icon_Full.svg',
+                          iconPath: 'https://sixpack30.b-cdn.net/images/Edit_Profile_Icon_Full.svg',
                           title: Translations.translate('edit_profile', langCode),
                           isLast: false,
                           onTap: () {
@@ -244,7 +245,7 @@ class ProfileView extends ConsumerWidget {
                             );
                           }),
                       _buildSettingsItem(
-                          iconPath: 'assets/images/Notifications_Icon_Full.svg',
+                          iconPath: 'https://sixpack30.b-cdn.net/images/Notifications_Icon_Full.svg',
                           title: Translations.translate('notifications', langCode),
                           isLast: effectiveIsPremium,
                           isSwitch: true,
@@ -287,13 +288,22 @@ class ProfileView extends ConsumerWidget {
                   child: Column(
                     children: [
                       _buildSettingsItem(
-                          iconPath: 'assets/images/Health_Icon_Full.svg',
+                          iconPath: 'https://sixpack30.b-cdn.net/images/Health_Icon_Full.svg',
                           title: Translations.translate('connect_health', langCode),
                           isLast: false,
                           isSwitch: true,
                           switchValue: user?.healthConnected ?? false,
                           onToggle: (val) async {
                             if (val) {
+                              if (Platform.isAndroid) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(Translations.translate('apple_health_ios_only', langCode)),
+                                    backgroundColor: Colors.orange,
+                                  ),
+                                );
+                                return;
+                              }
                               final healthService = HealthService();
                               final bool granted = await healthService.requestPermissions();
                               if (granted) {
@@ -305,7 +315,7 @@ class ProfileView extends ConsumerWidget {
                             }
                           }),
                       _buildSettingsItem(
-                          iconPath: 'assets/images/Language_Icon_Full.svg',
+                          iconPath: 'https://sixpack30.b-cdn.net/images/Language_Icon_Full.svg',
                           title: Translations.translate('language_preferences', langCode),
                           isLast: false,
                           onTap: () {
@@ -317,7 +327,7 @@ class ProfileView extends ConsumerWidget {
                             );
                           }),
                       _buildSettingsItem(
-                          iconPath: 'assets/images/Faq_Icon_Full.svg',
+                          iconPath: 'https://sixpack30.b-cdn.net/images/Faq_Icon_Full.svg',
                           title: Translations.translate('faq', langCode),
                           isLast: false,
                           onTap: () {
@@ -329,7 +339,7 @@ class ProfileView extends ConsumerWidget {
                             );
                           }),
                       _buildSettingsItem(
-                          iconPath: 'assets/images/Rate_App_Icon_Full.svg',
+                          iconPath: 'https://sixpack30.b-cdn.net/images/Rate_App_Icon_Full.svg',
                           title: Translations.translate('rate_us', langCode),
                           isLast: false,
                           onTap: () {
@@ -341,7 +351,7 @@ class ProfileView extends ConsumerWidget {
                             );
                           }),
                       _buildSettingsItem(
-                          iconPath: 'assets/images/Share_App_Icon_Full.svg',
+                          iconPath: 'https://sixpack30.b-cdn.net/images/Share_App_Icon_Full.svg',
                           title: Translations.translate('share_app', langCode),
                           isLast: false,
                           onTap: () {
@@ -353,7 +363,7 @@ class ProfileView extends ConsumerWidget {
                             );
                           }),
                       _buildSettingsItem(
-                          iconPath: 'assets/images/Logout_Icon_Full.svg',
+                          iconPath: 'https://sixpack30.b-cdn.net/images/Logout_Icon_Full.svg',
                           title: Translations.translate('logout', langCode),
                           isLast: true,
                           isRed: true,
@@ -402,7 +412,7 @@ class ProfileView extends ConsumerWidget {
                   child: Column(
                     children: [
                       _buildSettingsItem(
-                          iconPath: 'assets/images/Faq_Icon_Full.svg',
+                          iconPath: 'https://sixpack30.b-cdn.net/images/Faq_Icon_Full.svg',
                           title: Translations.translate('privacy_policy', langCode),
                           isLast: false,
                           onTap: () => launchUrl(
@@ -410,7 +420,7 @@ class ProfileView extends ConsumerWidget {
                                 mode: LaunchMode.externalApplication,
                               )),
                       _buildSettingsItem(
-                          iconPath: 'assets/images/Faq_Icon_Full.svg',
+                          iconPath: 'https://sixpack30.b-cdn.net/images/Faq_Icon_Full.svg',
                           title: Translations.translate('terms_of_service', langCode),
                           isLast: false,
                           onTap: () => launchUrl(
@@ -418,7 +428,7 @@ class ProfileView extends ConsumerWidget {
                                 mode: LaunchMode.externalApplication,
                               )),
                       _buildSettingsItem(
-                          iconPath: 'assets/images/Faq_Icon_Full.svg',
+                          iconPath: 'https://sixpack30.b-cdn.net/images/Faq_Icon_Full.svg',
                           title: Translations.translate('cookie_policy', langCode),
                           isLast: false,
                           onTap: () => launchUrl(
@@ -426,7 +436,7 @@ class ProfileView extends ConsumerWidget {
                                 mode: LaunchMode.externalApplication,
                               )),
                       _buildSettingsItem(
-                          iconPath: 'assets/images/Faq_Icon_Full.svg',
+                          iconPath: 'https://sixpack30.b-cdn.net/images/Faq_Icon_Full.svg',
                           title: Translations.translate('csae_policy', langCode),
                           isLast: true,
                           onTap: () => launchUrl(
@@ -481,12 +491,12 @@ class ProfileView extends ConsumerWidget {
             ),
             child: iconPath.endsWith('.svg')
                 ? SvgPicture.network(
-                    iconPath.startsWith('assets/') ? iconPath.replaceFirst('assets/', 'https://sixpack30.b-cdn.net/') : iconPath,
+                    iconPath,
                     width: 28.w,
                     height: 28.w,
                   )
                 : CachedNetworkImage(
-                    imageUrl: iconPath.startsWith('assets/') ? iconPath.replaceFirst('assets/', 'https://sixpack30.b-cdn.net/') : iconPath,
+                    imageUrl: iconPath,
                     width: 20.w,
                     height: 20.h,
                     color: isRed ? Colors.white : Colors.black87,

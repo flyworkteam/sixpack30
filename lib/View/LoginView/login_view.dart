@@ -108,8 +108,8 @@ class LoginView extends ConsumerWidget {
 
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    SvgPicture.asset(
-                      isIOS ? 'assets/images/ic_baseline-apple.svg' : 'assets/images/material-icon-theme_google.svg',
+                    SvgPicture.network(
+                      isIOS ? 'https://sixpack30.b-cdn.net/images/ic_baseline-apple.svg' : 'https://sixpack30.b-cdn.net/images/material-icon-theme_google.svg',
                       width: 28.w,
                       height: 28.h,
                       fit: BoxFit.cover,
@@ -155,8 +155,8 @@ class LoginView extends ConsumerWidget {
                   mainAxisAlignment: MainAxisAlignment.center,
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    SvgPicture.asset(
-                      isIOS ? 'assets/images/material-icon-theme_google.svg' : 'assets/images/ic_baseline-apple.svg',
+                    SvgPicture.network(
+                      isIOS ? 'https://sixpack30.b-cdn.net/images/material-icon-theme_google.svg' : 'https://sixpack30.b-cdn.net/images/ic_baseline-apple.svg',
                       width: 28.w,
                       height: 28.h,
                       fit: BoxFit.cover,

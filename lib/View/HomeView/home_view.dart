@@ -66,10 +66,18 @@ class _HomeViewState extends ConsumerState<HomeView> {
     final inProgressWorkout = ref.watch(workoutProgressProvider);
     final gender = user?.questionnaire?.gender ?? 'woman';
 
-    return Scaffold(
+    return PopScope(
+      canPop: _selectedTab == 0,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) return;
+        if (_selectedTab != 0) {
+          setState(() => _selectedTab = 0);
+        }
+      },
+      child: Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
-        bottom: false,
+        bottom: true,
         child: Stack(
           children: [
             AnimatedSwitcher(
@@ -137,7 +145,7 @@ class _HomeViewState extends ConsumerState<HomeView> {
           ],
         ),
       ),
-    );
+    ),);
   }
   Widget _buildHeader() {
     final userProfile = ref.watch(userProfileProvider);
@@ -478,14 +486,14 @@ class _HomeViewState extends ConsumerState<HomeView> {
                                     padding: EdgeInsets.only(bottom: 10.h),
                                     child: _buildWorkoutBadge(
                                       exerciseCount == 0 ? Translations.translate('rest', langCode) : '$exerciseCount ${Translations.translate('exercises_count', langCode)}',
-                                      'assets/images/Exercise_Body_Icon.svg',
+                                      'https://sixpack30.b-cdn.net/images/Exercise_Body_Icon.svg',
                                     ),
                                   ),
                                   Padding(
                                     padding: EdgeInsets.only(left: 10.w, bottom: 10.h),
                                     child: _buildWorkoutBadge(
                                       '${Translations.translate('focus_area', langCode)}:${Translations.translate('abs', langCode)}',
-                                      'assets/images/Abs_Zone_Icon.svg',
+                                      'https://sixpack30.b-cdn.net/images/Abs_Zone_Icon.svg',
                                     ),
                                   ),
                                 ],
@@ -494,13 +502,13 @@ class _HomeViewState extends ConsumerState<HomeView> {
                                 children: [
                                   _buildWorkoutBadge(
                                     '$duration ${Translations.translate('minutes', langCode)}',
-                                    'assets/images/Duration_Badge_Icon.svg',
+                                    'https://sixpack30.b-cdn.net/images/Duration_Badge_Icon.svg',
                                   ),
                                   Padding(
                                     padding: EdgeInsets.only(left: 10.w),
                                     child: _buildWorkoutBadge(
                                       '$kcal ${Translations.translate('kcal', langCode)}',
-                                      'assets/images/Calorie_Badge_Icon.svg',
+                                      'https://sixpack30.b-cdn.net/images/Calorie_Badge_Icon.svg',
                                     ),
                                   ),
                                 ],
@@ -549,14 +557,14 @@ class _HomeViewState extends ConsumerState<HomeView> {
         children: [
           if (assetPath.endsWith('.svg'))
             SvgPicture.network(
-              assetPath.startsWith('assets/') ? assetPath.replaceFirst('assets/', 'https://sixpack30.b-cdn.net/') : assetPath,
+              assetPath,
               width: 12.sp,
               height: 12.sp,
               fit: BoxFit.contain,
               colorFilter: const ColorFilter.mode(Color(0xFF06C44F), BlendMode.srcIn),
             )
           else
-            CachedNetworkImage(imageUrl: assetPath.startsWith('assets/') ? assetPath.replaceFirst('assets/', 'https://sixpack30.b-cdn.net/') : assetPath,
+            CachedNetworkImage(imageUrl: assetPath,
               width: 12.sp,
               height: 12.sp,
               fit: BoxFit.contain,
@@ -1675,7 +1683,7 @@ class _HomeViewState extends ConsumerState<HomeView> {
                                 label: Translations.translate('total_activity', langCode),
                                 value: activityCount,
                                 isHighlight: false,
-                                assetPath: 'assets/images/Total_Activity_Icon.svg',
+                                assetPath: 'https://sixpack30.b-cdn.net/images/Total_Activity_Icon.svg',
                               ),
                             ),
                             SizedBox(width: 4.w),
@@ -1684,7 +1692,7 @@ class _HomeViewState extends ConsumerState<HomeView> {
                                 label: Translations.translate('calories_burned', langCode),
                                 value: calories,
                                 isHighlight: true,
-                                assetPath: 'assets/images/Burned_Calories_Icon.svg',
+                                assetPath: 'https://sixpack30.b-cdn.net/images/Burned_Calories_Icon.svg',
                               ),
                             ),
                           ],
@@ -1697,7 +1705,7 @@ class _HomeViewState extends ConsumerState<HomeView> {
                                 label: Translations.translate('weight_lost', langCode),
                                 value: weightLostStr,
                                 isHighlight: true,
-                                assetPath: 'assets/images/Weight_Lost_Icon.svg',
+                                assetPath: 'https://sixpack30.b-cdn.net/images/Weight_Lost_Icon.svg',
                               ),
                             ),
                             SizedBox(width: 4.w),
@@ -1706,7 +1714,7 @@ class _HomeViewState extends ConsumerState<HomeView> {
                                 label: Translations.translate('streak', langCode),
                                 value: streakStr,
                                 isHighlight: false,
-                                assetPath: 'assets/images/Streak_Icon.svg',
+                                assetPath: 'https://sixpack30.b-cdn.net/images/Streak_Icon.svg',
                               ),
                             ),
                           ],
@@ -1863,19 +1871,19 @@ class _HomeViewState extends ConsumerState<HomeView> {
     final tabs = [
       {
         'label': Translations.translate('home', langCode),
-        'icon': 'assets/images/Nav_Home_Icon.svg',
+        'icon': 'https://sixpack30.b-cdn.net/images/Nav_Home_Icon.svg',
       },
       {
         'label': Translations.translate('training', langCode),
-        'icon': 'assets/images/Nav_Workout_Icon.svg',
+        'icon': 'https://sixpack30.b-cdn.net/images/Nav_Workout_Icon.svg',
       },
       {
         'label': Translations.translate('progress', langCode),
-        'icon': 'assets/images/Nav_Progress_Icon.svg',
+        'icon': 'https://sixpack30.b-cdn.net/images/Nav_Progress_Icon.svg',
       },
       {
         'label': Translations.translate('profile', langCode),
-        'icon': 'assets/images/Nav_Profile_Icon.svg',
+        'icon': 'https://sixpack30.b-cdn.net/images/Nav_Profile_Icon.svg',
       },
     ];
     return Container(
@@ -1903,7 +1911,7 @@ class _HomeViewState extends ConsumerState<HomeView> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   if ((tabs[i]['icon'] as String).endsWith('.svg'))
-                    SvgPicture.asset(
+                    SvgPicture.network(
                       tabs[i]['icon'] as String,
                       width: 24.sp,
                       height: 24.sp,
@@ -1913,8 +1921,8 @@ class _HomeViewState extends ConsumerState<HomeView> {
                       ),
                     )
                   else
-                    Image.asset(
-                      tabs[i]['icon'] as String,
+                    CachedNetworkImage(
+                      imageUrl: tabs[i]['icon'] as String,
                       width: 24.sp,
                       height: 24.sp,
                       color: isActive

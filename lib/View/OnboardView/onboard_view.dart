@@ -24,7 +24,7 @@ class OnboardView extends ConsumerWidget {
             children: [
               _buildPage(
                 context,
-                imagePath: 'assets/images/onboard1.png',
+                imagePath: 'https://sixpack30.b-cdn.net/images/onboard1.png',
                 gradientOpacity: 1.0,
                 gradientStops: const [0.0, 0.9],
                 imageDarkenOpacity: 0.3,
@@ -60,7 +60,7 @@ class OnboardView extends ConsumerWidget {
               ),
               _buildPage(
                 context,
-                imagePath: 'assets/images/onboard2.png',
+                imagePath: 'https://sixpack30.b-cdn.net/images/onboard2.png',
                 gradientOpacity: 1.0,
                 gradientStops: const [0.0, 0.9],
                 imageDarkenOpacity: 0.3,
@@ -97,7 +97,7 @@ class OnboardView extends ConsumerWidget {
               ),
               _buildPage(
                 context,
-                imagePath: 'assets/images/onboard3.png',
+                imagePath: 'https://sixpack30.b-cdn.net/images/onboard3.png',
                 gradientOpacity: 0.05,
                 imageAlignment: const Alignment(0.0, 1.0),
                 titleWidget: Column(
@@ -135,7 +135,7 @@ class OnboardView extends ConsumerWidget {
           ),
           if (onboardState.currentIndex < 2)
             Positioned(
-              top: 81.h,
+              top: 81.h + MediaQuery.of(context).padding.top,
               right: 34.w,
               child: GestureDetector(
                 onTap: () => onboardController.skip(context),
@@ -154,7 +154,7 @@ class OnboardView extends ConsumerWidget {
               ),
             ),
           Positioned(
-            bottom: 67.h,
+            bottom: 40.h + MediaQuery.of(context).padding.bottom,
             left: 32.w,
             right: 32.w,
             child: Column(
@@ -242,7 +242,7 @@ class OnboardView extends ConsumerWidget {
       fit: StackFit.expand,
       children: [
         CachedNetworkImage(
-          imageUrl: imagePath.startsWith('assets/') ? imagePath.replaceFirst('assets/', 'https://sixpack30.b-cdn.net/') : imagePath,
+          imageUrl: imagePath,
           fit: BoxFit.cover,
           alignment: imageAlignment,
           placeholder: (context, url) => Container(color: const Color(0xFF202020)),

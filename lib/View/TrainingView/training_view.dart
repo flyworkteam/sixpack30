@@ -233,7 +233,9 @@ class _TrainingViewState extends ConsumerState<TrainingView> {
                 if (widget.onBackPressed != null) {
                   widget.onBackPressed!();
                 } else {
-                  Navigator.pop(context);
+                  if (Navigator.canPop(context)) {
+                    Navigator.pop(context);
+                  }
                 }
               },
               child: Container(
@@ -283,7 +285,9 @@ class _TrainingViewState extends ConsumerState<TrainingView> {
                 if (widget.onBackPressed != null) {
                   widget.onBackPressed!();
                 } else {
-                  Navigator.pop(context);
+                  if (Navigator.canPop(context)) {
+                    Navigator.pop(context);
+                  }
                 }
               },
               child: Container(

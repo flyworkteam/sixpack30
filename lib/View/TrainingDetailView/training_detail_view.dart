@@ -43,8 +43,9 @@ class _TrainingDetailViewState extends ConsumerState<TrainingDetailView> {
     final gender = widget.gender;
     return Scaffold(
       backgroundColor: const Color(0xFFFEFEFE),
-      body: Stack(
-        children: [
+      body: SafeArea(
+        child: Stack(
+          children: [
           Positioned(
             top: 0,
             left: 0,
@@ -133,17 +134,17 @@ class _TrainingDetailViewState extends ConsumerState<TrainingDetailView> {
                             children: [
                               _buildBadge(
                                 iconData: Icons.access_time,
-                                iconAsset: 'assets/images/detail_clock_icon.svg',
+                                iconAsset: 'https://sixpack30.b-cdn.net/images/detail_clock_icon.svg',
                                 text: exercises.isEmpty ? Translations.translate('rest', langCode) : '10 ${Translations.translate('minutes', langCode)}',
                               ),
                               _buildBadge(
                                 iconData: Icons.fitness_center,
-                                iconAsset: 'assets/images/detail_abs_zone_icon.svg',
+                                iconAsset: 'https://sixpack30.b-cdn.net/images/detail_abs_zone_icon.svg',
                                 text: '${Translations.translate('focus_area', langCode)}: ${Translations.translate('abs', langCode)}',
                               ),
                               _buildBadge(
                                 iconData: Icons.accessibility_new,
-                                iconAsset: 'assets/images/detail_exercise_icon.svg',
+                                iconAsset: 'https://sixpack30.b-cdn.net/images/detail_exercise_icon.svg',
                                 text: exercises.isEmpty ? Translations.translate('active_rest', langCode) : '${exercises.length} ${Translations.translate('exercises_count', langCode)}',
                               ),
                             ],
@@ -324,12 +325,12 @@ class _TrainingDetailViewState extends ConsumerState<TrainingDetailView> {
         children: [
           iconAsset.endsWith('.svg')
               ? SvgPicture.network(
-                  iconAsset.startsWith('assets/') ? iconAsset.replaceFirst('assets/', 'https://sixpack30.b-cdn.net/') : iconAsset,
+                  iconAsset,
                   width: 16.w,
                   height: 16.w,
                 )
               : CachedNetworkImage(
-                  imageUrl: iconAsset.startsWith('assets/') ? iconAsset.replaceFirst('assets/', 'https://sixpack30.b-cdn.net/') : iconAsset,
+                  imageUrl: iconAsset,
                   width: 16.w,
                   height: 16.w,
                   color: const Color(0xFF06C44F),

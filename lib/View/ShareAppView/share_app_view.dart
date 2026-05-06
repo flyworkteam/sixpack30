@@ -136,32 +136,32 @@ class ShareAppView extends ConsumerWidget {
           Positioned(
             top: 20.h,
             left: 15.w,
-            child: _buildAvatar('assets/images/avatar_1.png', 48.w),
+            child: _buildAvatar('https://sixpack30.b-cdn.net/images/avatar_1.png', 48.w),
           ),
           Positioned(
             top: 15.h,
             right: 30.w,
-            child: _buildAvatar('assets/images/avatar_2.png', 40.w),
+            child: _buildAvatar('https://sixpack30.b-cdn.net/images/avatar_2.png', 40.w),
           ),
           Positioned(
             top: 85.h,
             left: 5.w,
-            child: _buildAvatar('assets/images/avatar_3.png', 36.w),
+            child: _buildAvatar('https://sixpack30.b-cdn.net/images/avatar_3.png', 36.w),
           ),
           Positioned(
             bottom: 25.h,
             left: 20.w,
-            child: _buildAvatar('assets/images/avatar_4.png', 42.w),
+            child: _buildAvatar('https://sixpack30.b-cdn.net/images/avatar_4.png', 42.w),
           ),
           Positioned(
             bottom: 30.h,
             right: 80.w,
-            child: _buildAvatar('assets/images/avatar_5.png', 46.w),
+            child: _buildAvatar('https://sixpack30.b-cdn.net/images/avatar_5.png', 46.w),
           ),
           Positioned(
             bottom: 60.h,
             right: 5.w,
-            child: _buildAvatar('assets/images/avatar_6.png', 44.w),
+            child: _buildAvatar('https://sixpack30.b-cdn.net/images/avatar_6.png', 44.w),
           ),
         ],
       ),
@@ -185,7 +185,7 @@ class ShareAppView extends ConsumerWidget {
       ),
       clipBehavior: Clip.antiAlias,
       child: CachedNetworkImage(
-        imageUrl: asset.startsWith('assets/') ? asset.replaceFirst('assets/', 'https://sixpack30.b-cdn.net/') : asset,
+        imageUrl: asset,
         fit: BoxFit.cover,
         errorWidget: (context, url, error) => Icon(Icons.person, size: size * 0.6, color: Colors.white),
       ),
@@ -296,10 +296,10 @@ class ShareAppView extends ConsumerWidget {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          _buildSocialItem('Instagram', 'assets/images/mdi_instagram.png', 71.59.w),
-          _buildSocialItem('Linkedln', 'assets/images/mdi_linkedin.png', 52.22.w),
-          _buildSocialItem('WhatsApp', 'assets/images/ri_whatsapp-fill.png', 71.59.w),
-          _buildSocialItem('Twitter', 'assets/images/prime_twitter.png', 52.22.w),
+          _buildSocialItem('Instagram', 'https://sixpack30.b-cdn.net/images/mdi_instagram.png', 71.59.w),
+          _buildSocialItem('Linkedln', 'https://sixpack30.b-cdn.net/images/mdi_linkedin.png', 52.22.w),
+          _buildSocialItem('WhatsApp', 'https://sixpack30.b-cdn.net/images/ri_whatsapp-fill.png', 71.59.w),
+          _buildSocialItem('Twitter', 'https://sixpack30.b-cdn.net/images/prime_twitter.png', 52.22.w),
         ],
       ),
     );
@@ -319,7 +319,7 @@ class ShareAppView extends ConsumerWidget {
             ),
             child: Center(
               child: CachedNetworkImage(
-                imageUrl: imagePath.startsWith('assets/') ? imagePath.replaceFirst('assets/', 'https://sixpack30.b-cdn.net/') : imagePath,
+                imageUrl: imagePath,
                 width: 28.64.w,
                 height: 28.64.w,
                 color: const Color(0xFF212121),

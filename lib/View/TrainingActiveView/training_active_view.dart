@@ -18,6 +18,7 @@ import '../../Core/Services/workout_progress_service.dart';
 import '../../Riverpod/Controllers/workout_progress_provider.dart';
 import '../../Riverpod/Controllers/workout_provider.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import '../../Core/Routes/app_routes.dart';
 
 class TrainingActiveView extends ConsumerStatefulWidget {
   final String gender;
@@ -281,8 +282,7 @@ class _TrainingActiveViewState extends ConsumerState<TrainingActiveView> {
       await ref.read(workoutProgressProvider.notifier).clearProgress();
       
       if (mounted) {
-        Navigator.of(context).pop();
-        Navigator.of(context).popUntil((route) => route.isFirst || route.settings.name == '/');
+        Navigator.of(context).pushNamedAndRemoveUntil(AppRoutes.home, (route) => false);
       }
     }
   }
@@ -392,7 +392,7 @@ class _TrainingActiveViewState extends ConsumerState<TrainingActiveView> {
                     _buildControlsRow(),
                     const Spacer(flex: 2),
                     _buildBottomStatusRow(langCode),
-                    SizedBox(height: 10.h),
+                    SizedBox(height: 10.h + MediaQuery.of(context).padding.bottom),
                   ],
                 ),
               ),
