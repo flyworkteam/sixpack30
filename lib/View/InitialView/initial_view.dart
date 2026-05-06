@@ -85,7 +85,7 @@ class _InitialViewState extends ConsumerState<InitialView> {
               clipBehavior: Clip.antiAlias,
               child: CachedNetworkImage(imageUrl: 'https://sixpack30.b-cdn.net/images/logo.png',
                 fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) => Center(
+                errorWidget: (context, url, error) => Center(
                   child: Text(
                     "Logo",
                     style: TextStyle(color: Colors.white, fontSize: 24.sp),

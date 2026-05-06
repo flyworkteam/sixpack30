@@ -66,7 +66,7 @@ class _MotivationViewState extends ConsumerState<MotivationView> {
               height: 500.h,
               child: CachedNetworkImage(imageUrl: 'https://sixpack30.b-cdn.net/images/confetti_bg.png',
                 fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) => const SizedBox(),
+                errorWidget: (context, url, error) => const SizedBox(),
               ),
             ),
             Align(

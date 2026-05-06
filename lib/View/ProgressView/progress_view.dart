@@ -314,7 +314,7 @@ class _ProgressViewState extends ConsumerState<ProgressView> {
               width: 127.8.w,
               height: 225.38.h,
               fit: BoxFit.contain,
-              errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+              errorWidget: (context, url, error) => const SizedBox.shrink(),
             ),
           ),
         ],
@@ -1258,14 +1258,14 @@ class _ProgressViewState extends ConsumerState<ProgressView> {
                     valueColor: AlwaysStoppedAnimation<Color>(progressColor),
                   ),
                 ),
-                Image.asset(
-                  iconAsset,
+                CachedNetworkImage(
+                  imageUrl: iconAsset.startsWith('assets/') ? iconAsset.replaceFirst('assets/', 'https://sixpack30.b-cdn.net/') : iconAsset,
                   width: 20.w,
                   height: 20.h,
                   color: iconColor,
                   fit: BoxFit.contain,
-                  errorBuilder: (_, __, ___) =>
-                      SizedBox(width: 20.w, height: 20.h),
+                  errorWidget: (context, url, error) =>
+                      const Icon(Icons.fitness_center),
                 ),
               ],
             ),

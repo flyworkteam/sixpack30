@@ -64,7 +64,7 @@ class _TrainingDetailViewState extends ConsumerState<TrainingDetailView> {
                   CachedNetworkImage(imageUrl: 'https://sixpack30.b-cdn.net/images/detayantrenman.jpg',
                     fit: BoxFit.cover,
                     alignment: Alignment.topCenter,
-                    errorBuilder: (context, error, stackTrace) => Container(
+                    errorWidget: (context, url, error) => Container(
                       color: const Color(0xFF323232),
                       child: Icon(
                         Icons.image_not_supported,
@@ -323,17 +323,17 @@ class _TrainingDetailViewState extends ConsumerState<TrainingDetailView> {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           iconAsset.endsWith('.svg')
-              ? SvgPicture.asset(
-                  iconAsset,
+              ? SvgPicture.network(
+                  iconAsset.startsWith('assets/') ? iconAsset.replaceFirst('assets/', 'https://sixpack30.b-cdn.net/') : iconAsset,
                   width: 16.w,
                   height: 16.w,
                 )
-              : Image.asset(
-                  iconAsset,
+              : CachedNetworkImage(
+                  imageUrl: iconAsset.startsWith('assets/') ? iconAsset.replaceFirst('assets/', 'https://sixpack30.b-cdn.net/') : iconAsset,
                   width: 16.w,
                   height: 16.w,
                   color: const Color(0xFF06C44F),
-                  errorBuilder: (context, error, stackTrace) => Icon(
+                  errorWidget: (context, url, error) => Icon(
                     iconData,
                     size: 14.sp,
                     color: const Color(0xFF06C44F),

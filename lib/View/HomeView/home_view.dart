@@ -524,7 +524,7 @@ class _HomeViewState extends ConsumerState<HomeView> {
                   width: 127.8.w,
                   height: 225.38.h,
                   fit: BoxFit.contain,
-                  errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+                  errorWidget: (context, url, error) => const SizedBox.shrink(),
                 ),
               ),
             ),
@@ -848,20 +848,14 @@ class _HomeViewState extends ConsumerState<HomeView> {
                 top: 9.h,
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(10.r),
-                  child: Container(
-                    width: 97.w,
-                    height: 86.h,
-                    color: const Color(0xFFF0F0F0),
-                    child: CachedNetworkImage(imageUrl: imagePath, 
-                            fit: BoxFit.cover,
-                            placeholder: (context, url) => const Center(child: CircularProgressIndicator(strokeWidth: 2)),
-                            errorWidget: (context, url, error) => const Icon(Icons.fitness_center),
-                          ) => const Icon(Icons.fitness_center),
-                          ),
+                    child: CachedNetworkImage(
+                      imageUrl: imagePath,
+                      fit: BoxFit.cover,
+                      placeholder: (context, url) => const Center(child: CircularProgressIndicator(strokeWidth: 2)),
+                      errorWidget: (context, url, error) => const Icon(Icons.fitness_center),
                   ),
                 ),
               ),
-              
               Positioned(
                 left: 118.w,
                 top: 9.h,
