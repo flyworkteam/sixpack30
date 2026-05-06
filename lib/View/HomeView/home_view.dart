@@ -117,7 +117,7 @@ class _HomeViewState extends ConsumerState<HomeView> {
                           _buildSectionTitle(Translations.translate('completed_days', langCode)),
                           SizedBox(height: 15.h),
                           _buildCompletedDays(),
-                          if (!isPremium) ...[
+                          if (!isPremiumUser) ...[
                             SizedBox(height: 30.h),
                             _buildPremiumBanner(),
                           ],
@@ -263,38 +263,6 @@ class _HomeViewState extends ConsumerState<HomeView> {
               ),
             ),
           ),
-          if (isPremium) ...[
-            SizedBox(width: 8.w),
-            Container(
-              width: 110.w,
-              height: 32.h,
-              decoration: BoxDecoration(
-                color: const Color(0xFFEFCE37),
-                borderRadius: BorderRadius.circular(6.r),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  SvgPicture.asset(
-                    'assets/images/Crown_Premium.svg',
-                    width: 24.sp,
-                    height: 24.sp,
-                    colorFilter: const ColorFilter.mode(Color(0xFFFDFDFD), BlendMode.srcIn),
-                  ),
-                  SizedBox(width: 4.w),
-                  Text(
-                    'Premium',
-                    style: GoogleFonts.montserrat(
-                      fontSize: 14.sp,
-                      fontWeight: FontWeight.w600,
-                      color: const Color(0xFFFDFDFD),
-                      height: 1.0,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
         ],
       ),
     );

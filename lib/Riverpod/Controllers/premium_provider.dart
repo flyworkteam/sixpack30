@@ -9,47 +9,30 @@ import 'package:six_pack_30/Core/Network/api_service.dart';
 import 'package:six_pack_30/Core/Network/api_service_provider.dart';
 
 final premiumProvider = StateNotifierProvider<PremiumNotifier, AsyncValue<bool>>((ref) {
-  final authState = ref.watch(authControllerProvider);
-  final userProfile = ref.watch(userProfileProvider).value;
-  final apiService = ref.watch(apiServiceProvider);
+  final notifier = PremiumNotifier(ref);
   
-  final notifier = PremiumNotifier(apiService, ref);
-  
-  // Listen to auth changes to log in/out of RevenueCat
-  authState.whenData((user) {
-    if (user != null) {
-      notifier.logIn(user.uid);
-    } else {
-      notifier.logOut();
-    }
+  ref.listen(authControllerProvider, (previous, next) {
+    next.whenData((user) {
+      if (user != null) {
+        notifier.logIn(user.uid);
+      } else {
+        notifier.logOut();
+      }
+    });
   });
-  
-  // If database says user is premium, we prioritize that or combine it.
-  if (userProfile?.isPremium == true) {
-    notifier.setPremiumFromDb(true);
-  } else {
-    // If DB doesn't say premium, we still rely on RevenueCat check which happens inside notifier
-  }
   
   return notifier;
 });
 
 class PremiumNotifier extends StateNotifier<AsyncValue<bool>> {
-  final ApiService _apiService;
   final Ref _ref;
-  bool _isPremiumFromDb = false;
+  final ApiService _apiService = ApiService();
 
-  PremiumNotifier(this._apiService, this._ref) : super(const AsyncValue.loading()) {
+  PremiumNotifier(this._ref) : super(const AsyncValue.loading()) {
     initPlatformState();
   }
 
-  void setPremiumFromDb(bool value) {
-    _isPremiumFromDb = value;
-    // If DB is premium, immediately update state to true
-    if (value && (state.value != true)) {
-      state = const AsyncValue.data(true);
-    }
-  }
+  bool get _isPremiumFromDb => _ref.read(userProfileProvider).value?.isPremium ?? false;
 
   Future<void> initPlatformState() async {
     try {
@@ -77,7 +60,6 @@ class PremiumNotifier extends StateNotifier<AsyncValue<bool>> {
   Future<void> logOut() async {
     try {
       await Purchases.logOut();
-      _isPremiumFromDb = false;
       await updatePurchaseStatus();
     } catch (e) {
       if (kDebugMode) print('RevenueCat LogOut Error: $e');
