@@ -155,7 +155,7 @@ class _HomeViewState extends ConsumerState<HomeView> {
     final String firebaseEmailPart = firebaseUser?.email != null 
         ? (firebaseUser!.email!.contains('privaterelay.appleid.com') ? '' : firebaseUser.email!.split('@').first) 
         : '';
-    final String displayName = isLoading
+    final String rawDisplayName = isLoading
         ? Translations.translate('loading', langCode)
         : (user?.name != null && user!.name!.trim().isNotEmpty
             ? user.name!
@@ -164,6 +164,10 @@ class _HomeViewState extends ConsumerState<HomeView> {
                 : (firebaseEmailPart.isNotEmpty 
                     ? firebaseEmailPart 
                     : 'Kullanıcı')));
+                    
+    final String displayName = rawDisplayName.length > 12 
+        ? '${rawDisplayName.substring(0, 12)}...' 
+        : rawDisplayName;
         
     final String rawGender = (user?.questionnaire?.gender ?? '').toLowerCase().trim();
     final bool isMale = rawGender.contains('male') || 
