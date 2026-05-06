@@ -303,7 +303,8 @@ class _TrainingDetailViewState extends ConsumerState<TrainingDetailView> {
               ),
             ),
           ),
-        ],
+          ],
+        ),
       ),
     );
   }
