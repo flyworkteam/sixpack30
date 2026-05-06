@@ -71,7 +71,7 @@ class _ProgressViewState extends ConsumerState<ProgressView> {
           SingleChildScrollView(
             physics: const ClampingScrollPhysics(),
             padding: EdgeInsets.only(
-              top: MediaQuery.of(context).padding.top + 45.h,
+              top: 20.h,
               bottom: 120.h,
             ),
             child: statsAsync.when(
@@ -289,8 +289,8 @@ class _ProgressViewState extends ConsumerState<ProgressView> {
                                   padding: EdgeInsets.only(left: 10.w),
                                   child: _buildWorkoutBadge(
                                     workout != null
-                                        ? '${workout.calories ?? 200} Kcal'
-                                        : '250 Kcal',
+                                        ? '${workout.calories ?? 200} ${Translations.translate('kcal', langCode)}'
+                                        : '250 ${Translations.translate('kcal', langCode)}',
                                     'assets/images/Calorie_Badge_Icon.svg',
                                   ),
                                 ),
@@ -566,7 +566,7 @@ class _ProgressViewState extends ConsumerState<ProgressView> {
                 width: 164.w,
                 label: Translations.translate('calories_burned', langCode),
                 labelColor: const Color(0xFFEEEEEE),
-                value: '$totalKcal Kcal',
+                value: '$totalKcal ${Translations.translate('kcal', langCode)}',
                 valueColor: Colors.white,
                 isGreen: true,
                 overlayLeft: 122,
@@ -807,7 +807,7 @@ class _ProgressViewState extends ConsumerState<ProgressView> {
           SizedBox(height: 15.h),
           _buildListCard(
             label: Translations.translate('total_burned_calories', langCode),
-            value: stats == null ? '0 Kcal' : '${stats.totalKcal.toInt()} Kcal',
+            value: stats == null ? '0 ${Translations.translate('kcal', langCode)}' : '${stats.totalKcal.toInt()} ${Translations.translate('kcal', langCode)}',
             iconWidget: SizedBox(
               width: 54.w,
               height: 54.h,
@@ -851,10 +851,10 @@ class _ProgressViewState extends ConsumerState<ProgressView> {
 
     final int displayBpm = isHealthConnected && stats.bpm > 0 ? stats.bpm : (isHealthConnected ? 0 : 82);
     String displaySleep = stats.sleepDuration
-        .replaceAll('Saat', Translations.translate('hours', langCode))
-        .replaceAll('Dakika', Translations.translate('minutes', langCode));
+        .replaceAll(Translations.translate('hours', 'tr'), Translations.translate('hours', langCode))
+        .replaceAll(Translations.translate('minutes', 'tr'), Translations.translate('minutes', langCode));
 
-    if (!isHealthConnected && (stats.sleepDuration == '0 Saat 0 Dakika' || stats.sleepDuration == '0 Saat')) {
+    if (!isHealthConnected && (stats.sleepDuration == '0 ${Translations.translate('hours', 'tr')} 0 ${Translations.translate('minutes', 'tr')}' || stats.sleepDuration == '0 ${Translations.translate('hours', 'tr')}')) {
       displaySleep = '7 ${Translations.translate('hours', langCode)} 20 ${Translations.translate('minutes', langCode)}';
     }
 
@@ -1399,10 +1399,10 @@ class _ProgressViewState extends ConsumerState<ProgressView> {
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      _buildCustomPopupItem('Günlük 10 bin', 10000, isSelected: _selectedStepGoalValue == 10000),
-                      _buildCustomPopupItem('Günlük 15 bin', 15000, isSelected: _selectedStepGoalValue == 15000),
-                      _buildCustomPopupItem('Günlük 20 bin', 20000, isSelected: _selectedStepGoalValue == 20000),
-                      _buildCustomPopupItem('Günlük 30 bin', 30000, isSelected: _selectedStepGoalValue == 30000),
+                      _buildCustomPopupItem(Translations.translate('daily_goal', langCode).replaceAll('{count}', '10.000'), 10000, isSelected: _selectedStepGoalValue == 10000),
+                      _buildCustomPopupItem(Translations.translate('daily_goal', langCode).replaceAll('{count}', '15.000'), 15000, isSelected: _selectedStepGoalValue == 15000),
+                      _buildCustomPopupItem(Translations.translate('daily_goal', langCode).replaceAll('{count}', '20.000'), 20000, isSelected: _selectedStepGoalValue == 20000),
+                      _buildCustomPopupItem(Translations.translate('daily_goal', langCode).replaceAll('{count}', '30.000'), 30000, isSelected: _selectedStepGoalValue == 30000),
                     ],
                   ),
                 ),

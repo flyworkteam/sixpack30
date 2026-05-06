@@ -90,7 +90,7 @@ class _HomeViewState extends ConsumerState<HomeView> {
                   : SingleChildScrollView(
                       key: const ValueKey('HomeTab'),
                       physics: const ClampingScrollPhysics(),
-                      padding: EdgeInsets.only(bottom: 80.h, top: MediaQuery.of(context).padding.top + 45.h),
+                      padding: EdgeInsets.only(bottom: 80.h, top: 20.h),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -218,15 +218,23 @@ class _HomeViewState extends ConsumerState<HomeView> {
                   letterSpacing: -0.132.sp,
                 ),
               ),
-              Text(
-                displayName,
-                style: GoogleFonts.montserrat(
-                  fontSize: 20.sp,
-                  fontWeight: FontWeight.w700,
-                  color: const Color(0xFF0D0D0D),
-                  height: 1.5,
-                  letterSpacing: -0.22.sp,
-                ),
+              Row(
+                children: [
+                  Text(
+                    displayName,
+                    style: GoogleFonts.montserrat(
+                      fontSize: 20.sp,
+                      fontWeight: FontWeight.w700,
+                      color: const Color(0xFF0D0D0D),
+                      height: 1.5,
+                      letterSpacing: -0.22.sp,
+                    ),
+                  ),
+                  if (isPremiumUser) ...[
+                    SizedBox(width: 8.w),
+                    _buildPremiumBadge(langCode),
+                  ],
+                ],
               ),
             ],
           ),
@@ -490,7 +498,7 @@ class _HomeViewState extends ConsumerState<HomeView> {
                                   Padding(
                                     padding: EdgeInsets.only(left: 10.w),
                                     child: _buildWorkoutBadge(
-                                      '$kcal Kcal',
+                                      '$kcal ${Translations.translate('kcal', langCode)}',
                                       'assets/images/Calorie_Badge_Icon.svg',
                                     ),
                                   ),
@@ -1668,7 +1676,7 @@ class _HomeViewState extends ConsumerState<HomeView> {
               final String activityCount = userStats == null ? '0' : (userStats.totalActivity == 0 ? '$completedCount' : '${userStats.totalActivity}');
               
               final int totalKcal = userStats?.totalKcal.toInt() ?? 0;
-              final String calories = userStats == null ? '0 Kcal' : '$totalKcal Kcal';
+              final String calories = userStats == null ? '0 ${Translations.translate('kcal', langCode)}' : '$totalKcal ${Translations.translate('kcal', langCode)}';
               
               final double weightDiff = userStats != null ? (userStats.initialWeight - userStats.weight) : 0.0;
               final double displayWeightDiff = weightDiff < 0 ? 0 : weightDiff;
@@ -1956,6 +1964,37 @@ class _HomeViewState extends ConsumerState<HomeView> {
             ),
           );
         }),
+      ),
+    );
+  }
+
+  Widget _buildPremiumBadge(String langCode) {
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+      decoration: BoxDecoration(
+        color: const Color(0xFFEFCE37),
+        borderRadius: BorderRadius.circular(6.r),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          SvgPicture.asset(
+            'assets/images/Crown_Premium.svg',
+            width: 14.sp,
+            height: 14.sp,
+            colorFilter: const ColorFilter.mode(Color(0xFFFDFDFD), BlendMode.srcIn),
+          ),
+          SizedBox(width: 4.w),
+          Text(
+            Translations.translate('premium', langCode),
+            style: GoogleFonts.montserrat(
+              fontSize: 10.sp,
+              fontWeight: FontWeight.w600,
+              color: const Color(0xFFFDFDFD),
+              height: 1.0,
+            ),
+          ),
+        ],
       ),
     );
   }

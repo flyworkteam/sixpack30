@@ -2,6 +2,10 @@
 class Translations {
   static const Map<String, Map<String, String>> data = {
     'tr': {
+      'kcal': 'Kcal',
+      'general_workout': 'Genel Antrenman',
+      'daily_goal': 'Günlük {count}',
+      'premium': 'Premium',
       'app_title': 'Six Pack 30',
       'welcome_back': 'Hoşgeldin',
       'language_preferences': 'Dil Tercihleri',
@@ -236,6 +240,10 @@ class Translations {
 
     },
     'en': {
+      'kcal': 'Kcal',
+      'general_workout': 'General Workout',
+      'daily_goal': 'Daily {count}',
+      'premium': 'Premium',
       'app_title': 'Six Pack 30',
       'welcome_back': 'Welcome',
       'language_preferences': 'Language Preferences',
@@ -471,6 +479,10 @@ class Translations {
 
     },
     'es': {
+      'kcal': 'Kcal',
+      'general_workout': 'Entrenamiento General',
+      'daily_goal': 'Diario {count}',
+      'premium': 'Premium',
       'app_title': 'Six Pack 30',
       'welcome_back': 'Bienvenido',
       'language_preferences': 'Preferencias de Idioma',
@@ -705,6 +717,10 @@ class Translations {
 
     },
     'pt': {
+      'kcal': 'Kcal',
+      'general_workout': 'Treino Geral',
+      'daily_goal': 'Diário {count}',
+      'premium': 'Premium',
       'app_title': 'Six Pack 30',
       'welcome_back': 'Bem-vindo',
       'language_preferences': 'Preferências de Idioma',
@@ -939,6 +955,10 @@ class Translations {
 
     },
     'fr': {
+      'kcal': 'Kcal',
+      'general_workout': 'Entraînement Général',
+      'daily_goal': 'Quotidien {count}',
+      'premium': 'Premium',
       'app_title': 'Six Pack 30',
       'welcome_back': 'Bienvenue',
       'language_preferences': 'Préférences de Langue',
@@ -1173,6 +1193,10 @@ class Translations {
 
     },
     'it': {
+      'kcal': 'Kcal',
+      'general_workout': 'Allenamento Generale',
+      'daily_goal': 'Quotidiano {count}',
+      'premium': 'Premium',
       'app_title': 'Six Pack 30',
       'welcome_back': 'Benvenuto',
       'language_preferences': 'Preferenze Lingua',
@@ -1408,6 +1432,10 @@ class Translations {
 
     },
     'de': {
+      'kcal': 'Kcal',
+      'general_workout': 'Allgemeines Training',
+      'daily_goal': 'Täglich {count}',
+      'premium': 'Premium',
       'app_title': 'Six Pack 30',
       'welcome_back': 'Willkommen',
       'language_preferences': 'Spracheinstellungen',
@@ -1584,6 +1612,10 @@ class Translations {
       'reps_sets_progress': 'SATZ {current} VON {total}',
     },
     'ru': {
+      'kcal': 'Ккал',
+      'general_workout': 'Общая тренировка',
+      'daily_goal': 'Ежедневно {count}',
+      'premium': 'Премиум',
       'app_title': 'Six Pack 30',
       'welcome_back': 'Добро пожаловать',
       'language_preferences': 'Языковые настройки',
@@ -1822,6 +1854,10 @@ class Translations {
 
     },
     'ja': {
+      'kcal': 'Kcal',
+      'general_workout': '一般トレーニング',
+      'daily_goal': '毎日 {count}',
+      'premium': 'プレミアム',
       'app_title': 'Six Pack 30',
       'welcome_back': 'おかえりなさい',
       'language_preferences': '言語設定',
@@ -2056,6 +2092,10 @@ class Translations {
 
     },
     'ko': {
+      'kcal': 'Kcal',
+      'general_workout': '일반 운동',
+      'daily_goal': '매일 {count}',
+      'premium': '프리미엄',
       'app_title': 'Six Pack 30',
       'welcome_back': '환영합니다',
       'language_preferences': '언어 설정',
@@ -2290,6 +2330,10 @@ class Translations {
 
     },
     'hi': {
+      'kcal': 'Kcal',
+      'general_workout': 'सामान्य कसरत',
+      'daily_goal': 'दैनिक {count}',
+      'premium': 'प्रीमियम',
       'app_title': 'Six Pack 30',
       'welcome_back': 'वापसी पर स्वागत है',
       'language_preferences': 'भाषा प्राथमिकताएँ',
@@ -2534,6 +2578,7 @@ class Translations {
     if (langCode == 'tr') return title;
 
     final Map<String, String> titleToKey = {
+      'Genel Antrenman': 'general_workout',
       'Aktivasyon': 'activation',
       'Kontrol': 'control',
       'Yakıcı': 'burner',

@@ -84,6 +84,14 @@ class PremiumNotifier extends StateNotifier<AsyncValue<bool>> {
     }
   }
 
+  bool _checkPremiumEntitlement(CustomerInfo customerInfo) {
+    return customerInfo.entitlements.active.containsKey('premium') || 
+           customerInfo.entitlements.active.containsKey('Premium') ||
+           customerInfo.entitlements.active.containsKey('pro') ||
+           customerInfo.entitlements.active.containsKey('SixPack30 Pro') ||
+           customerInfo.entitlements.active.containsKey('all_access');
+  }
+
   Future<void> updatePurchaseStatus() async {
     try {
       if (_isPremiumFromDb) {
@@ -92,10 +100,7 @@ class PremiumNotifier extends StateNotifier<AsyncValue<bool>> {
       }
 
       CustomerInfo customerInfo = await Purchases.getCustomerInfo();
-      final bool isPremiumRC = customerInfo.entitlements.active.containsKey('premium') || 
-                               customerInfo.entitlements.active.containsKey('Premium') ||
-                               customerInfo.entitlements.active.containsKey('pro') ||
-                               customerInfo.entitlements.active.containsKey('all_access');
+      final bool isPremiumRC = _checkPremiumEntitlement(customerInfo);
       
       // Sync with backend if RC says premium but DB is not yet aware
       if (isPremiumRC && !_isPremiumFromDb) {
@@ -130,10 +135,10 @@ class PremiumNotifier extends StateNotifier<AsyncValue<bool>> {
     try {
       state = const AsyncValue.loading();
       CustomerInfo customerInfo = await Purchases.purchasePackage(package);
-      final bool isPremium = customerInfo.entitlements.active.containsKey('premium') || 
-                             customerInfo.entitlements.active.containsKey('Premium');
+      final bool isPremium = _checkPremiumEntitlement(customerInfo);
       
       if (isPremium) {
+        state = const AsyncValue.data(true); // Update immediately
         final user = FirebaseAuth.instance.currentUser;
         if (user != null) {
           final token = await user.getIdToken();
@@ -142,9 +147,10 @@ class PremiumNotifier extends StateNotifier<AsyncValue<bool>> {
             _ref.invalidate(userProfileProvider);
           }
         }
+      } else {
+        state = AsyncValue.data(_isPremiumFromDb);
       }
       
-      state = AsyncValue.data(isPremium || _isPremiumFromDb);
       return isPremium;
     } catch (e) {
       await updatePurchaseStatus();
@@ -156,10 +162,10 @@ class PremiumNotifier extends StateNotifier<AsyncValue<bool>> {
     try {
       state = const AsyncValue.loading();
       CustomerInfo customerInfo = await Purchases.restorePurchases();
-      final bool isPremium = customerInfo.entitlements.active.containsKey('premium') || 
-                             customerInfo.entitlements.active.containsKey('Premium');
+      final bool isPremium = _checkPremiumEntitlement(customerInfo);
       
       if (isPremium) {
+        state = const AsyncValue.data(true); // Update immediately
         final user = FirebaseAuth.instance.currentUser;
         if (user != null) {
           final token = await user.getIdToken();
@@ -168,9 +174,9 @@ class PremiumNotifier extends StateNotifier<AsyncValue<bool>> {
             _ref.invalidate(userProfileProvider);
           }
         }
+      } else {
+        state = AsyncValue.data(_isPremiumFromDb);
       }
-      
-      state = AsyncValue.data(isPremium || _isPremiumFromDb);
     } catch (e) {
       await updatePurchaseStatus();
     }
