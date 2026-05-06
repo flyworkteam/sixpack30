@@ -166,7 +166,7 @@ class _HomeViewState extends ConsumerState<HomeView> {
                     : 'Kullanıcı')));
                     
     final String displayName = rawDisplayName.length > 12 
-        ? '${rawDisplayName.substring(0, 12)}...' 
+        ? rawDisplayName.substring(0, 12) 
         : rawDisplayName;
         
     final String rawGender = (user?.questionnaire?.gender ?? '').toLowerCase().trim();
