@@ -165,8 +165,8 @@ class _HomeViewState extends ConsumerState<HomeView> {
                     ? firebaseEmailPart 
                     : 'Kullanıcı')));
                     
-    final String displayName = rawDisplayName.length > 12 
-        ? rawDisplayName.substring(0, 12) 
+    final String displayName = rawDisplayName.length > 10 
+        ? rawDisplayName.substring(0, 10) 
         : rawDisplayName;
         
     final String rawGender = (user?.questionnaire?.gender ?? '').toLowerCase().trim();
