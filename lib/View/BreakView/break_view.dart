@@ -66,8 +66,7 @@ class _BreakViewState extends ConsumerState<BreakView> with SingleTickerProvider
                     width: 70.w,
                     height: 70.w,
                     alignment: Alignment.center,
-                    child: SvgPicture.asset(
-                      'assets/images/rest_muscles_icon.svg',
+                    child: SvgPicture.network('https://sixpack30.b-cdn.net/images/rest_muscles_icon.svg',
                       width: 70.w,
                       height: 70.w,
                     ),

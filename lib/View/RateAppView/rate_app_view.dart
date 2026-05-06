@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -111,8 +112,7 @@ class _RateAppViewState extends ConsumerState<RateAppView> {
                                   top: 23.h,
                                   child: ClipRRect(
                                     borderRadius: BorderRadius.circular(3.r),
-                                    child: Image.asset(
-                                      'assets/images/agirlik.png',
+                                    child: CachedNetworkImage(imageUrl: 'https://sixpack30.b-cdn.net/images/agirlik.png',
                                       width: 200.w,
                                       height: 221.h,
                                       fit: BoxFit.cover,
@@ -165,8 +165,7 @@ class _RateAppViewState extends ConsumerState<RateAppView> {
                                 },
                                 child: Padding(
                                   padding: EdgeInsets.symmetric(horizontal: 2.w),
-                                  child: Image.asset(
-                                    'assets/images/yildiz.png',
+                                  child: CachedNetworkImage(imageUrl: 'https://sixpack30.b-cdn.net/images/yildiz.png',
                                     width: 44.w,
                                     height: 44.w,
                                     color: isSelected

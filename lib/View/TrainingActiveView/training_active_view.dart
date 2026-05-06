@@ -17,6 +17,7 @@ import '../MotivationView/motivation_view.dart';
 import '../../Core/Services/workout_progress_service.dart';
 import '../../Riverpod/Controllers/workout_progress_provider.dart';
 import '../../Riverpod/Controllers/workout_provider.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 class TrainingActiveView extends ConsumerStatefulWidget {
   final String gender;
@@ -602,31 +603,14 @@ class _TrainingActiveViewState extends ConsumerState<TrainingActiveView> {
                   children: [
                     ClipRRect(
                       borderRadius: BorderRadius.circular(3.r),
-                      child: exercises[currentIndex + 1]
-                              .getImagePath(widget.gender)
-                              .startsWith('http')
-                          ? Image.network(
-                              exercises[currentIndex + 1]
-                                  .getImagePath(widget.gender),
-                              width: 38.w,
-                              height: 28.h,
-                              fit: BoxFit.cover,
-                              errorBuilder: (_, __, ___) => Container(
-                                  width: 38.w,
-                                  height: 28.h,
-                                  color: Colors.grey[300]),
-                            )
-                          : Image.asset(
-                              exercises[currentIndex + 1]
-                                  .getImagePath(widget.gender),
-                              width: 38.w,
-                              height: 28.h,
-                              fit: BoxFit.cover,
-                              errorBuilder: (_, __, ___) => Container(
-                                  width: 38.w,
-                                  height: 28.h,
-                                  color: Colors.grey[300]),
-                            ),
+                      child: CachedNetworkImage(
+                        imageUrl: exercises[currentIndex + 1].getImagePath(widget.gender),
+                        width: 38.w,
+                        height: 28.h,
+                        fit: BoxFit.cover,
+                        placeholder: (context, url) => Container(width: 38.w, height: 28.h, color: Colors.grey[300]),
+                        errorWidget: (context, url, error) => Container(width: 38.w, height: 28.h, color: Colors.grey[300]),
+                      ),
                     ),
                     SizedBox(width: 4.w),
                     Flexible(

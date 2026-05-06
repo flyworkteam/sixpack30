@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -63,8 +64,7 @@ class _MotivationViewState extends ConsumerState<MotivationView> {
               right: 0,
               top: 0,
               height: 500.h,
-              child: Image.asset(
-                'assets/images/confetti_bg.png',
+              child: CachedNetworkImage(imageUrl: 'https://sixpack30.b-cdn.net/images/confetti_bg.png',
                 fit: BoxFit.cover,
                 errorBuilder: (context, error, stackTrace) => const SizedBox(),
               ),

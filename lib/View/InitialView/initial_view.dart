@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -82,8 +83,7 @@ class _InitialViewState extends ConsumerState<InitialView> {
                 borderRadius: BorderRadius.circular(24.r),
               ),
               clipBehavior: Clip.antiAlias,
-              child: Image.asset(
-                'assets/images/logo.png',
+              child: CachedNetworkImage(imageUrl: 'https://sixpack30.b-cdn.net/images/logo.png',
                 fit: BoxFit.cover,
                 errorBuilder: (context, error, stackTrace) => Center(
                   child: Text(

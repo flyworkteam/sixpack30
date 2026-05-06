@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:six_pack_30/Riverpod/Controllers/all_controllers.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 class OnboardView extends ConsumerWidget {
   const OnboardView({super.key});
@@ -240,11 +241,12 @@ class OnboardView extends ConsumerWidget {
     return Stack(
       fit: StackFit.expand,
       children: [
-        Image.asset(
-          imagePath,
+        CachedNetworkImage(
+          imageUrl: imagePath.startsWith('assets/') ? imagePath.replaceFirst('assets/', 'https://sixpack30.b-cdn.net/') : imagePath,
           fit: BoxFit.cover,
           alignment: imageAlignment,
-          errorBuilder: (context, error, stackTrace) => Container(
+          placeholder: (context, url) => Container(color: const Color(0xFF202020)),
+          errorWidget: (context, url, error) => Container(
             color: const Color(0xFF202020),
             child: Center(
               child: Icon(

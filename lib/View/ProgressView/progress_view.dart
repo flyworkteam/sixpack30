@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -309,8 +310,7 @@ class _ProgressViewState extends ConsumerState<ProgressView> {
           Positioned(
             left: 223.w,
             top: -52.h,
-            child: Image.asset(
-              'assets/images/Adsız tasarım-6.png',
+            child: CachedNetworkImage(imageUrl: 'https://sixpack30.b-cdn.net/images/Adsız tasarım-6.png',
               width: 127.8.w,
               height: 225.38.h,
               fit: BoxFit.contain,
@@ -337,16 +337,16 @@ class _ProgressViewState extends ConsumerState<ProgressView> {
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           if (assetPath.endsWith('.svg'))
-            SvgPicture.asset(
-              assetPath,
+            SvgPicture.network(
+              assetPath.startsWith('assets/') ? assetPath.replaceFirst('assets/', 'https://sixpack30.b-cdn.net/') : assetPath,
               width: 12.sp,
               height: 12.sp,
               fit: BoxFit.contain,
               colorFilter: const ColorFilter.mode(Color(0xFF06C44F), BlendMode.srcIn),
             )
           else
-            Image.asset(
-              assetPath,
+            CachedNetworkImage(
+              imageUrl: assetPath.startsWith('assets/') ? assetPath.replaceFirst('assets/', 'https://sixpack30.b-cdn.net/') : assetPath,
               width: 12.sp,
               height: 12.sp,
               fit: BoxFit.contain,
@@ -396,8 +396,7 @@ class _ProgressViewState extends ConsumerState<ProgressView> {
                   children: [
                     Column(
                       children: [
-                        SvgPicture.asset(
-                          'assets/images/Streak_Fire_Icon_Full.svg',
+                        SvgPicture.network('https://sixpack30.b-cdn.net/images/Streak_Fire_Icon_Full.svg',
                           width: 41.45.w,
                           height: 41.45.h,
                         ),
@@ -492,8 +491,7 @@ class _ProgressViewState extends ConsumerState<ProgressView> {
         alignment: Alignment.center,
         children: [
           done
-              ? SvgPicture.asset(
-                  'assets/images/Streak_Tick_Base.svg',
+              ? SvgPicture.network('https://sixpack30.b-cdn.net/images/Streak_Tick_Base.svg',
                   width: 34.w,
                   height: 34.h,
                 )
@@ -571,8 +569,7 @@ class _ProgressViewState extends ConsumerState<ProgressView> {
                 isGreen: true,
                 overlayLeft: 122,
                 overlayTop: 28,
-                overlayWidget: Image.asset(
-                  'assets/images/training_summary_graph.png',
+                overlayWidget: CachedNetworkImage(imageUrl: 'https://sixpack30.b-cdn.net/images/training_summary_graph.png',
                   width: 42.38.w,
                   height: 49.16.h,
                   fit: BoxFit.contain,
@@ -592,8 +589,7 @@ class _ProgressViewState extends ConsumerState<ProgressView> {
                 isGreen: false,
                 overlayLeft: 64,
                 overlayTop: 23,
-                overlayWidget: Image.asset(
-                  'assets/images/cizgiler.png',
+                overlayWidget: CachedNetworkImage(imageUrl: 'https://sixpack30.b-cdn.net/images/cizgiler.png',
                   width: 149.12.w,
                   height: 63.h,
                   fit: BoxFit.contain,
@@ -735,8 +731,7 @@ class _ProgressViewState extends ConsumerState<ProgressView> {
                 child: Stack(
                   alignment: Alignment.center,
                   children: [
-                    Image.asset(
-                      'assets/images/elips.png',
+                    CachedNetworkImage(imageUrl: 'https://sixpack30.b-cdn.net/images/elips.png',
                       width: 61.w,
                       height: 61.h,
                       fit: BoxFit.contain,
@@ -776,8 +771,7 @@ class _ProgressViewState extends ConsumerState<ProgressView> {
               child: Stack(
                 alignment: Alignment.center,
                 children: [
-                  SvgPicture.asset(
-                    'assets/images/Completion_Rate_Track.svg',
+                  SvgPicture.network('https://sixpack30.b-cdn.net/images/Completion_Rate_Track.svg',
                     width: 54.w,
                     height: 54.h,
                   ),
@@ -794,8 +788,7 @@ class _ProgressViewState extends ConsumerState<ProgressView> {
                       ),
                     ),
                   ),
-                  SvgPicture.asset(
-                    'assets/images/Training_Completion_Icon.svg',
+                  SvgPicture.network('https://sixpack30.b-cdn.net/images/Training_Completion_Icon.svg',
                     width: 20.w,
                     height: 20.h,
                     fit: BoxFit.contain,
@@ -817,8 +810,7 @@ class _ProgressViewState extends ConsumerState<ProgressView> {
                     top: 10.h,
                     left: 0,
                     right: 0,
-                    child: SvgPicture.asset(
-                      'assets/images/Total_Calories_Chart.svg',
+                    child: SvgPicture.network('https://sixpack30.b-cdn.net/images/Total_Calories_Chart.svg',
                       width: 54.w,
                       height: 54.h,
                       fit: BoxFit.contain,
@@ -827,8 +819,7 @@ class _ProgressViewState extends ConsumerState<ProgressView> {
                   Positioned(
                     top: 21.h,
                     left: 11.w,
-                    child: SvgPicture.asset(
-                      'assets/images/Calories_Fire_Icon.svg',
+                    child: SvgPicture.network('https://sixpack30.b-cdn.net/images/Calories_Fire_Icon.svg',
                       width: 32.w,
                       height: 32.h,
                       fit: BoxFit.contain,
@@ -913,8 +904,7 @@ class _ProgressViewState extends ConsumerState<ProgressView> {
                   top: 10.h,
                   left: 0,
                   right: 0,
-                  child: SvgPicture.asset(
-                    'assets/images/Total_Calories_Chart.svg',
+                  child: SvgPicture.network('https://sixpack30.b-cdn.net/images/Total_Calories_Chart.svg',
                     width: 54.w,
                     height: 54.h,
                     fit: BoxFit.contain,
@@ -923,8 +913,7 @@ class _ProgressViewState extends ConsumerState<ProgressView> {
                 Positioned(
                   top: 21.h,
                   left: 11.w,
-                  child: SvgPicture.asset(
-                    'assets/images/Sleep_Moon_Icon.svg',
+                  child: SvgPicture.network('https://sixpack30.b-cdn.net/images/Sleep_Moon_Icon.svg',
                     width: 32.w,
                     height: 32.h,
                     fit: BoxFit.contain,
@@ -1142,9 +1131,9 @@ class _ProgressViewState extends ConsumerState<ProgressView> {
               child: Opacity(
                 opacity: 0.8,
                 child: chartAsset.endsWith('.svg')
-                    ? SvgPicture.asset(chartAsset,
+                    ? SvgPicture.network(chartAsset.startsWith('assets/') ? chartAsset.replaceFirst('assets/', 'https://sixpack30.b-cdn.net/') : chartAsset,
                         fit: BoxFit.fitWidth, alignment: Alignment.bottomCenter)
-                    : Image.asset(chartAsset,
+                    : CachedNetworkImage(imageUrl: chartAsset.startsWith('assets/') ? chartAsset.replaceFirst('assets/', 'https://sixpack30.b-cdn.net/') : chartAsset,
                         fit: BoxFit.fitWidth, alignment: Alignment.bottomCenter),
               ),
             ),
@@ -1162,28 +1151,28 @@ class _ProgressViewState extends ConsumerState<ProgressView> {
                         borderRadius: BorderRadius.circular(5.r),
                       ),
                       child: iconAsset.endsWith('.svg')
-                          ? SvgPicture.asset(
-                              iconAsset,
+                          ? SvgPicture.network(
+                              iconAsset.startsWith('assets/') ? iconAsset.replaceFirst('assets/', 'https://sixpack30.b-cdn.net/') : iconAsset,
                               width: 16.w,
                               height: 16.h,
                               fit: BoxFit.contain,
                             )
-                          : Image.asset(
-                              iconAsset,
+                          : CachedNetworkImage(imageUrl: 
+                              iconAsset.startsWith('assets/') ? iconAsset.replaceFirst('assets/', 'https://sixpack30.b-cdn.net/') : iconAsset,
                               width: 16.w,
                               height: 16.h,
                               fit: BoxFit.contain,
                             ),
                     )
                   : (iconAsset.endsWith('.svg')
-                        ? SvgPicture.asset(
-                            iconAsset,
+                        ? SvgPicture.network(
+                            iconAsset.startsWith('assets/') ? iconAsset.replaceFirst('assets/', 'https://sixpack30.b-cdn.net/') : iconAsset,
                             width: 20.w,
                             height: 20.h,
                             fit: BoxFit.contain,
                           )
-                        : Image.asset(
-                            iconAsset,
+                        : CachedNetworkImage(imageUrl: 
+                            iconAsset.startsWith('assets/') ? iconAsset.replaceFirst('assets/', 'https://sixpack30.b-cdn.net/') : iconAsset,
                             width: 20.w,
                             height: 20.h,
                             fit: BoxFit.contain,
@@ -1312,8 +1301,7 @@ class _ProgressViewState extends ConsumerState<ProgressView> {
               ),
               if (showArrow) ...[
                 SizedBox(width: 4.w),
-                SvgPicture.asset(
-                  'assets/images/muscle_increase_arrow.svg',
+                SvgPicture.network('https://sixpack30.b-cdn.net/images/muscle_increase_arrow.svg',
                   width: 12.w,
                   height: 12.h,
                 ),
@@ -1365,8 +1353,7 @@ class _ProgressViewState extends ConsumerState<ProgressView> {
                       strokeCap: StrokeCap.round,
                     ),
                   ),
-                  SvgPicture.asset(
-                    'assets/images/step_walk_icon.svg',
+                  SvgPicture.network('https://sixpack30.b-cdn.net/images/step_walk_icon.svg',
                     width: 22.w,
                     height: 22.h,
                   ),
@@ -1502,8 +1489,7 @@ class _ProgressViewState extends ConsumerState<ProgressView> {
                           final newAmount = (i + 1) * 0.5;
                           ref.read(statsProvider.notifier).updateWater(newAmount);
                         },
-                        child: SvgPicture.asset(
-                          'assets/images/water_glass_icon.svg',
+                        child: SvgPicture.network('https://sixpack30.b-cdn.net/images/water_glass_icon.svg',
                           width: 19.w,
                           height: 19.h,
                           colorFilter: ColorFilter.mode(

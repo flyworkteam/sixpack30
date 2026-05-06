@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import '../../Riverpod/Controllers/locale_provider.dart';
 import '../../Core/Localization/translations.dart';
 class ShareAppView extends ConsumerWidget {
@@ -183,10 +184,10 @@ class ShareAppView extends ConsumerWidget {
         ],
       ),
       clipBehavior: Clip.antiAlias,
-      child: Image.asset(
-        asset,
+      child: CachedNetworkImage(
+        imageUrl: asset.startsWith('assets/') ? asset.replaceFirst('assets/', 'https://sixpack30.b-cdn.net/') : asset,
         fit: BoxFit.cover,
-        errorBuilder: (context, error, stackTrace) => Icon(Icons.person, size: size * 0.6, color: Colors.white),
+        errorWidget: (context, url, error) => Icon(Icons.person, size: size * 0.6, color: Colors.white),
       ),
     );
   }
@@ -317,8 +318,8 @@ class ShareAppView extends ConsumerWidget {
               borderRadius: BorderRadius.circular(6.r),
             ),
             child: Center(
-              child: Image.asset(
-                imagePath,
+              child: CachedNetworkImage(
+                imageUrl: imagePath.startsWith('assets/') ? imagePath.replaceFirst('assets/', 'https://sixpack30.b-cdn.net/') : imagePath,
                 width: 28.64.w,
                 height: 28.64.w,
                 color: const Color(0xFF212121),

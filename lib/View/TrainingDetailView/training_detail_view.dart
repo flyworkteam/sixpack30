@@ -61,8 +61,7 @@ class _TrainingDetailViewState extends ConsumerState<TrainingDetailView> {
               child: Stack(
                 fit: StackFit.expand,
                 children: [
-                  Image.asset(
-                    'assets/images/detayantrenman.jpg',
+                  CachedNetworkImage(imageUrl: 'https://sixpack30.b-cdn.net/images/detayantrenman.jpg',
                     fit: BoxFit.cover,
                     alignment: Alignment.topCenter,
                     errorBuilder: (context, error, stackTrace) => Container(
@@ -120,8 +119,7 @@ class _TrainingDetailViewState extends ConsumerState<TrainingDetailView> {
                               ),
                               GestureDetector(
                                 onTap: () => Navigator.of(context).pop(),
-                                child: SvgPicture.asset(
-                                  'assets/images/detail_close_icon.svg',
+                                child: SvgPicture.network('https://sixpack30.b-cdn.net/images/detail_close_icon.svg',
                                   width: 24.w,
                                   height: 24.w,
                                 ),
@@ -379,28 +377,20 @@ class _TrainingDetailViewState extends ConsumerState<TrainingDetailView> {
             top: 4.h,
             child: ClipRRect(
               borderRadius: BorderRadius.circular(10.r),
-              child: imagePath.startsWith('http')
-                  ? CachedNetworkImage(
-                      imageUrl: imagePath,
-                      width: 81.w,
-                      height: 61.h,
-                      fit: BoxFit.cover,
-                      placeholder: (context, url) => Center(
-                        child: SizedBox(
-                          width: 20.w,
-                          height: 20.w,
-                          child: const CircularProgressIndicator(strokeWidth: 2),
-                        ),
-                      ),
-                      errorWidget: (context, url, error) => _buildPlaceholder(),
-                    )
-                  : Image.asset(
-                      imagePath,
-                      width: 81.w,
-                      height: 61.h,
-                      fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) => _buildPlaceholder(),
-                    ),
+              child: CachedNetworkImage(
+                imageUrl: imagePath,
+                width: 81.w,
+                height: 61.h,
+                fit: BoxFit.cover,
+                placeholder: (context, url) => Center(
+                  child: SizedBox(
+                    width: 20.w,
+                    height: 20.w,
+                    child: const CircularProgressIndicator(strokeWidth: 2),
+                  ),
+                ),
+                errorWidget: (context, url, error) => _buildPlaceholder(),
+              ),
             ),
           ),
           Positioned(

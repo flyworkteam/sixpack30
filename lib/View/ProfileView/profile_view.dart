@@ -91,7 +91,7 @@ class ProfileView extends ConsumerWidget {
                     ? firebaseEmailPart 
                     : Translations.translate('guest', langCode))));
         
-    final String defaultProfileImage = 'assets/images/iconstack.io - (User Circle Regular).png';
+    final String defaultProfileImage = 'https://sixpack30.b-cdn.net/images/iconstack.io - (User Circle Regular).png';
     final bool effectiveIsPremium = isPremium;
 
     return SafeArea(
@@ -181,8 +181,7 @@ class ProfileView extends ConsumerWidget {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        SvgPicture.asset(
-                          'assets/images/Crown_Premium.svg',
+                        SvgPicture.network('https://sixpack30.b-cdn.net/images/Crown_Premium.svg',
                           width: 24.sp,
                           height: 24.sp,
                           colorFilter: const ColorFilter.mode(
@@ -481,13 +480,13 @@ class ProfileView extends ConsumerWidget {
               borderRadius: BorderRadius.circular(3.r),
             ),
             child: iconPath.endsWith('.svg')
-                ? SvgPicture.asset(
-                    iconPath,
+                ? SvgPicture.network(
+                    iconPath.startsWith('assets/') ? iconPath.replaceFirst('assets/', 'https://sixpack30.b-cdn.net/') : iconPath,
                     width: 28.w,
                     height: 28.w,
                   )
-                : Image.asset(
-                    iconPath,
+                : CachedNetworkImage(
+                    imageUrl: iconPath.startsWith('assets/') ? iconPath.replaceFirst('assets/', 'https://sixpack30.b-cdn.net/') : iconPath,
                     width: 20.w,
                     height: 20.h,
                     color: isRed ? Colors.white : Colors.black87,

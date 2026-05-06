@@ -33,7 +33,7 @@ class LoginView extends ConsumerWidget {
                     width: 0.8,
                   ),
                   image: const DecorationImage(
-                    image: AssetImage('assets/images/logo.png'),
+                    image: NetworkImage('https://sixpack30.b-cdn.net/images/logo.png'),
                     fit: BoxFit.cover,
                   ),
                 ),
@@ -204,7 +204,7 @@ class LoginView extends ConsumerWidget {
                   mainAxisAlignment: MainAxisAlignment.center,
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    SvgPicture.asset('assets/images/iconstack.io - (User Outline).svg', width: 18.w, height: 18.h, fit: BoxFit.cover),
+                    SvgPicture.network('https://sixpack30.b-cdn.net/images/iconstack.io - (User Outline).svg', width: 18.w, height: 18.h, fit: BoxFit.cover),
                     SizedBox(width: 4.w),
                     Text(
                       'Misafir Olarak Devam Et',

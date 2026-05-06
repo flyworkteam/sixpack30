@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 class ExerciseVideoPlayer extends StatefulWidget {
   final String videoUrl;
@@ -48,15 +49,7 @@ class _ExerciseVideoPlayerState extends State<ExerciseVideoPlayer> {
   }
 
   void _tryLoadingVideo(String url, {int fallbackIndex = 0}) {
-    if (fallbackIndex == 0) {
-      if (url.startsWith('http')) {
-        _controller = VideoPlayerController.networkUrl(Uri.parse(url));
-      } else {
-        _controller = VideoPlayerController.asset(url);
-      }
-    } else {
-      _controller = VideoPlayerController.networkUrl(Uri.parse(url));
-    }
+    _controller = VideoPlayerController.networkUrl(Uri.parse(url));
 
     _controller.initialize().then((_) {
       if (mounted) {
@@ -79,13 +72,9 @@ class _ExerciseVideoPlayerState extends State<ExerciseVideoPlayer> {
     final String gender = widget.placeholderUrl.toLowerCase().contains('woman') ? 'woman' : 'man';
     
     List<String> fallbacks = [
-      
       'https://sixpack30.b-cdn.net/videos/${Uri.encodeComponent(baseName)}%20$gender.mp4',
-      
       'https://sixpack30.b-cdn.net/videos/${Uri.encodeComponent(baseName)}.mp4',
-      
       'https://sixpack30.b-cdn.net/videos/${baseName.replaceAll(' ', '_')}.mp4',
-      
       'https://sixpack30.b-cdn.net/videos/${baseName.replaceAll(' ', '-')}.mp4',
     ];
 
@@ -105,9 +94,12 @@ class _ExerciseVideoPlayerState extends State<ExerciseVideoPlayer> {
   @override
   Widget build(BuildContext context) {
     if (_isError) {
-      return widget.placeholderUrl.startsWith('http')
-          ? Image.network(widget.placeholderUrl, fit: BoxFit.cover, width: double.infinity, height: double.infinity)
-          : Image.asset(widget.placeholderUrl, fit: BoxFit.cover);
+      return CachedNetworkImage(
+        imageUrl: widget.placeholderUrl,
+        fit: BoxFit.cover,
+        width: double.infinity,
+        height: double.infinity,
+      );
     }
 
     if (_controller.value.isInitialized) {
@@ -125,9 +117,12 @@ class _ExerciseVideoPlayerState extends State<ExerciseVideoPlayer> {
 
     return Stack(
       children: [
-        widget.placeholderUrl.startsWith('http')
-            ? Image.network(widget.placeholderUrl, fit: BoxFit.cover, width: double.infinity, height: double.infinity)
-            : Image.asset(widget.placeholderUrl, fit: BoxFit.cover),
+        CachedNetworkImage(
+          imageUrl: widget.placeholderUrl,
+          fit: BoxFit.cover,
+          width: double.infinity,
+          height: double.infinity,
+        ),
         const Center(
           child: CircularProgressIndicator(
             color: Color(0xFF00EF5B),

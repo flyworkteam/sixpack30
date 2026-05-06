@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -849,8 +850,7 @@ class _QuestionsViewState extends ConsumerState<QuestionsView> {
                   color: const Color(0xFFEDEDED).withValues(alpha: 0.85),
                   borderRadius: BorderRadius.circular(12.r),
                 ),
-                child: Image.asset(
-                  'assets/images/geriicon.png',
+                child: CachedNetworkImage(imageUrl: 'https://sixpack30.b-cdn.net/images/geriicon.png',
                   width: 12.w,
                   height: 12.h,
                 ),
@@ -976,8 +976,7 @@ class _QuestionsViewState extends ConsumerState<QuestionsView> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                SvgPicture.asset(
-                  'assets/images/iconstack.io - (Value None).svg',
+                SvgPicture.network('https://sixpack30.b-cdn.net/images/iconstack.io - (Value None).svg',
                   width: 18.w,
                   height: 18.h,
                   fit: BoxFit.cover,
@@ -1079,23 +1078,22 @@ class _QuestionsViewState extends ConsumerState<QuestionsView> {
                       child: Transform.translate(
                         offset: Offset(offsetX, offsetY),
                         child: imagePath.endsWith('.svg')
-                            ? SvgPicture.asset(
-                                imagePath,
+                            ? SvgPicture.network(
+                                imagePath.startsWith('assets/') ? imagePath.replaceFirst('assets/', 'https://sixpack30.b-cdn.net/') : imagePath,
                                 width: imageWidth != null ? imageWidth.w : null,
                                 height: imageHeight != null
                                     ? imageHeight.h
                                     : null,
                                 fit: BoxFit.contain,
                               )
-                            : Image.asset(
-                                imagePath,
+                            : CachedNetworkImage(
+                                imageUrl: imagePath.startsWith('assets/') ? imagePath.replaceFirst('assets/', 'https://sixpack30.b-cdn.net/') : imagePath,
                                 width: imageWidth != null ? imageWidth.w : null,
                                 height: imageHeight != null
                                     ? imageHeight.h
                                     : null,
                                 fit: BoxFit.contain,
                                 filterQuality: FilterQuality.high,
-                                isAntiAlias: true,
                               ),
                       ),
                     ),
@@ -1240,8 +1238,8 @@ class _QuestionsViewState extends ConsumerState<QuestionsView> {
                 topLeft: Radius.circular(10.r),
                 bottomLeft: Radius.circular(10.r),
               ),
-              child: Image.asset(
-                imagePath,
+              child: CachedNetworkImage(
+                imageUrl: imagePath.startsWith('assets/') ? imagePath.replaceFirst('assets/', 'https://sixpack30.b-cdn.net/') : imagePath,
                 width: 104.w,
                 height: 85.h,
                 fit: BoxFit.cover,
@@ -1340,8 +1338,7 @@ class _QuestionsViewState extends ConsumerState<QuestionsView> {
                   ),
                 ),
                 SizedBox(width: 10.w),
-                SvgPicture.asset(
-                  'assets/images/iconstack.io - (Arrow Down).svg',
+                SvgPicture.network('https://sixpack30.b-cdn.net/images/iconstack.io - (Arrow Down).svg',
                   width: 18.w,
                   height: 18.h,
                   fit: BoxFit.cover,
@@ -1357,7 +1354,7 @@ class _QuestionsViewState extends ConsumerState<QuestionsView> {
     return Stack(
       children: [
         Positioned.fill(
-          child: Image.asset('assets/images/Sorular.png', fit: BoxFit.cover),
+          child: CachedNetworkImage(imageUrl: 'https://sixpack30.b-cdn.net/images/Sorular.png', fit: BoxFit.cover),
         ),
         Positioned.fill(
           child: Container(color: Colors.black.withValues(alpha: 0.66)),
@@ -1605,8 +1602,7 @@ class _QuestionsViewState extends ConsumerState<QuestionsView> {
     return Stack(
       fit: StackFit.expand,
       children: [
-        Image.asset(
-          'assets/images/ready_bg.png',
+        CachedNetworkImage(imageUrl: 'https://sixpack30.b-cdn.net/images/ready_bg.png',
           fit: BoxFit.cover,
           alignment: Alignment(0.25, 0.0),
         ),
@@ -1673,8 +1669,7 @@ class _QuestionsViewState extends ConsumerState<QuestionsView> {
                     ),
                   ),
                   SizedBox(width: 10.w),
-                  SvgPicture.asset(
-                    'assets/images/iconstack.io - (Arrow Down).svg',
+                  SvgPicture.network('https://sixpack30.b-cdn.net/images/iconstack.io - (Arrow Down).svg',
                     width: 18.w,
                     height: 18.h,
                     fit: BoxFit.cover,
@@ -1692,8 +1687,7 @@ class _QuestionsViewState extends ConsumerState<QuestionsView> {
     return Stack(
       children: [
         Positioned.fill(
-          child: Image.asset(
-            'assets/images/sportswoman.jpg',
+          child: CachedNetworkImage(imageUrl: 'https://sixpack30.b-cdn.net/images/sportswoman.jpg',
             fit: BoxFit.cover,
           ),
         ),
@@ -1776,8 +1770,7 @@ class _QuestionsViewState extends ConsumerState<QuestionsView> {
     return Positioned(
       left: left.w,
       top: top.h,
-      child: Image.asset(
-        'assets/images/Polygon$num.png',
+      child: CachedNetworkImage(imageUrl: 'https://sixpack30.b-cdn.net/images/Polygon$num.png',
         width: w.w,
         height: h.h,
         fit: BoxFit.fill,
@@ -2004,8 +1997,7 @@ class _QuestionsViewState extends ConsumerState<QuestionsView> {
                       offset: (_selectedActivity >= 2)
                           ? Offset(-15.w, 15.h)
                           : Offset.zero,
-                      child: Image.asset(
-                        'assets/images/${(_selectedGender == 1) ? 'actman' : 'actwoman'}${_selectedActivity + 1}.png',
+                      child: CachedNetworkImage(imageUrl: 'https://sixpack30.b-cdn.net/images/${(_selectedGender == 1) ? 'actman' : 'actwoman'}${_selectedActivity + 1}.png',
                         width: (_selectedActivity == 2) ? 380.w : 342.w,
                         fit: BoxFit.contain,
                       ),
@@ -2331,8 +2323,8 @@ class _QuestionsViewState extends ConsumerState<QuestionsView> {
           child: Row(
             children: [
               if (iconPath.endsWith('.svg'))
-                SvgPicture.asset(
-                  iconPath,
+                SvgPicture.network(
+                  iconPath.startsWith('assets/') ? iconPath.replaceFirst('assets/', 'https://sixpack30.b-cdn.net/') : iconPath,
                   width: 24.w,
                   height: 24.h,
                   colorFilter: isSelected
@@ -2340,8 +2332,8 @@ class _QuestionsViewState extends ConsumerState<QuestionsView> {
                       : null,
                 )
               else
-                Image.asset(
-                  iconPath,
+                CachedNetworkImage(
+                  imageUrl: iconPath.startsWith('assets/') ? iconPath.replaceFirst('assets/', 'https://sixpack30.b-cdn.net/') : iconPath,
                   width: 24.w,
                   height: 24.h,
                   color: isSelected ? const Color(0xFF06C44F) : null,
@@ -2388,8 +2380,8 @@ class _QuestionsViewState extends ConsumerState<QuestionsView> {
                 offset: imagePath.contains('genderMAN')
                     ? Offset(3.5.w, 38.h)
                     : Offset.zero,
-                child: Image.asset(
-                  imagePath,
+                child: CachedNetworkImage(
+                  imageUrl: imagePath.startsWith('assets/') ? imagePath.replaceFirst('assets/', 'https://sixpack30.b-cdn.net/') : imagePath,
                   fit: BoxFit.cover,
                   width: 165.w,
                   height: 195.h,

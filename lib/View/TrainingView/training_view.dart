@@ -92,8 +92,7 @@ class _TrainingViewState extends ConsumerState<TrainingView> {
                   background: Stack(
                     fit: StackFit.expand,
                     children: [
-                      Image.asset(
-                        'assets/images/training_banner.jpg',
+                      CachedNetworkImage(imageUrl: 'https://sixpack30.b-cdn.net/images/training_banner.jpg',
                         fit: BoxFit.cover,
                         alignment: Alignment.topCenter,
                       ),
@@ -265,7 +264,7 @@ class _TrainingViewState extends ConsumerState<TrainingView> {
         color: Colors.black,
         borderRadius: BorderRadius.vertical(bottom: Radius.circular(15.r)),
         image: DecorationImage(
-          image: const AssetImage('assets/images/training_banner.jpg'),
+          image: const NetworkImage('https://sixpack30.b-cdn.net/images/training_banner.jpg'),
           fit: BoxFit.cover,
           alignment: Alignment.topCenter,
           colorFilter: ColorFilter.mode(
@@ -456,8 +455,7 @@ class _TrainingViewState extends ConsumerState<TrainingView> {
                           SizedBox(height: 6.h),
                           Row(
                             children: [
-                              SvgPicture.asset(
-                                'assets/images/training_clock_icon.svg',
+                              SvgPicture.network('https://sixpack30.b-cdn.net/images/training_clock_icon.svg',
                                 width: 15.8.w,
                                 height: 15.8.w,
                                 colorFilter: isLocked 
@@ -482,8 +480,7 @@ class _TrainingViewState extends ConsumerState<TrainingView> {
                   if (isPremiumLocked)
                     Padding(
                       padding: EdgeInsets.only(right: 15.w),
-                      child: SvgPicture.asset(
-                        'assets/images/training_lock_icon.svg',
+                      child: SvgPicture.network('https://sixpack30.b-cdn.net/images/training_lock_icon.svg',
                         width: 20.w,
                         height: 20.w,
                       ),

@@ -191,8 +191,7 @@ class _NotificationsViewState extends ConsumerState<NotificationsView> {
         background: Container(
           alignment: Alignment.centerRight,
           padding: EdgeInsets.only(right: 15.w),
-          child: SvgPicture.asset(
-            'assets/images/notification_delete_icon.svg',
+          child: SvgPicture.network('https://sixpack30.b-cdn.net/images/notification_delete_icon.svg',
             width: 26.w,
             height: 26.w,
           ),

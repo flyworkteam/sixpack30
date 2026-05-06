@@ -176,7 +176,7 @@ class _HomeViewState extends ConsumerState<HomeView> {
     final bool isMan = !isGuest && user != null && isMale;
     final String gender = isMale ? 'man' : 'woman';
     final String? userPhoto = user?.photoUrl;
-    final String defaultProfileImage = 'assets/images/iconstack.io - (User Circle Regular).png';
+    final String defaultProfileImage = 'https://sixpack30.b-cdn.net/images/iconstack.io - (User Circle Regular).png';
     final bool isPremiumUser = ref.watch(premiumProvider).value ?? false;
     isPremium = isPremiumUser;
 
@@ -258,8 +258,7 @@ class _HomeViewState extends ConsumerState<HomeView> {
                 color: const Color(0xFFF5F5F5),
                 borderRadius: BorderRadius.circular(10.r),
               ),
-              child: SvgPicture.asset(
-                'assets/images/Notification_Icon.svg',
+              child: SvgPicture.network('https://sixpack30.b-cdn.net/images/Notification_Icon.svg',
                 width: 12.sp,
                 height: 12.sp,
                 colorFilter: const ColorFilter.mode(Colors.black, BlendMode.srcIn),
@@ -278,8 +277,7 @@ class _HomeViewState extends ConsumerState<HomeView> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  SvgPicture.asset(
-                    'assets/images/Crown_Premium.svg',
+                  SvgPicture.network('https://sixpack30.b-cdn.net/images/Crown_Premium.svg',
                     width: 24.sp,
                     height: 24.sp,
                     colorFilter: const ColorFilter.mode(Color(0xFFFDFDFD), BlendMode.srcIn),
@@ -522,8 +520,7 @@ class _HomeViewState extends ConsumerState<HomeView> {
               top: -52.h,
               child: Opacity(
                 opacity: 1.0,
-                child: Image.asset(
-                  'assets/images/Adsız tasarım-6.png',
+                child: CachedNetworkImage(imageUrl: 'https://sixpack30.b-cdn.net/images/Adsız tasarım-6.png',
                   width: 127.8.w,
                   height: 225.38.h,
                   fit: BoxFit.contain,
@@ -551,16 +548,15 @@ class _HomeViewState extends ConsumerState<HomeView> {
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           if (assetPath.endsWith('.svg'))
-            SvgPicture.asset(
-              assetPath,
+            SvgPicture.network(
+              assetPath.startsWith('assets/') ? assetPath.replaceFirst('assets/', 'https://sixpack30.b-cdn.net/') : assetPath,
               width: 12.sp,
               height: 12.sp,
               fit: BoxFit.contain,
               colorFilter: const ColorFilter.mode(Color(0xFF06C44F), BlendMode.srcIn),
             )
           else
-            Image.asset(
-              assetPath,
+            CachedNetworkImage(imageUrl: assetPath.startsWith('assets/') ? assetPath.replaceFirst('assets/', 'https://sixpack30.b-cdn.net/') : assetPath,
               width: 12.sp,
               height: 12.sp,
               fit: BoxFit.contain,
@@ -618,18 +614,12 @@ class _HomeViewState extends ConsumerState<HomeView> {
                 width: 97.w,
                 height: 86.h,
                 color: const Color(0xFFF0F0F0),
-                child: imagePath.startsWith('http')
-                    ? CachedNetworkImage(
-                        imageUrl: imagePath,
-                        fit: BoxFit.cover,
-                        placeholder: (context, url) => const Center(child: CircularProgressIndicator(strokeWidth: 2)),
-                        errorWidget: (context, url, error) => const Icon(Icons.fitness_center),
-                      )
-                    : Image.asset(
-                        imagePath,
-                        fit: BoxFit.cover,
-                        errorBuilder: (_, __, ___) => const Icon(Icons.fitness_center),
-                      ),
+                child: CachedNetworkImage(
+                  imageUrl: imagePath,
+                  fit: BoxFit.cover,
+                  placeholder: (context, url) => const Center(child: CircularProgressIndicator(strokeWidth: 2)),
+                  errorWidget: (context, url, error) => const Icon(Icons.fitness_center),
+                ),
               ),
             ),
           ),
@@ -746,8 +736,7 @@ class _HomeViewState extends ConsumerState<HomeView> {
                   child: Container(
                     width: 97.w,
                     height: 86.h,
-                    child: Image.asset(
-                      'assets/images/day_4.png',
+                    child: CachedNetworkImage(imageUrl: 'https://sixpack30.b-cdn.net/images/day_4.png',
                       fit: BoxFit.cover,
                     ),
                   ),
@@ -863,17 +852,11 @@ class _HomeViewState extends ConsumerState<HomeView> {
                     width: 97.w,
                     height: 86.h,
                     color: const Color(0xFFF0F0F0),
-                    child: imagePath.startsWith('http')
-                        ? CachedNetworkImage(
-                            imageUrl: imagePath,
+                    child: CachedNetworkImage(imageUrl: imagePath, 
                             fit: BoxFit.cover,
                             placeholder: (context, url) => const Center(child: CircularProgressIndicator(strokeWidth: 2)),
                             errorWidget: (context, url, error) => const Icon(Icons.fitness_center),
-                          )
-                        : Image.asset(
-                            imagePath,
-                            fit: BoxFit.cover,
-                            errorBuilder: (_, __, ___) => const Icon(Icons.fitness_center),
+                          ) => const Icon(Icons.fitness_center),
                           ),
                   ),
                 ),
@@ -1144,8 +1127,7 @@ class _HomeViewState extends ConsumerState<HomeView> {
                               setState(() => _completedDaysPage--);
                             }
                           },
-                          child: SvgPicture.asset(
-                            'assets/images/Completed_Days_Back_Icon.svg',
+                          child: SvgPicture.network('https://sixpack30.b-cdn.net/images/Completed_Days_Back_Icon.svg',
                             width: 16.sp,
                             height: 16.sp,
                             colorFilter: ColorFilter.mode(
@@ -1161,8 +1143,7 @@ class _HomeViewState extends ConsumerState<HomeView> {
                               setState(() => _completedDaysPage++);
                             }
                           },
-                          child: SvgPicture.asset(
-                            'assets/images/Completed_Days_Forward_Icon.svg',
+                          child: SvgPicture.network('https://sixpack30.b-cdn.net/images/Completed_Days_Forward_Icon.svg',
                             width: 16.sp,
                             height: 16.sp,
                             colorFilter: ColorFilter.mode(
@@ -1227,8 +1208,7 @@ class _HomeViewState extends ConsumerState<HomeView> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  SvgPicture.asset(
-                    'assets/images/Completed_Day_Flame_Icon.svg',
+                  SvgPicture.network('https://sixpack30.b-cdn.net/images/Completed_Day_Flame_Icon.svg',
                     width: 10.w,
                     height: 13.57.h,
                     fit: BoxFit.contain,
@@ -1305,8 +1285,7 @@ class _HomeViewState extends ConsumerState<HomeView> {
                       children: [
                         Transform.translate(
                           offset: Offset(0, 4.h),
-                          child: SvgPicture.asset(
-                            'assets/images/Premium_Upgrade_Icon.svg',
+                          child: SvgPicture.network('https://sixpack30.b-cdn.net/images/Premium_Upgrade_Icon.svg',
                             width: 32.w,
                             height: 32.h,
                             fit: BoxFit.contain,
@@ -1660,8 +1639,7 @@ class _HomeViewState extends ConsumerState<HomeView> {
                   letterSpacing: -0.176.sp,
                 ),
               ),
-              SvgPicture.asset(
-                'assets/images/Progress_Status_Icon.svg',
+              SvgPicture.network('https://sixpack30.b-cdn.net/images/Progress_Status_Icon.svg',
                 width: 24.sp,
                 height: 24.sp,
                 colorFilter: const ColorFilter.mode(Color(0xFF4E4A4A), BlendMode.srcIn),
@@ -1805,8 +1783,7 @@ class _HomeViewState extends ConsumerState<HomeView> {
                         Positioned(
                           left: 38.w,
                           top: 142.h,
-                          child: SvgPicture.asset(
-                            'assets/images/Success_Trophy_Icon.svg',
+                          child: SvgPicture.network('https://sixpack30.b-cdn.net/images/Success_Trophy_Icon.svg',
                             width: 50.sp,
                             height: 46.sp,
                           ),
@@ -1981,8 +1958,7 @@ class _HomeViewState extends ConsumerState<HomeView> {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          SvgPicture.asset(
-            'assets/images/Crown_Premium.svg',
+          SvgPicture.network('https://sixpack30.b-cdn.net/images/Crown_Premium.svg',
             width: 14.sp,
             height: 14.sp,
             colorFilter: const ColorFilter.mode(Color(0xFFFDFDFD), BlendMode.srcIn),

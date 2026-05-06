@@ -171,8 +171,7 @@ class _LanguageViewState extends ConsumerState<LanguageView> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      SvgPicture.asset(
-                        'assets/images/Save_Icon_Language.svg',
+                      SvgPicture.network('https://sixpack30.b-cdn.net/images/Save_Icon_Language.svg',
                         width: 20.sp,
                         height: 20.sp,
                         colorFilter: const ColorFilter.mode(Colors.black, BlendMode.srcIn),
