@@ -1508,10 +1508,10 @@ class _QuestionsViewState extends ConsumerState<QuestionsView> {
             controller: _bgPageController,
             itemBuilder: (context, index) {
               final String asset = (index % 2 == 0)
-                  ? 'https://sixpack30.b-cdn.net/images/loading_bg.png'
-                  : 'https://sixpack30.b-cdn.net/images/loading_complete_bg.png';
-              return CachedNetworkImage(
-                imageUrl: asset,
+                  ? 'assets/images/loading_bg.png'
+                  : 'assets/images/loading_complete_bg.png';
+              return Image.asset(
+                asset,
                 fit: BoxFit.cover,
                 alignment: asset.contains('complete')
                     ? const Alignment(0.1, 0.0)
@@ -1622,9 +1622,10 @@ class _QuestionsViewState extends ConsumerState<QuestionsView> {
     return Stack(
       fit: StackFit.expand,
       children: [
-        CachedNetworkImage(imageUrl: 'https://sixpack30.b-cdn.net/images/ready_bg.png',
+        Image.asset(
+          'assets/images/ready_bg.png',
           fit: BoxFit.cover,
-          alignment: Alignment(0.25, 0.0),
+          alignment: const Alignment(0.25, 0.0),
         ),
         Container(color: Colors.black.withValues(alpha: 0.26)),
         Positioned(

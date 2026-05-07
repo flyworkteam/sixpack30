@@ -744,8 +744,14 @@ class _HomeViewState extends ConsumerState<HomeView> {
                   child: Container(
                     width: 97.w,
                     height: 86.h,
-                    child: CachedNetworkImage(imageUrl: 'https://sixpack30.b-cdn.net/images/day_4.png',
+                    color: const Color(0xFFF0F0F0),
+                    child: CachedNetworkImage(
+                      imageUrl: 'https://sixpack30.b-cdn.net/images/day_4.png',
+                      width: 97.w,
+                      height: 86.h,
                       fit: BoxFit.cover,
+                      placeholder: (context, url) => const Center(child: CircularProgressIndicator(strokeWidth: 2)),
+                      errorWidget: (context, url, error) => const Icon(Icons.fitness_center),
                     ),
                   ),
                 ),
@@ -856,11 +862,18 @@ class _HomeViewState extends ConsumerState<HomeView> {
                 top: 9.h,
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(10.r),
+                  child: Container(
+                    width: 97.w,
+                    height: 86.h,
+                    color: const Color(0xFFF0F0F0),
                     child: CachedNetworkImage(
                       imageUrl: imagePath,
+                      width: 97.w,
+                      height: 86.h,
                       fit: BoxFit.cover,
                       placeholder: (context, url) => const Center(child: CircularProgressIndicator(strokeWidth: 2)),
                       errorWidget: (context, url, error) => const Icon(Icons.fitness_center),
+                    ),
                   ),
                 ),
               ),

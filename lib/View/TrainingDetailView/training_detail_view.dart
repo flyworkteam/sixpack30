@@ -283,7 +283,7 @@ class _TrainingDetailViewState extends ConsumerState<TrainingDetailView> {
             ),
           ),
           Positioned(
-            top: MediaQuery.of(context).padding.top + 35.h,
+            top: MediaQuery.of(context).padding.top + 15.h,
             left: 25.w,
             child: GestureDetector(
               onTap: () => Navigator.of(context).pop(),

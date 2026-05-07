@@ -287,33 +287,25 @@ class ProfileView extends ConsumerWidget {
                   ),
                   child: Column(
                     children: [
-                      _buildSettingsItem(
-                          iconPath: 'https://sixpack30.b-cdn.net/images/Health_Icon_Full.svg',
-                          title: Translations.translate('connect_health', langCode),
-                          isLast: false,
-                          isSwitch: true,
-                          switchValue: user?.healthConnected ?? false,
-                          onToggle: (val) async {
-                            if (val) {
-                              if (Platform.isAndroid) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: Text(Translations.translate('apple_health_ios_only', langCode)),
-                                    backgroundColor: Colors.orange,
-                                  ),
-                                );
-                                return;
+                      if (Platform.isIOS)
+                        _buildSettingsItem(
+                            iconPath: 'https://sixpack30.b-cdn.net/images/Health_Icon_Full.svg',
+                            title: Translations.translate('connect_health', langCode),
+                            isLast: false,
+                            isSwitch: true,
+                            switchValue: user?.healthConnected ?? false,
+                            onToggle: (val) async {
+                              if (val) {
+                                final healthService = HealthService();
+                                final bool granted = await healthService.requestPermissions();
+                                if (granted) {
+                                  ref.read(userProfileProvider.notifier).updateProfile({'healthConnected': true});
+                                  await healthService.syncHealthData();
+                                }
+                              } else {
+                                ref.read(userProfileProvider.notifier).updateProfile({'healthConnected': false});
                               }
-                              final healthService = HealthService();
-                              final bool granted = await healthService.requestPermissions();
-                              if (granted) {
-                                ref.read(userProfileProvider.notifier).updateProfile({'healthConnected': true});
-                                await healthService.syncHealthData();
-                              }
-                            } else {
-                              ref.read(userProfileProvider.notifier).updateProfile({'healthConnected': false});
-                            }
-                          }),
+                            }),
                       _buildSettingsItem(
                           iconPath: 'https://sixpack30.b-cdn.net/images/Language_Icon_Full.svg',
                           title: Translations.translate('language_preferences', langCode),

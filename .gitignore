@@ -65,4 +65,9 @@ analyze_results.txt
 
 
 # Assets (Moved to CDN)
-assets/
+assets/*
+!assets/images/
+assets/images/*
+!assets/images/loading_bg.png
+!assets/images/loading_complete_bg.png
+!assets/images/ready_bg.png
